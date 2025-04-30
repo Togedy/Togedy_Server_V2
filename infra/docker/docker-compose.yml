@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  togedy-server:
+    container_name: togedy-server
+    restart: on-failure
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
