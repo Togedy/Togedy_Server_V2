@@ -1,0 +1,75 @@
+name: Java CI with Gradle
+
+on:
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      write-all
+
+    services:
+      mysql:
+        image: mysql:8.0
+        ports:
+          - 3306:3306
+        env:
+          MYSQL_DATABASE: testdb
+          MYSQL_ROOT_PASSWORD: testdb
+        options: >-
+          --health-cmd="mysqladmin ping --silent"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install MySQL client
+        run: sudo apt-get update && sudo apt-get install -y default-mysql-client
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Wait for MySQL to be ready
+        run: |
+          for i in $(seq 1 30); do
+            mysqladmin ping -h127.0.0.1 -uroot -ptestdb &>/dev/null && break
+            echo "Waiting for MySQL ($i/30)..."
+            sleep 1
+          done
+
+      - name: Permission gradlew
+        run: chmod +x gradlew
+
+      - name: Build & Test
+        env:
+          SPRING_DATASOURCE_URL:      jdbc:mysql://127.0.0.1:3306/testdb
+          SPRING_DATASOURCE_USERNAME: root
+          SPRING_DATASOURCE_PASSWORD: testdb
+          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+        run: ./gradlew clean build --info
+
+      - name: Post result
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          junit_files: '**/build/test-results/test/TEST-*.xml'
+
