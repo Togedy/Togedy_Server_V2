@@ -22,7 +22,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.KEY }}
           script: |
-            cd ${{ secrets.PROJECT_PATH }}/infra/docker
+            cd ${{ secrets.PROJECT_PATH }}infra/docker
             
             cat > .env <<EOF
             MYSQL_HOST=${{ secrets.MYSQL_HOST }}
@@ -31,5 +31,5 @@ jobs:
             EOF
             
             cd ../script
-            chmod +x ./infra/script/deploy.sh
-            ./infra/script/deploy.sh
+            chmod +x deploy.sh
+            ./deploy.sh
