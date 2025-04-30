@@ -23,7 +23,7 @@ cd ../docker
 # 4) 기존 컨테이너/네트워크 정리
 # ───────────────────────────────────────────────────────────────────
 echo "Stopping existing containers"
-docker compose down
+sudo docker compose down
 
 # ───────────────────────────────────────────────────────────────────
 # 5) 이미지 빌드 & 컨테이너 재기동
@@ -31,7 +31,7 @@ docker compose down
 #    - -d     : 백그라운드 모드
 # ───────────────────────────────────────────────────────────────────
 echo "Building & starting services"
-docker compose up -d --build
+sudo docker compose up -d --build
 
 # ───────────────────────────────────────────────────────────────────
 # 6) 헬스 체크 (옵션)
