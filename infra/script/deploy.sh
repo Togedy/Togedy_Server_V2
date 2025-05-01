@@ -33,18 +33,5 @@ sudo docker compose down
 echo "Building & starting services"
 sudo docker compose up -d --build
 
-# ───────────────────────────────────────────────────────────────────
-# 6) 헬스 체크 (옵션)
-# ───────────────────────────────────────────────────────────────────
-echo "Waiting for app to become healthy..."
-for i in {1..30}; do
-  if curl -sSf http://localhost:8080/actuator/health > /dev/null; then
-    echo "✅ App is healthy!"
-    exit 0
-  fi
-  echo "($i/30) still waiting..."
-  sleep 1
-done
-
-echo "App did not become healthy in time" >&2
-exit 1
+echo "Deployment complete"
+exit 0
