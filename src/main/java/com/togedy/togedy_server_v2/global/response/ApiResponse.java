@@ -13,9 +13,11 @@ import lombok.Getter;
 public class ApiResponse<T> {
 
     @JsonProperty(value = "isSuccess")
-    private final boolean success = true;
+    private final boolean success;
 
     @JsonProperty(value = "response")
     private final T response;
 
+    @JsonProperty(value = "errorResponse")
+    private final ErrorResponse errorResponse;
 }
