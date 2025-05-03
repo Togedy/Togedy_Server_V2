@@ -31,4 +31,13 @@ public class User extends BaseEntity {
     @Column(name = "status", nullable = false)
     private BaseStatus status;
 
+    private User(String nickname, String email) {
+        this.nickname = nickname;
+        this.email = email;
+        this.status = BaseStatus.ACTIVE;
+    }
+
+    public static User create(String nickname, String email) {
+        return new User(nickname, email);
+    }
 }
