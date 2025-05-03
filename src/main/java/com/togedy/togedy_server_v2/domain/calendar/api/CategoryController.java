@@ -1,14 +1,18 @@
 package com.togedy.togedy_server_v2.domain.calendar.api;
 
 import com.togedy.togedy_server_v2.domain.calendar.application.CategoryService;
+import com.togedy.togedy_server_v2.domain.calendar.dto.GetCategoryResponse;
 import com.togedy.togedy_server_v2.domain.calendar.dto.PostCategoryRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,5 +25,11 @@ public class CategoryController {
     public ApiResponse<Void> createCategory(@RequestBody PostCategoryRequest request) {
         categoryService.generateCategory(request);
         return ApiUtil.successOnly();
+    }
+
+    @GetMapping("")
+    public ApiResponse<List<GetCategoryResponse>> readAllCategories(Long userId) {
+        List<GetCategoryResponse> response = categoryService.findAllCategoriesByUserId(userId);
+        return ApiUtil.success(response);
     }
 }
