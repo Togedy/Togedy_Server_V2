@@ -7,7 +7,7 @@ import com.togedy.togedy_server_v2.domain.calendar.dto.GetCategoryResponse;
 import com.togedy.togedy_server_v2.domain.calendar.dto.PatchCategoryRequest;
 import com.togedy.togedy_server_v2.domain.calendar.dto.PostCategoryRequest;
 import com.togedy.togedy_server_v2.domain.calendar.entity.Category;
-import com.togedy.togedy_server_v2.domain.user.dto.UserRepository;
+import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
