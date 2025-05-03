@@ -7,6 +7,7 @@ import com.togedy.togedy_server_v2.domain.calendar.dto.PostCategoryRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +42,12 @@ public class CategoryController {
                                             @PathVariable Long categoryId,
                                             Long userId) {
         categoryService.modifyCategory(request, categoryId, userId);
+        return ApiUtil.successOnly();
+    }
+
+    @DeleteMapping("/{categoryId}")
+    public ApiResponse<Void> deleteCategory(@PathVariable Long categoryId, Long userId) {
+        categoryService.removeCategory(categoryId, userId);
         return ApiUtil.successOnly();
     }
 

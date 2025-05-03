@@ -51,4 +51,15 @@ public class CategoryService {
 
         category.update(request);
     }
+
+    public void removeCategory(Long categoryId, Long userId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(CategoryNotFoundException::new);
+
+        if (!category.getUser().getId().equals(userId)) {
+            throw new CategoryNotOwnedException();
+        }
+
+        categoryRepository.delete(category);
+    }
 }
