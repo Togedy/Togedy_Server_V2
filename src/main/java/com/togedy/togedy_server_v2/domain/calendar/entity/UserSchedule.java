@@ -1,11 +1,15 @@
 package com.togedy.togedy_server_v2.domain.calendar.entity;
 
+import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.entity.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -41,19 +45,33 @@ public class UserSchedule {
     private String status = Status.ACTIVE.getStatus();
 
     @Column(name = "is_d_day")
-    private boolean isDday;
+    private boolean dDay;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @Builder
-    public UserSchedule(String name,
+    public UserSchedule(User user,
+                        Category category,
+                        String name,
                         String memo,
                         LocalDate startDate,
                         LocalDate endDate,
-                        boolean isDday)
+                        boolean dDay)
     {
+        this.user = user;
+        this.category = category;
         this.name = name;
         this.memo = memo;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.isDday = isDday;
+        this.dDay = dDay;
     }
+
 }
