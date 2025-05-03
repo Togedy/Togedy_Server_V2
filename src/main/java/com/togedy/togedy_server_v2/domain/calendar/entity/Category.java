@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.calendar.entity;
 
+import com.togedy.togedy_server_v2.domain.calendar.dto.PatchCategoryRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import com.togedy.togedy_server_v2.global.entity.Status;
@@ -47,4 +48,14 @@ public class Category extends BaseEntity {
         this.name = name;
         this.color = color;
     }
+
+    public void update(PatchCategoryRequest request) {
+        if (!request.getCategoryName().isBlank()) {
+            this.name = request.getCategoryName();
+        }
+        if (!request.getCategoryColor().isBlank()) {
+            this.color = request.getCategoryColor();
+        }
+    }
+
 }
