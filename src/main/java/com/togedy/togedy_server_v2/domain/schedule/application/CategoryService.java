@@ -1,12 +1,12 @@
-package com.togedy.togedy_server_v2.domain.calendar.application;
+package com.togedy.togedy_server_v2.domain.schedule.application;
 
-import com.togedy.togedy_server_v2.domain.calendar.Exception.CategoryNotFoundException;
-import com.togedy.togedy_server_v2.domain.calendar.Exception.CategoryNotOwnedException;
-import com.togedy.togedy_server_v2.domain.calendar.dao.CategoryRepository;
-import com.togedy.togedy_server_v2.domain.calendar.dto.GetCategoryResponse;
-import com.togedy.togedy_server_v2.domain.calendar.dto.PatchCategoryRequest;
-import com.togedy.togedy_server_v2.domain.calendar.dto.PostCategoryRequest;
-import com.togedy.togedy_server_v2.domain.calendar.entity.Category;
+import com.togedy.togedy_server_v2.domain.schedule.Exception.CategoryNotFoundException;
+import com.togedy.togedy_server_v2.domain.schedule.Exception.CategoryNotOwnedException;
+import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
+import com.togedy.togedy_server_v2.domain.schedule.dto.GetCategoryResponse;
+import com.togedy.togedy_server_v2.domain.schedule.dto.PatchCategoryRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.PostCategoryRequest;
+import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;

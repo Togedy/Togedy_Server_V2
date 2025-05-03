@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.calendar.dto;
+package com.togedy.togedy_server_v2.domain.schedule.dto;
 
 import lombok.AccessLevel;
 import lombok.Getter;

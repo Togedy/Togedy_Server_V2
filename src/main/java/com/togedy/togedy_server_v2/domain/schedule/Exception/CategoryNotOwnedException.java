@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.calendar.Exception;
+package com.togedy.togedy_server_v2.domain.schedule.Exception;
 
 import com.togedy.togedy_server_v2.global.error.CustomException;
 import com.togedy.togedy_server_v2.global.error.ErrorCode;

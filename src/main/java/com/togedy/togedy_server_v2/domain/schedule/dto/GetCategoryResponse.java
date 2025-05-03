@@ -1,6 +1,6 @@
-package com.togedy.togedy_server_v2.domain.calendar.dto;
+package com.togedy.togedy_server_v2.domain.schedule.dto;
 
-import com.togedy.togedy_server_v2.domain.calendar.entity.Category;
+import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
 import lombok.Builder;
 import lombok.Getter;
 

@@ -1,9 +1,9 @@
-package com.togedy.togedy_server_v2.domain.calendar.api;
+package com.togedy.togedy_server_v2.domain.schedule.api;
 
-import com.togedy.togedy_server_v2.domain.calendar.application.CategoryService;
-import com.togedy.togedy_server_v2.domain.calendar.dto.GetCategoryResponse;
-import com.togedy.togedy_server_v2.domain.calendar.dto.PatchCategoryRequest;
-import com.togedy.togedy_server_v2.domain.calendar.dto.PostCategoryRequest;
+import com.togedy.togedy_server_v2.domain.schedule.application.CategoryService;
+import com.togedy.togedy_server_v2.domain.schedule.dto.GetCategoryResponse;
+import com.togedy.togedy_server_v2.domain.schedule.dto.PatchCategoryRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.PostCategoryRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;

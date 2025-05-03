@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.calendar.entity;
+package com.togedy.togedy_server_v2.domain.schedule.entity;
 
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.entity.Status;

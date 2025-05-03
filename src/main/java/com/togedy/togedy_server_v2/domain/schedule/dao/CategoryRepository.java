@@ -1,6 +1,6 @@
-package com.togedy.togedy_server_v2.domain.calendar.dao;
+package com.togedy.togedy_server_v2.domain.schedule.dao;
 
-import com.togedy.togedy_server_v2.domain.calendar.entity.Category;
+import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
