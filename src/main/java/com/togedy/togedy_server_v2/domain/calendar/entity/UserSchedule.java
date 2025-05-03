@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.calendar.entity;
 
+import com.togedy.togedy_server_v2.global.entity.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -37,7 +38,7 @@ public class UserSchedule {
     private LocalDate endDate;
 
     @Column(name = "status")
-    private String status = "CREATED";
+    private String status = Status.ACTIVE.getStatus();
 
     @Column(name = "is_d_day")
     private boolean isDday;

@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.calendar.entity;
 
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
+import com.togedy.togedy_server_v2.global.entity.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,7 +31,7 @@ public class Category extends BaseEntity {
     private String color;
 
     @Column(name = "status")
-    private String status = "CREATED";
+    private String status = Status.ACTIVE.getStatus();
 
     @Builder
     public Category(String name, String color) {

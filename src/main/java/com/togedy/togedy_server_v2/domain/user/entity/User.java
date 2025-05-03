@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.user.entity;
 
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
+import com.togedy.togedy_server_v2.global.entity.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,7 +31,7 @@ public class User extends BaseEntity {
     private String profileImageUrl;
 
     @Column(name = "status")
-    private String status;
+    private String status = Status.ACTIVE.getStatus();
 
     @Builder
     public User(String nickname, String profileImageUrl, String status) {
