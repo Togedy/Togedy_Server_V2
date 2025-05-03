@@ -34,9 +34,8 @@ public class User extends BaseEntity {
     private String status = Status.ACTIVE.getStatus();
 
     @Builder
-    public User(String nickname, String profileImageUrl, String status) {
+    public User(String nickname, String profileImageUrl) {
         this.nickname = nickname;
         this.profileImageUrl = profileImageUrl;
-        this.status = status;
     }
 }
