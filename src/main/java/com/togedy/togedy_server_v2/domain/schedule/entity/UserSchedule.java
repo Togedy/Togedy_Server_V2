@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.schedule.entity;
 
+import com.togedy.togedy_server_v2.domain.schedule.dto.PatchUserScheduleRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -80,4 +81,28 @@ public class UserSchedule {
         this.dDay = dDay;
     }
 
+    public void update(PatchUserScheduleRequest request) {
+        if (request.getUserScheduleName() != null) {
+            this.name = request.getUserScheduleName();
+        }
+        if (request.getMemo() != null) {
+            this.memo = request.getMemo();
+        }
+        if (request.getStartDate() != null) {
+            this.startDate = LocalDateTime.parse(request.getStartDate());
+        }
+        if (request.getAllDayStart() != null) {
+            this.startDate = LocalDateTime.parse(request.getStartDate());
+        }
+        if (request.getEndDate() != null) {
+            this.startDate = LocalDateTime.parse(request.getStartDate());
+        }
+        if (request.getAllDayEnd() != null) {
+            this.startDate = LocalDateTime.parse(request.getStartDate());
+        }
+    }
+
+    public void update(Category category) {
+        this.category = category;
+    }
 }

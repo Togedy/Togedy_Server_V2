@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.schedule.api;
 
+import com.togedy.togedy_server_v2.domain.schedule.dto.PatchUserScheduleRequest;
 import com.togedy.togedy_server_v2.domain.schedule.application.UserScheduleService;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetUserScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.PostUserScheduleRequest;
@@ -7,6 +8,7 @@ import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -30,5 +32,13 @@ public class UserScheduleController {
     public ApiResponse<GetUserScheduleResponse> readUserSchedule(@PathVariable Long userScheduleId, Long userId) {
         GetUserScheduleResponse response = userScheduleService.findUserSchedule(userScheduleId, userId);
         return ApiUtil.success(response);
+    }
+
+    @PatchMapping("/{userScheduleId}")
+    public ApiResponse<Void> updateUserSchedule(@RequestBody PatchUserScheduleRequest request,
+                                                @PathVariable Long userScheduleId,
+                                                Long userId) {
+        userScheduleService.modifyUserSchedule(request, userScheduleId, userId);
+        return ApiUtil.successOnly();
     }
 }

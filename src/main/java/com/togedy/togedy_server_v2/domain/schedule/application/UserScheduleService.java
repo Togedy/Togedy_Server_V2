@@ -6,6 +6,7 @@ import com.togedy.togedy_server_v2.domain.schedule.Exception.UserScheduleNotOwne
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetUserScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
+import com.togedy.togedy_server_v2.domain.schedule.dto.PatchUserScheduleRequest;
 import com.togedy.togedy_server_v2.domain.schedule.dto.PostUserScheduleRequest;
 import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
@@ -54,7 +55,6 @@ public class UserScheduleService {
 
     @Transactional(readOnly = true)
     public GetUserScheduleResponse findUserSchedule(Long userScheduleId, Long userId) {
-
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
                 .orElseThrow(UserScheduleNotFoundException::new);
 
@@ -63,5 +63,21 @@ public class UserScheduleService {
         }
 
         return GetUserScheduleResponse.from(userSchedule);
+    }
+
+    @Transactional
+    public void modifyUserSchedule(PatchUserScheduleRequest request, Long userScheduleId, Long userId) {
+        UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
+                .orElseThrow(UserScheduleNotFoundException::new);
+        Category category = categoryRepository.findById(request.getCategoryId())
+                .orElseThrow(CategoryNotFoundException::new);
+
+        if (!userSchedule.getUser().getId().equals(userId)) {
+            throw new UserScheduleNotOwnedException();
+        }
+
+        userSchedule.update(request);
+        userSchedule.update(category);
+        userScheduleRepository.save(userSchedule);
     }
 }
