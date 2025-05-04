@@ -58,6 +58,7 @@ public class CategoryService {
         category.update(request);
     }
 
+    @Transactional
     public void removeCategory(Long categoryId, Long userId) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(CategoryNotFoundException::new);
