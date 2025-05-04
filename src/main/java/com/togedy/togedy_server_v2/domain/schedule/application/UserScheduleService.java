@@ -1,6 +1,9 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
 import com.togedy.togedy_server_v2.domain.schedule.Exception.CategoryNotFoundException;
+import com.togedy.togedy_server_v2.domain.schedule.Exception.UserScheduleNotFoundException;
+import com.togedy.togedy_server_v2.domain.schedule.Exception.UserScheduleNotOwnedException;
+import com.togedy.togedy_server_v2.domain.schedule.dto.GetUserScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dto.PostUserScheduleRequest;
@@ -49,6 +52,16 @@ public class UserScheduleService {
         userScheduleRepository.save(userSchedule);
     }
 
+    @Transactional(readOnly = true)
+    public GetUserScheduleResponse findUserSchedule(Long userScheduleId, Long userId) {
 
+        UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
+                .orElseThrow(UserScheduleNotFoundException::new);
 
+        if (!userSchedule.getUser().getId().equals(userId)) {
+            throw new UserScheduleNotOwnedException();
+        }
+
+        return GetUserScheduleResponse.from(userSchedule);
+    }
 }

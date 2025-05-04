@@ -15,7 +15,11 @@ public enum ErrorCode {
     // CATEGORY
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "C404", "해당 카테고리를 찾을 수 없습니다."),
     CATEGORY_NOT_OWNED(HttpStatus.UNAUTHORIZED, "C401", "해당 유저의 카테고리가 아닙니다."),
-    DUPLICATE_CATEGORY(HttpStatus.BAD_REQUEST, "C400", "이름과 색상이 동일한 카테고리가 존재합니다.");
+    DUPLICATE_CATEGORY(HttpStatus.BAD_REQUEST, "C400", "이름과 색상이 동일한 카테고리가 존재합니다."),
+
+    // USER_SCHEDULE
+    USER_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "US404", "해당 개인 일정을 찾을 수 없습니다."),
+    USER_SCHEDULE_NOT_OWNED(HttpStatus.UNAUTHORIZED, "US401", "해당 유저의 개인 일정이 아닙니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
