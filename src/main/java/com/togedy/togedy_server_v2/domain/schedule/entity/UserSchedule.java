@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_schedule")
@@ -35,10 +36,16 @@ public class UserSchedule {
     private String memo;
 
     @Column(name = "start_date")
-    private LocalDate startDate;
+    private LocalDateTime startDate;
 
     @Column(name = "end_date")
-    private LocalDate endDate;
+    private LocalDateTime endDate;
+
+    @Column(name = "is_all_day_start")
+    private boolean allDayStart;
+
+    @Column(name = "is_all_day_end")
+    private boolean allDayEnd;
 
     @Column(name = "is_d_day")
     private boolean dDay;
@@ -56,16 +63,20 @@ public class UserSchedule {
                         Category category,
                         String name,
                         String memo,
-                        LocalDate startDate,
-                        LocalDate endDate,
-                        boolean dDay)
-    {
+                        LocalDateTime startDate,
+                        boolean allDayStart,
+                        LocalDateTime endDate,
+                        boolean allDayEnd,
+                        boolean dDay) {
+
         this.user = user;
         this.category = category;
         this.name = name;
         this.memo = memo;
         this.startDate = startDate;
+        this.allDayStart = allDayStart;
         this.endDate = endDate;
+        this.allDayEnd = allDayEnd;
         this.dDay = dDay;
     }
 
