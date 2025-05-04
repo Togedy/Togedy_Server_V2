@@ -80,4 +80,16 @@ public class UserScheduleService {
         userSchedule.update(category);
         userScheduleRepository.save(userSchedule);
     }
+
+    @Transactional
+    public void removeUserSchedule(Long userScheduleId, Long userId) {
+        UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
+                .orElseThrow(UserScheduleNotFoundException::new);
+
+        if (!userSchedule.getUser().getId().equals(userId)) {
+            throw new UserScheduleNotOwnedException();
+        }
+
+        userScheduleRepository.delete(userSchedule);
+    }
 }

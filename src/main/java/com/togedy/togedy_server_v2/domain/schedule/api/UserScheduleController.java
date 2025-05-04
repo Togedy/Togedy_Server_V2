@@ -7,6 +7,7 @@ import com.togedy.togedy_server_v2.domain.schedule.dto.PostUserScheduleRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,6 +40,12 @@ public class UserScheduleController {
                                                 @PathVariable Long userScheduleId,
                                                 Long userId) {
         userScheduleService.modifyUserSchedule(request, userScheduleId, userId);
+        return ApiUtil.successOnly();
+    }
+
+    @DeleteMapping("/{userScheduleId}")
+    public ApiResponse<Void> deleteUserSchedule(@PathVariable Long userScheduleId, Long userId) {
+        userScheduleService.removeUserSchedule(userScheduleId, userId);
         return ApiUtil.successOnly();
     }
 }
