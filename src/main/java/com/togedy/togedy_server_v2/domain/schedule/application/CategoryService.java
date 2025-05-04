@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.schedule.application;
 
 import com.togedy.togedy_server_v2.domain.schedule.Exception.CategoryNotFoundException;
 import com.togedy.togedy_server_v2.domain.schedule.Exception.CategoryNotOwnedException;
+import com.togedy.togedy_server_v2.domain.schedule.Exception.DuplicateCategoryException;
 import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetCategoryResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.PatchCategoryRequest;
@@ -27,6 +28,11 @@ public class CategoryService {
     public void generateCategory(PostCategoryRequest request) {
         // 더미 유저, 이후 변경
         User user = new User("dummy", "dummy");
+
+        if (categoryRepository.existsByColorAndName(request.getCategoryName(), request.getCategoryColor())) {
+            throw new DuplicateCategoryException();
+        }
+
         Category category = new Category(user, request.getCategoryName(), request.getCategoryColor());
         categoryRepository.save(category);
     }
