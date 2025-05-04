@@ -1,7 +1,6 @@
 package com.togedy.togedy_server_v2.domain.schedule.entity;
 
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.global.entity.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -41,16 +40,12 @@ public class UserSchedule {
     @Column(name = "end_date")
     private LocalDate endDate;
 
-    @Column(name = "status")
-    private String status = Status.ACTIVE.getStatus();
-
     @Column(name = "is_d_day")
     private boolean dDay;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")

@@ -2,8 +2,6 @@ package com.togedy.togedy_server_v2.domain.schedule.entity;
 
 import com.togedy.togedy_server_v2.domain.schedule.dto.PatchCategoryRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.global.entity.BaseEntity;
-import com.togedy.togedy_server_v2.global.entity.Status;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -22,7 +20,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "category")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Category extends BaseEntity {
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -34,9 +32,6 @@ public class Category extends BaseEntity {
 
     @Column(name = "color")
     private String color;
-
-    @Column(name = "status")
-    private String status = Status.ACTIVE.getStatus();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
