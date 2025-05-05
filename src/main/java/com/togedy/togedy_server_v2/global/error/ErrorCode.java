@@ -21,7 +21,9 @@ public enum ErrorCode {
 
     // USER (2000)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U2000", "사용자를 찾을 수 없습니다."),
-    DUPLICATED_EMAIL(HttpStatus.CONFLICT, "U2001", "이미 존재하는 이메일입니다.");
+    DUPLICATED_NICKNAME(HttpStatus.CONFLICT, "U2001", "이미 존재하는 닉네임입니다."),
+
+    DUPLICATED_EMAIL(HttpStatus.CONFLICT, "U2002", "이미 존재하는 이메일입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

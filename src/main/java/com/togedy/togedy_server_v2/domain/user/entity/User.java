@@ -18,10 +18,10 @@ public class User extends BaseEntity {
     @Column(name = "user_id", updatable = false)
     private Long id;
 
-    @Column(name = "nickname", length = 10, nullable = false)
+    @Column(name = "nickname", length = 10, nullable = false, unique = true)
     private String nickname;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @Column(name = "profile_image_url")
@@ -39,5 +39,9 @@ public class User extends BaseEntity {
 
     public static User create(String nickname, String email) {
         return new User(nickname, email);
+    }
+
+    public void updateStatus(BaseStatus status) {
+        this.status = status;
     }
 }
