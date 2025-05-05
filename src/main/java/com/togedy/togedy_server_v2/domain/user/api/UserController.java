@@ -1,8 +1,11 @@
-package com.togedy.togedy_server_v2.domain.user.controller;
+package com.togedy.togedy_server_v2.domain.user.api;
 
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
-import com.togedy.togedy_server_v2.domain.user.service.UserService;
+import com.togedy.togedy_server_v2.domain.user.application.UserService;
+import com.togedy.togedy_server_v2.domain.user.dto.LoginUserRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.LoginUserResponse;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
+import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenInfo;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,5 +40,16 @@ public class UserController {
         response.put("userId", userId);
 
         return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "간편 로그인", description = """
+            
+            이메일 기반 간편 로그인 후 JWT 토큰 발급한다.
+            
+            """)
+    @PostMapping("/login")
+    public ApiResponse<LoginUserResponse> loginUser(@Validated @RequestBody LoginUserRequest request) {
+        JwtTokenInfo tokenInfo = userService.signInUser(request.getEmail());
+        return ApiUtil.success(new LoginUserResponse(tokenInfo));
     }
 }
