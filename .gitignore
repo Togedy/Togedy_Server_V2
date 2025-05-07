@@ -202,3 +202,6 @@ gradle-app.setting
 *.hprof
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,java,intellij,gradle
+
+### application-local.yml ###
+src/main/resources/application-local.yml
