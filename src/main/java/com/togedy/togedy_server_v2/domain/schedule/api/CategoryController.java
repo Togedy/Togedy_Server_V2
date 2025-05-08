@@ -23,7 +23,7 @@ import java.util.List;
 @RequestMapping("/api/v2/calendars/categories")
 public class CategoryController {
 
-    private CategoryService categoryService;
+    private final CategoryService categoryService;
 
     @PostMapping("")
     public ApiResponse<Void> createCategory(@RequestBody PostCategoryRequest request) {
