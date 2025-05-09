@@ -1,6 +1,5 @@
 package com.togedy.togedy_server_v2.domain.user.dto;
 
-import com.togedy.togedy_server_v2.domain.user.entity.User;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -19,7 +18,4 @@ public class CreateUserRequest {
     @Email
     private String email;
 
-    public User toEntity() {
-        return User.create(nickname, email);
-    }
 }

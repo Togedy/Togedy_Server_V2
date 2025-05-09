@@ -20,16 +20,14 @@ public class UserService {
 
     @Transactional
     public Long generateUser(CreateUserRequest request) {
-        // 닉네임 중복 검사
         if (userRepository.existsByNickname(request.getNickname())) {
             throw new UserException(ErrorCode.DUPLICATED_NICKNAME);
         }
-        // 이메일 중복 검사
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new UserException(ErrorCode.DUPLICATED_EMAIL);
         }
 
-        User user = request.toEntity();
+        User user = User.create(request.getNickname(), request.getEmail());
         return userRepository.save(user).getId();
     }
 
