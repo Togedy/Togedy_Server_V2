@@ -9,14 +9,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Immutable;
 
 @Entity
-@Table(name = "admission_method")
+@Table(name = "admission_method",
+        uniqueConstraints = @UniqueConstraint(
+        columnNames = {"university_id",
+                "admission_method_name"}
+        )
+)
+@Immutable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class AdmissionMethod {
@@ -26,15 +32,11 @@ public class AdmissionMethod {
     @Column(name = "admission_method_id")
     private Long id;
 
-    @Column(name = "admission_method_name")
+    @Column(name = "admission_method_name", nullable = false)
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "university_id")
+    @JoinColumn(name = "university_id", nullable = false, updatable = false)
     private University university;
 
-    @Builder
-    private AdmissionMethod(String name) {
-        this.name = name;
-    }
 }

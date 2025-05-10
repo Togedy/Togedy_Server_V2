@@ -6,13 +6,17 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Immutable;
 
 @Entity
-@Table(name = "university")
+@Table(name = "university",
+        uniqueConstraints = @UniqueConstraint(columnNames = "university_name")
+)
+@Immutable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class University {
@@ -22,15 +26,10 @@ public class University {
     @Column(name = "university_id")
     private Long id;
 
-    @Column(name = "university_name")
+    @Column(name = "university_name", unique = true, nullable = false)
     private String name;
 
-    @Column(name = "admission_type")
+    @Column(name = "admission_type", nullable = false)
     private String admissionType;
 
-    @Builder
-    private University(String name, String admissionType) {
-        this.name = name;
-        this.admissionType = admissionType;
-    }
 }

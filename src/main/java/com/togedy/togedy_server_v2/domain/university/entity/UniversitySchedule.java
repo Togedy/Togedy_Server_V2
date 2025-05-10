@@ -10,14 +10,15 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Immutable;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "university_schedule")
+@Immutable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UniversitySchedule {
@@ -27,25 +28,17 @@ public class UniversitySchedule {
     @Column(name = "university_schedule_id")
     private Long id;
 
-    @Column(name = "admission_stage")
+    @Column(name = "admission_stage", nullable = false)
     private String admissionStage;
 
-    @Column(name = "start_date")
+    @Column(name = "start_date", columnDefinition = "DATETIME(0)", nullable = false)
     private LocalDateTime startDate;
 
-    @Column(name = "end_date")
+    @Column(name = "end_date", columnDefinition = "DATETIME(0)", nullable = false)
     private LocalDateTime endDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "admission_method_id")
+    @JoinColumn(name = "admission_method_id", nullable = false, updatable = false)
     private AdmissionMethod admissionMethod;
 
-    @Builder
-    private UniversitySchedule(String admissionStage,
-                               LocalDateTime startDate,
-                               LocalDateTime endDate) {
-        this.admissionStage = admissionStage;
-        this.startDate = startDate;
-        this.endDate = endDate;
-    }
 }
