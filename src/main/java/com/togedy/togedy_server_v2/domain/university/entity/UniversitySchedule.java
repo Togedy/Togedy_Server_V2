@@ -37,6 +37,9 @@ public class UniversitySchedule {
     @Column(name = "end_date", columnDefinition = "DATETIME(0)", nullable = false)
     private LocalDateTime endDate;
 
+    @Column(name = "academic_year", columnDefinition = "YEAR", nullable = false, updatable = false)
+    private int academicYear;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "admission_method_id", nullable = false, updatable = false)
     private AdmissionMethod admissionMethod;
