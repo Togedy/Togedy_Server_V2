@@ -19,7 +19,10 @@ public enum ErrorCode {
 
     // USER_SCHEDULE (4000)
     USER_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "US4000", "해당 개인 일정을 찾을 수 없습니다."),
-    USER_SCHEDULE_NOT_OWNED(HttpStatus.UNAUTHORIZED, "US4001", "해당 유저의 개인 일정이 아닙니다.");
+    USER_SCHEDULE_NOT_OWNED(HttpStatus.UNAUTHORIZED, "US4001", "해당 유저의 개인 일정이 아닙니다."),
+
+    // UNIVERSITY_SCHEDULE (5000)
+    UNIVERSITY_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "UNS5000", "해당 대학 일정을 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

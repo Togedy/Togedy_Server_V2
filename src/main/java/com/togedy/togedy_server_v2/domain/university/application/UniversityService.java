@@ -1,14 +1,21 @@
 package com.togedy.togedy_server_v2.domain.university.application;
 
+import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityScheduleRepository;
 import com.togedy.togedy_server_v2.domain.university.dto.AdmissionTypeDto;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityScheduleRepository;
+import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityScheduleRequest;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversitySchedule;
+import com.togedy.togedy_server_v2.domain.university.entity.UserUniversitySchedule;
+import com.togedy.togedy_server_v2.domain.university.exception.UniversityScheduleNotFoundException;
+import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
+import com.togedy.togedy_server_v2.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -22,6 +29,8 @@ import java.util.stream.Collectors;
 public class UniversityService {
 
     private final UniversityScheduleRepository universityScheduleRepository;
+    private final UserUniversityScheduleRepository userUniversityScheduleRepository;
+    private final UserRepository userRepository;
 
     public List<GetUniversityScheduleResponse> findUniversityScheduleList(String namePart) {
         List<UniversitySchedule> universitiScheduleList =
@@ -56,5 +65,27 @@ public class UniversityService {
         });
 
         return response;
+    }
+
+    @Transactional
+    public void generateUserUniversitySchedule(PostUniversityScheduleRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(RuntimeException::new);
+        List<Long> universityScheduleIdList = request.getUniversityScheduleIdList();
+        List<UniversitySchedule> universityScheduleList
+                = universityScheduleRepository.findAllById(universityScheduleIdList);
+
+        if (universityScheduleList.size() != universityScheduleIdList.size()) {
+            throw new UniversityScheduleNotFoundException();
+        }
+
+        List<UserUniversitySchedule> userUniversityScheduleList = universityScheduleList.stream()
+                .map(us -> UserUniversitySchedule.builder()
+                        .user(user)
+                        .universitySchedule(us)
+                        .build())
+                .toList();
+
+        userUniversityScheduleRepository.saveAll(userUniversityScheduleList);
     }
 }

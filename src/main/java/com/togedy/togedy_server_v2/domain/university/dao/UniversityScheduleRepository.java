@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface UniversityScheduleRepository extends JpaRepository<UniversitySchedule, Long> {
 
@@ -23,4 +24,7 @@ public interface UniversityScheduleRepository extends JpaRepository<UniversitySc
             @Param("year")      int    year
     );
 
+    Optional<UniversitySchedule> findById(Long universityScheduleId);
+
+    List<UniversitySchedule> findAllById(List<Long> universityScheduleIdList);
 }

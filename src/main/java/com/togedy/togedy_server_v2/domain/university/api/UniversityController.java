@@ -2,10 +2,13 @@ package com.togedy.togedy_server_v2.domain.university.api;
 
 import com.togedy.togedy_server_v2.domain.university.application.UniversityService;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
+import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityScheduleRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,4 +28,11 @@ public class UniversityController {
         return ApiUtil.success(response);
     }
 
+    @PostMapping("")
+    public ApiResponse<Void> createUserUniversitySchedule(
+            @RequestBody PostUniversityScheduleRequest request,
+            Long userId) {
+        universityService.generateUserUniversitySchedule(request, userId);
+        return ApiUtil.successOnly();
+    }
 }
