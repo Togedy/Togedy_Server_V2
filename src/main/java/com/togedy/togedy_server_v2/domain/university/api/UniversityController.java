@@ -6,6 +6,7 @@ import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityScheduleR
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,6 +34,14 @@ public class UniversityController {
             @RequestBody PostUniversityScheduleRequest request,
             Long userId) {
         universityService.generateUserUniversitySchedule(request, userId);
+        return ApiUtil.successOnly();
+    }
+
+    @DeleteMapping("")
+    public ApiResponse<Void> deleteUserUniversitySchedule(
+            @RequestParam List<Long> universityScheduleIdList,
+            Long userId) {
+        universityService.removeUserUniversitySchedule(universityScheduleIdList, userId);
         return ApiUtil.successOnly();
     }
 }

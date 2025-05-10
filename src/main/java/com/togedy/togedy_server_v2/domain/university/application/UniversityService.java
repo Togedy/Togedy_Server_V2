@@ -88,4 +88,20 @@ public class UniversityService {
 
         userUniversityScheduleRepository.saveAll(userUniversityScheduleList);
     }
+
+    @Transactional
+    public void removeUserUniversitySchedule(List<Long> universityScheduleIdList, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(RuntimeException::new);
+
+        List<UserUniversitySchedule> userUniversityScheduleList =
+                userUniversityScheduleRepository
+                        .findByUserAndUniversityScheduleIdIn(user, universityScheduleIdList);
+
+        if (userUniversityScheduleList.isEmpty()) {
+            throw new UniversityScheduleNotFoundException();
+        }
+
+        userUniversityScheduleRepository.deleteAll(userUniversityScheduleList);
+    }
 }
