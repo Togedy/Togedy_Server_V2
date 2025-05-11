@@ -10,6 +10,7 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.util.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -24,7 +25,7 @@ public class CalendarService {
     private final UserScheduleRepository userScheduleRepository;
     private final UserUniversityScheduleRepository userUniversityScheduleRepository;
 
-
+    @Transactional(readOnly = true)
     public GetMonthlyCalendarsResponse findMonthlyCalendar(YearMonth yearMonth, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(RuntimeException::new);
