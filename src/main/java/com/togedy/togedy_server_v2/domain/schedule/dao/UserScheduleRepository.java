@@ -21,4 +21,20 @@ public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long
             @Param("year") int year,
             @Param("month") int month
     );
+
+    @Query("""
+       SELECT us
+       FROM UserSchedule us
+       WHERE us.user.id = :userId
+       AND YEAR(us.startDate)  = :year
+       AND MONTH(us.startDate) = :month
+       AND DATE(us.startDate) = :date
+    """)
+    List<UserSchedule> findByUserIdAndYearAndMonthAndDate(
+            @Param("userId") Long userId,
+            @Param("year") int year,
+            @Param("month") int month,
+            @Param("date") int date
+    );
+
 }

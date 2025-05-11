@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
+import com.togedy.togedy_server_v2.domain.schedule.dto.GetDailyCalendarResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetMonthlyCalendarsResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.ScheduleListDto;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityScheduleRepository;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -47,5 +49,31 @@ public class CalendarService {
         );
 
         return GetMonthlyCalendarsResponse.from(scheduleList);
+    }
+
+
+    @Transactional
+    public List<GetDailyCalendarResponse> findDailyCalendar(LocalDate date, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(RuntimeException::new);
+
+
+        List<GetDailyCalendarResponse> scheduleList = new ArrayList<>(userScheduleRepository
+                .findByUserIdAndYearAndMonthAndDate(userId, date.getYear(), date.getMonthValue(), date.getDayOfMonth())
+                .stream().map(GetDailyCalendarResponse::from).toList());
+
+        scheduleList.addAll(userUniversityScheduleRepository.findByUserIdAndYearAndMonthAndDate(userId, date.getYear(), date.getMonthValue(), date.getDayOfMonth())
+                .stream().map(UserUniversitySchedule::getUniversitySchedule)
+                .map(GetDailyCalendarResponse::from)
+                .toList());
+
+        scheduleList.sort(
+                Comparator.comparingLong((GetDailyCalendarResponse schedule) ->
+                                DateTimeUtils.durationInSeconds(schedule.getStartDate(), schedule.getEndDate()))
+                        .thenComparing(GetDailyCalendarResponse::getStartDate)
+                        .reversed()
+        );
+
+        return scheduleList;
     }
 }

@@ -1,0 +1,20 @@
+package com.togedy.togedy_server_v2.domain.schedule.dto;
+
+import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
+import lombok.Builder;
+import lombok.Getter;
+
+@Getter
+@Builder
+public class CategoryDto {
+
+    private String categoryName;
+    private String categoryColor;
+
+    public static CategoryDto from(Category category) {
+        return CategoryDto.builder()
+                .categoryName(category.getName())
+                .categoryColor(category.getColor())
+                .build();
+    }
+}
