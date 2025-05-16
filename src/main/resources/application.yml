@@ -3,6 +3,7 @@ spring:
     group:
       "local": "localDB"
       "dev": "devDB"
+    active: dev
 
 ---
 server:
@@ -33,3 +34,16 @@ jwt:
   secret-key: ${JWT_SECRET_KEY}
   access-expired-in: 7200000    # 2시간
   refresh-expired-in: 604800000 # 7일
+
+swagger:
+  server:
+    url: ${SWAGGER_URL}
+
+springdoc:
+  swagger-ui:
+    path: /api-test
+    groups-order: DESC
+    tags-sorter: alpha
+    operations-sorter: default
+    persist-authorization: true
+    display-request-duration: true
