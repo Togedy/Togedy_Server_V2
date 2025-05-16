@@ -4,9 +4,11 @@ import com.togedy.togedy_server_v2.domain.schedule.application.CalendarService;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetDailyCalendarResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetMonthlyCalendarsResponse;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
+import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,16 +28,16 @@ public class CalendarController {
     @GetMapping("/monthly")
     public ApiResponse<GetMonthlyCalendarsResponse> readMonthlyCalendar(
             @RequestParam @DateTimeFormat(pattern = "yyyy-mm") YearMonth month,
-            Long userId) {
-        GetMonthlyCalendarsResponse response = calendarService.findMonthlyCalendar(month, userId);
+            @AuthenticationPrincipal AuthUser user) {
+        GetMonthlyCalendarsResponse response = calendarService.findMonthlyCalendar(month, user.getId());
         return ApiUtil.success(response);
     }
 
     @GetMapping("/daily")
     public ApiResponse<List<GetDailyCalendarResponse>> readDailyCalendar(
             @RequestParam @DateTimeFormat(pattern = "yyyy-mm-dd") LocalDate date,
-            Long userId) {
-        List<GetDailyCalendarResponse> response = calendarService.findDailyCalendar(date, userId);
+            @AuthenticationPrincipal AuthUser user) {
+        List<GetDailyCalendarResponse> response = calendarService.findDailyCalendar(date, user.getId());
         return ApiUtil.success(response);
     }
 }

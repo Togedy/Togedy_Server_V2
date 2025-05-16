@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,9 +26,9 @@ public class CategoryService {
     private final UserRepository userRepository;
 
     @Transactional
-    public void generateCategory(PostCategoryRequest request) {
-        // 더미 유저, 이후 변경
-        User user = new User("dummy", "dummy");
+    public void generateCategory(PostCategoryRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(RuntimeException::new);
 
         if (categoryRepository.existsByColorAndName(request.getCategoryName(), request.getCategoryColor())) {
             throw new DuplicateCategoryException();
@@ -39,6 +40,8 @@ public class CategoryService {
 
     @Transactional(readOnly = true)
     public List<GetCategoryResponse> findAllCategoriesByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(RuntimeException::new);
         List<Category> categoryList = categoryRepository.findAllByUserId(userId);
 
         return categoryList.stream()

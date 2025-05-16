@@ -5,8 +5,10 @@ import com.togedy.togedy_server_v2.domain.schedule.dto.GetCategoryResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.PatchCategoryRequest;
 import com.togedy.togedy_server_v2.domain.schedule.dto.PostCategoryRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
+import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -26,8 +28,9 @@ public class CategoryController {
     private final CategoryService categoryService;
 
     @PostMapping("")
-    public ApiResponse<Void> createCategory(@RequestBody PostCategoryRequest request) {
-        categoryService.generateCategory(request);
+    public ApiResponse<Void> createCategory(@RequestBody PostCategoryRequest request,
+                                            @AuthenticationPrincipal AuthUser user) {
+        categoryService.generateCategory(request, user.getId());
         return ApiUtil.successOnly();
     }
 

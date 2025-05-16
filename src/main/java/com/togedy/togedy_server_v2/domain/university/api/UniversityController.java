@@ -4,8 +4,10 @@ import com.togedy.togedy_server_v2.domain.university.application.UniversityServi
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
 import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityScheduleRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
+import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,16 +34,16 @@ public class UniversityController {
     @PostMapping("")
     public ApiResponse<Void> createUserUniversitySchedule(
             @RequestBody PostUniversityScheduleRequest request,
-            Long userId) {
-        universityService.generateUserUniversitySchedule(request, userId);
+            @AuthenticationPrincipal AuthUser user) {
+        universityService.generateUserUniversitySchedule(request, user.getId());
         return ApiUtil.successOnly();
     }
 
     @DeleteMapping("")
     public ApiResponse<Void> deleteUserUniversitySchedule(
             @RequestParam List<Long> universityScheduleIdList,
-            Long userId) {
-        universityService.removeUserUniversitySchedule(universityScheduleIdList, userId);
+            @AuthenticationPrincipal AuthUser user) {
+        universityService.removeUserUniversitySchedule(universityScheduleIdList, user.getId());
         return ApiUtil.successOnly();
     }
 }

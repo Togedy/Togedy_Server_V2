@@ -5,8 +5,10 @@ import com.togedy.togedy_server_v2.domain.schedule.application.UserScheduleServi
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetUserScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.PostUserScheduleRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
+import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -24,28 +26,31 @@ public class UserScheduleController {
     private final UserScheduleService userScheduleService;
 
     @PostMapping("")
-    public ApiResponse<Void> createUserSchedule(@RequestBody PostUserScheduleRequest request, Long userId) {
-        userScheduleService.generateUserSchedule(request, userId);
+    public ApiResponse<Void> createUserSchedule(@RequestBody PostUserScheduleRequest request,
+                                                @AuthenticationPrincipal AuthUser user) {
+        userScheduleService.generateUserSchedule(request, user.getId());
         return ApiUtil.successOnly();
     }
 
     @GetMapping("/{userScheduleId}")
-    public ApiResponse<GetUserScheduleResponse> readUserSchedule(@PathVariable Long userScheduleId, Long userId) {
-        GetUserScheduleResponse response = userScheduleService.findUserSchedule(userScheduleId, userId);
+    public ApiResponse<GetUserScheduleResponse> readUserSchedule(@PathVariable Long userScheduleId,
+                                                                 @AuthenticationPrincipal AuthUser user) {
+        GetUserScheduleResponse response = userScheduleService.findUserSchedule(userScheduleId, user.getId());
         return ApiUtil.success(response);
     }
 
     @PatchMapping("/{userScheduleId}")
     public ApiResponse<Void> updateUserSchedule(@RequestBody PatchUserScheduleRequest request,
                                                 @PathVariable Long userScheduleId,
-                                                Long userId) {
-        userScheduleService.modifyUserSchedule(request, userScheduleId, userId);
+                                                @AuthenticationPrincipal AuthUser user) {
+        userScheduleService.modifyUserSchedule(request, userScheduleId, user.getId());
         return ApiUtil.successOnly();
     }
 
     @DeleteMapping("/{userScheduleId}")
-    public ApiResponse<Void> deleteUserSchedule(@PathVariable Long userScheduleId, Long userId) {
-        userScheduleService.removeUserSchedule(userScheduleId, userId);
+    public ApiResponse<Void> deleteUserSchedule(@PathVariable Long userScheduleId,
+                                                @AuthenticationPrincipal AuthUser user) {
+        userScheduleService.removeUserSchedule(userScheduleId, user.getId());
         return ApiUtil.successOnly();
     }
 }
