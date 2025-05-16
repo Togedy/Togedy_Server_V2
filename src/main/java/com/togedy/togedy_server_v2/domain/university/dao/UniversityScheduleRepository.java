@@ -25,6 +25,4 @@ public interface UniversityScheduleRepository extends JpaRepository<UniversitySc
     );
 
     Optional<UniversitySchedule> findById(Long universityScheduleId);
-
-    List<UniversitySchedule> findAllById(List<Long> universityScheduleIdList);
 }
