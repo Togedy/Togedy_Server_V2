@@ -27,7 +27,7 @@ public class CalendarController {
 
     @GetMapping("/monthly")
     public ApiResponse<GetMonthlyCalendarsResponse> readMonthlyCalendar(
-            @RequestParam @DateTimeFormat(pattern = "yyyy-mm") YearMonth month,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
             @AuthenticationPrincipal AuthUser user) {
         GetMonthlyCalendarsResponse response = calendarService.findMonthlyCalendar(month, user.getId());
         return ApiUtil.success(response);

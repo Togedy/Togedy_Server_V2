@@ -17,7 +17,9 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -36,10 +38,18 @@ public class CalendarService {
                 .findByUserIdAndYearAndMonth(userId, yearMonth.getYear(), yearMonth.getMonthValue())
                 .stream().map(ScheduleListDto::from).toList());
 
+        Set<String> seen = new HashSet<>();
         scheduleList.addAll(userUniversityScheduleRepository.findByUserAndYearAndMonth(userId, yearMonth.getYear(), yearMonth.getMonthValue())
                         .stream().map(UserUniversitySchedule::getUniversitySchedule)
                         .map(ScheduleListDto::from)
-                        .toList());
+                        .filter(dto -> {
+                            String key = dto.getStartDate() + "|" +
+                                    dto.getEndDate()   + "|" +
+                                    dto.getScheduleName() + "|" +
+                                    dto.getUniversityAdmissionStage();
+                    return seen.add(key);
+                })
+                .toList());
 
         scheduleList.sort(
                 Comparator.comparingLong((ScheduleListDto schedule) ->
