@@ -35,7 +35,7 @@ public class CalendarController {
 
     @GetMapping("/daily")
     public ApiResponse<List<GetDailyCalendarResponse>> readDailyCalendar(
-            @RequestParam @DateTimeFormat(pattern = "yyyy-mm-dd") LocalDate date,
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
             @AuthenticationPrincipal AuthUser user) {
         List<GetDailyCalendarResponse> response = calendarService.findDailyCalendar(date, user.getId());
         return ApiUtil.success(response);

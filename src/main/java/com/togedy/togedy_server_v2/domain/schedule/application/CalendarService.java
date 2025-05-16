@@ -67,14 +67,21 @@ public class CalendarService {
         User user = userRepository.findById(userId)
                 .orElseThrow(RuntimeException::new);
 
-
         List<GetDailyCalendarResponse> scheduleList = new ArrayList<>(userScheduleRepository
-                .findByUserIdAndYearAndMonthAndDate(userId, date.getYear(), date.getMonthValue(), date.getDayOfMonth())
+                .findByUserIdAndDate(userId, date)
                 .stream().map(GetDailyCalendarResponse::from).toList());
 
-        scheduleList.addAll(userUniversityScheduleRepository.findByUserIdAndYearAndMonthAndDate(userId, date.getYear(), date.getMonthValue(), date.getDayOfMonth())
+        Set<String> seen = new HashSet<>();
+        scheduleList.addAll(userUniversityScheduleRepository.findByUserIdAndDate(userId, date)
                 .stream().map(UserUniversitySchedule::getUniversitySchedule)
                 .map(GetDailyCalendarResponse::from)
+                .filter(dto -> {
+                    String key = dto.getStartDate() + "|" +
+                            dto.getEndDate()   + "|" +
+                            dto.getScheduleName() + "|" +
+                            dto.getUniversityAdmissionStage();
+                    return seen.add(key);
+                })
                 .toList());
 
         scheduleList.sort(

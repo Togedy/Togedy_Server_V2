@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long> {
@@ -26,15 +27,11 @@ public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long
        SELECT us
        FROM UserSchedule us
        WHERE us.user.id = :userId
-       AND YEAR(us.startDate)  = :year
-       AND MONTH(us.startDate) = :month
        AND DATE(us.startDate) = :date
     """)
-    List<UserSchedule> findByUserIdAndYearAndMonthAndDate(
+    List<UserSchedule> findByUserIdAndDate(
             @Param("userId") Long userId,
-            @Param("year") int year,
-            @Param("month") int month,
-            @Param("date") int date
+            @Param("date") LocalDate date
     );
 
 }
