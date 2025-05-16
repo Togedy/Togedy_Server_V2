@@ -34,7 +34,7 @@ public class UniversitySchedule {
     @Column(name = "start_date", columnDefinition = "DATETIME(0)", nullable = false)
     private LocalDateTime startDate;
 
-    @Column(name = "end_date", columnDefinition = "DATETIME(0)", nullable = false)
+    @Column(name = "end_date", columnDefinition = "DATETIME(0)", nullable = true)
     private LocalDateTime endDate;
 
     @Column(name = "academic_year", columnDefinition = "YEAR", nullable = false, updatable = false)
