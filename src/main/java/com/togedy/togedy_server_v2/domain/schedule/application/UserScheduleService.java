@@ -16,8 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-
 @Service
 @RequiredArgsConstructor
 public class UserScheduleService {
@@ -35,20 +33,17 @@ public class UserScheduleService {
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(CategoryNotFoundException::new);
 
-        LocalDateTime startDate = LocalDateTime.parse(request.getStartDate());
-        LocalDateTime endDate = LocalDateTime.parse(request.getEndDate());
-
-        UserSchedule userSchedule = new UserSchedule(
-                user,
-                category,
-                request.getUserScheduleName(),
-                request.getMemo(),
-                startDate,
-                request.isAllDayStart(),
-                endDate,
-                request.isAllDayEnd(),
-                request.isDDay()
-        );
+        UserSchedule userSchedule = UserSchedule.builder()
+                .user(user)
+                .category(category)
+                .name(request.getUserScheduleName())
+                .memo(request.getMemo())
+                .startDate(request.getStartDate())
+                .startTime(request.getStartTime())
+                .endDate(request.getEndDate())
+                .endTime(request.getEndTime())
+                .dDay(request.isDDay())
+                .build();
 
         userScheduleRepository.save(userSchedule);
     }

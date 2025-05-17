@@ -17,7 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -89,16 +88,19 @@ public class UserSchedule {
             this.memo = request.getMemo();
         }
         if (request.getStartDate() != null) {
-            this.startDate = LocalDateTime.parse(request.getStartDate());
+            this.startDate = request.getStartDate();
         }
-        if (request.getAllDayStart() != null) {
-            this.startDate = LocalDateTime.parse(request.getStartDate());
+        if (request.getStartTime() != null) {
+            this.startTime = request.getStartTime();
         }
         if (request.getEndDate() != null) {
-            this.startDate = LocalDateTime.parse(request.getStartDate());
+            this.endDate = request.getEndDate();
         }
-        if (request.getAllDayEnd() != null) {
-            this.startDate = LocalDateTime.parse(request.getStartDate());
+        if (request.getEndTime() != null) {
+            this.endTime = request.getEndTime();
+        }
+        if (request.getDDay() != null) {
+            this.dDay = request.getDDay();
         }
     }
 
