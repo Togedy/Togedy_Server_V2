@@ -8,13 +8,20 @@ import lombok.Getter;
 @Builder
 public class CategoryDto {
 
+    private Long categoryId;
     private String categoryName;
     private String categoryColor;
 
     public static CategoryDto from(Category category) {
         return CategoryDto.builder()
+                .categoryId(category.getId())
                 .categoryName(category.getName())
                 .categoryColor(category.getColor())
+                .build();
+    }
+
+    public static CategoryDto temp() {
+        return CategoryDto.builder()
                 .build();
     }
 }
