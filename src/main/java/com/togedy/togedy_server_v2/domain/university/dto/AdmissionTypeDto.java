@@ -1,6 +1,5 @@
 package com.togedy.togedy_server_v2.domain.university.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 

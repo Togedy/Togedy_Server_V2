@@ -13,7 +13,8 @@ public interface UniversityScheduleRepository extends JpaRepository<UniversitySc
     @Query("""
         SELECT us
         FROM UniversitySchedule us
-        JOIN FETCH us.admissionMethod am
+        JOIN FETCH us.admissionScheduleList asl
+        JOIN FETCH asl.admissionMethod am
         JOIN FETCH am.university u
         WHERE u.name LIKE CONCAT('%', :namePart, '%')
         AND us.academicYear = :year

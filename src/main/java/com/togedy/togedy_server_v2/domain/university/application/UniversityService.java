@@ -6,6 +6,7 @@ import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleRe
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityScheduleRepository;
 import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityScheduleRequest;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
+import com.togedy.togedy_server_v2.domain.university.entity.AdmissionSchedule;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversitySchedule;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversitySchedule;
@@ -32,34 +33,37 @@ public class UniversityService {
     private final UserUniversityScheduleRepository userUniversityScheduleRepository;
     private final UserRepository userRepository;
 
-    public List<GetUniversityScheduleResponse> findUniversityScheduleList(String namePart) {
-        List<UniversitySchedule> universitiScheduleList =
-                universityScheduleRepository.findByUniversityNameLikeAndYear(namePart, 2025);
+    private static final int ACADEMIC_YEAR = 2025;
 
-        Map<University, List<UniversitySchedule>> universityListMap = universitiScheduleList.stream()
+    public List<GetUniversityScheduleResponse> findUniversityScheduleList(String name) {
+        List<UniversitySchedule> universitiScheduleList =
+                universityScheduleRepository.findByUniversityNameLikeAndYear(name, ACADEMIC_YEAR);
+
+        List<AdmissionSchedule> admissionScheduleList = universitiScheduleList.stream()
+                .flatMap(us -> us.getAdmissionScheduleList().stream())
+                .toList();
+
+        Map<University, List<AdmissionSchedule>> universityListMap = admissionScheduleList.stream()
                 .collect(Collectors.groupingBy(
-                        us -> us.getAdmissionMethod().getUniversity(),
+                        admissionSchedule -> admissionSchedule.getAdmissionMethod().getUniversity(),
                         LinkedHashMap::new,
                         Collectors.toList()
                 ));
 
         List<GetUniversityScheduleResponse> response = new ArrayList<>();
-        universityListMap.forEach((uni, schedules) -> {
-            Map<String, List<UniversitySchedule>> admissionListMap = schedules.stream()
+        universityListMap.forEach((uni, scheduleList) -> {
+            List<AdmissionTypeDto> admissionList = scheduleList.stream()
                     .collect(Collectors.groupingBy(
-                            us -> us.getAdmissionMethod().getName(),
+                            schedule -> schedule.getAdmissionMethod().getName(),      // key: 전형 이름
                             LinkedHashMap::new,
-                            Collectors.toList()
-                    ));
-
-            List<AdmissionTypeDto> admissionList = admissionListMap.entrySet().stream()
-                    .map(e -> {
-                        List<UniversityScheduleDto> scheduleDtoList = e.getValue().stream()
-                                .map(UniversityScheduleDto::from)
-                                .collect(Collectors.toList());
-                        return AdmissionTypeDto.of(e.getKey(), scheduleDtoList);
-                    })
-                    .collect(Collectors.toList());
+                            Collectors.mapping(
+                                    schedule -> UniversityScheduleDto.from(schedule.getUniversitySchedule()),  // value: 스케줄 DTO
+                                    Collectors.toList()
+                            )
+                    ))
+                    .entrySet().stream()
+                    .map(e -> AdmissionTypeDto.of(e.getKey(), e.getValue()))
+                    .toList();
 
             response.add(GetUniversityScheduleResponse.of(uni, admissionList));
         });
