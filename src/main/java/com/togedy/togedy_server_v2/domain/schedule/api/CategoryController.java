@@ -35,22 +35,23 @@ public class CategoryController {
     }
 
     @GetMapping("")
-    public ApiResponse<List<GetCategoryResponse>> readAllCategories(Long userId) {
-        List<GetCategoryResponse> response = categoryService.findAllCategoriesByUserId(userId);
+    public ApiResponse<List<GetCategoryResponse>> readAllCategories(@AuthenticationPrincipal AuthUser user) {
+        List<GetCategoryResponse> response = categoryService.findAllCategoriesByUserId(user.getId());
         return ApiUtil.success(response);
     }
 
     @PatchMapping("/{categoryId}")
     public ApiResponse<Void> updateCategory(@RequestBody PatchCategoryRequest request,
                                             @PathVariable Long categoryId,
-                                            Long userId) {
-        categoryService.modifyCategory(request, categoryId, userId);
+                                            @AuthenticationPrincipal AuthUser user) {
+        categoryService.modifyCategory(request, categoryId, user.getId());
         return ApiUtil.successOnly();
     }
 
     @DeleteMapping("/{categoryId}")
-    public ApiResponse<Void> deleteCategory(@PathVariable Long categoryId, Long userId) {
-        categoryService.removeCategory(categoryId, userId);
+    public ApiResponse<Void> deleteCategory(@PathVariable Long categoryId,
+                                            @AuthenticationPrincipal AuthUser user) {
+        categoryService.removeCategory(categoryId, user.getId());
         return ApiUtil.successOnly();
     }
 
