@@ -18,6 +18,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "user_schedule")
@@ -27,28 +28,28 @@ public class UserSchedule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_schedule_id")
+    @Column(name = "user_schedule_id", nullable = false)
     private Long id;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     private String name;
 
     @Column(name = "memo")
     private String memo;
 
-    @Column(name = "start_date")
-    private LocalDateTime startDate;
+    @Column(name = "start_date", nullable = false)
+    private LocalDate startDate;
+
+    @Column(name = "start_time")
+    private LocalTime startTime;
 
     @Column(name = "end_date")
-    private LocalDateTime endDate;
+    private LocalDate endDate;
 
-    @Column(name = "is_all_day_start")
-    private boolean allDayStart;
+    @Column(name = "end_time")
+    private LocalTime endTime;
 
-    @Column(name = "is_all_day_end")
-    private boolean allDayEnd;
-
-    @Column(name = "is_d_day")
+    @Column(name = "is_d_day", nullable = false)
     private boolean dDay;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -64,20 +65,19 @@ public class UserSchedule {
                         Category category,
                         String name,
                         String memo,
-                        LocalDateTime startDate,
-                        boolean allDayStart,
-                        LocalDateTime endDate,
-                        boolean allDayEnd,
+                        LocalDate startDate,
+                        LocalTime startTime,
+                        LocalDate endDate,
+                        LocalTime endTime,
                         boolean dDay) {
-
         this.user = user;
         this.category = category;
         this.name = name;
         this.memo = memo;
         this.startDate = startDate;
-        this.allDayStart = allDayStart;
+        this.startTime = startTime;
         this.endDate = endDate;
-        this.allDayEnd = allDayEnd;
+        this.endTime = endTime;
         this.dDay = dDay;
     }
 

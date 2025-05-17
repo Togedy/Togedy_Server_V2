@@ -13,7 +13,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Immutable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,11 +34,17 @@ public class UniversitySchedule {
     @Column(name = "admission_stage", nullable = false)
     private String admissionStage;
 
-    @Column(name = "start_date", columnDefinition = "DATETIME(0)", nullable = false)
-    private LocalDateTime startDate;
+    @Column(name = "start_date", nullable = false)
+    private LocalDate startDate;
 
-    @Column(name = "end_date", columnDefinition = "DATETIME(0)", nullable = true)
-    private LocalDateTime endDate;
+    @Column(name = "start_time")
+    private LocalTime startTime;
+
+    @Column(name = "end_date")
+    private LocalDate endDate;
+
+    @Column(name = "end_time")
+    private LocalTime endTime;
 
     @Column(name = "academic_year", columnDefinition = "YEAR", nullable = false, updatable = false)
     private int academicYear;
