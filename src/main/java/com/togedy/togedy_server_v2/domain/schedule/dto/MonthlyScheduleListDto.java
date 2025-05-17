@@ -1,8 +1,10 @@
 package com.togedy.togedy_server_v2.domain.schedule.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleType;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.domain.university.entity.AdmissionSchedule;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -15,10 +17,14 @@ public class MonthlyScheduleListDto {
 
     private LocalDate startDate;
 
+    @Schema(type = "string", format = "time", example = "00:00:00")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime startTime;
 
     private LocalDate endDate;
 
+    @Schema(type = "string", format = "time", example = "00:00:00")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime endTime;
 
     private String scheduleName;

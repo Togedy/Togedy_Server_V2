@@ -42,7 +42,7 @@ public class UserScheduleService {
                 .startTime(request.getStartTime())
                 .endDate(request.getEndDate())
                 .endTime(request.getEndTime())
-                .dDay(request.isDDay())
+                .dDay(request.getDDay())
                 .build();
 
         userScheduleRepository.save(userSchedule);

@@ -1,8 +1,9 @@
 package com.togedy.togedy_server_v2.domain.schedule.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,25 +15,28 @@ import java.time.LocalTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PatchUserScheduleRequest {
 
+    @NotBlank
     private String userScheduleName;
 
+    @NotNull
     private LocalDate startDate;
 
-    @Schema(type = "string", format = "time", example = "00:00:00")
+    @Schema(type = "string", format = "time", example = "00:00")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime startTime;
 
     private LocalDate endDate;
 
-    @Schema(type = "string", format = "time", example = "00:00:00")
+    @Schema(type = "string", format = "time", example = "00:00")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime endTime;
 
+    @NotNull
     private Long categoryId;
 
     private String memo;
 
-    @JsonProperty("d-day")
+    @NotNull
     private Boolean dDay;
 
 }
