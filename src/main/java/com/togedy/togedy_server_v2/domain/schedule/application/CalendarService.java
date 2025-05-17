@@ -62,7 +62,7 @@ public class CalendarService {
 
         scheduleList.sort(Comparator.<MonthlyScheduleListDto>comparingLong(dto ->
                         DateTimeUtils.durationInSeconds(dto.getStartDate(), dto.getStartTime(),
-                        dto.getEndDate(),   dto.getEndTime())).reversed()
+                        dto.getEndDate(),   dto.getEndTime()))
                 .thenComparing(dto -> DateTimeUtils.toStartDateTime(dto.getStartDate(), dto.getStartTime()))
                 .reversed()
         );
@@ -101,7 +101,7 @@ public class CalendarService {
 
         scheduleList.sort(Comparator.<DailyScheduleListDto>comparingLong(dto ->
                                 DateTimeUtils.durationInSeconds(dto.getStartDate(), dto.getStartTime(),
-                                        dto.getEndDate(),   dto.getEndTime())).reversed()
+                                        dto.getEndDate(),   dto.getEndTime()))
                         .thenComparing(dto -> DateTimeUtils.toStartDateTime(dto.getStartDate(), dto.getStartTime()))
                 .reversed()
         );
