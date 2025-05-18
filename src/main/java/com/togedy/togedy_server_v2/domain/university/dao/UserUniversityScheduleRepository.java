@@ -21,7 +21,7 @@ public interface UserUniversityScheduleRepository extends JpaRepository<UserUniv
       AND YEAR(us.startDate) = :year
       AND MONTH(us.startDate) = :month
     """)
-    List<UserUniversitySchedule> findByUserAndYearAndMonth(
+    List<UserUniversitySchedule> findByUserIdAndYearAndMonth(
             @Param("userId") Long userId,
             @Param("year")   int  year,
             @Param("month")  int  month

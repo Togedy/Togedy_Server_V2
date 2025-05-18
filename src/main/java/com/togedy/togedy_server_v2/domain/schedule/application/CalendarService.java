@@ -42,7 +42,7 @@ public class CalendarService {
                 .toList();
 
         List<MonthlyScheduleListDto> universitySchedule = userUniversityScheduleRepository
-                .findByUserAndYearAndMonth(userId, yearMonth.getYear(), yearMonth.getMonthValue())
+                .findByUserIdAndYearAndMonth(userId, yearMonth.getYear(), yearMonth.getMonthValue())
                 .stream()
                 .flatMap(uus -> uus.getUniversitySchedule()
                         .getAdmissionScheduleList().stream())
