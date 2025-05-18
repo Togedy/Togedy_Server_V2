@@ -38,4 +38,11 @@ public interface UserUniversityScheduleRepository extends JpaRepository<UserUniv
             @Param("userId") Long userId,
             @Param("date") LocalDate date
     );
+
+    @Query("""
+        SELECT uus.universitySchedule.id
+        FROM UserUniversitySchedule uus
+        WHERE uus.user.id = :userId
+        """)
+    List<Long> findAddedUniversityScheduleIds(@Param("userId") Long userId);
 }
