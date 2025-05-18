@@ -28,8 +28,9 @@ public class UniversityController {
     @GetMapping("")
     public ApiResponse<List<GetUniversityScheduleResponse>> readUniversityScheduleList(
             @RequestParam(name = "name") String name,
+            @RequestParam(name = "admission-type", required = false) String admissionType,
             @AuthenticationPrincipal AuthUser user){
-        List<GetUniversityScheduleResponse> response = universityService.findUniversityScheduleList(name, user.getId());
+        List<GetUniversityScheduleResponse> response = universityService.findUniversityScheduleList(name, admissionType, user.getId());
         return ApiUtil.success(response);
     }
 

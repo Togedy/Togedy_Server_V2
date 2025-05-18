@@ -11,6 +11,7 @@ import com.togedy.togedy_server_v2.domain.university.entity.AdmissionSchedule;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversitySchedule;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversitySchedule;
+import com.togedy.togedy_server_v2.domain.university.exception.InvalidAdmissionTypeException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityScheduleNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
@@ -23,7 +24,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -41,20 +41,22 @@ public class UniversityService {
     private static final int ACADEMIC_YEAR = 2025;
 
     @Transactional(readOnly = true)
-    public List<GetUniversityScheduleResponse> findUniversityScheduleList(String name, Long userId) {
-        // 1) AdmissionSchedule + fetch join 한 번 호출
-        List<AdmissionSchedule> schedules =
-                admissionScheduleRepository.findAllWithUserFlag(userId, name, ACADEMIC_YEAR);
+    public List<GetUniversityScheduleResponse> findUniversityScheduleList(String name, String admissionType, Long userId) {
 
-        // 2) 사용자가 추가한 스케줄 ID 세트 조회 (한 번 호출)
-        Set<Long> addedIds = new HashSet<>(
+        if (!admissionType.isBlank() || admissionType.equals("수시") || !admissionType.equals("정시")) {
+            throw new InvalidAdmissionTypeException();
+        }
+
+        List<AdmissionSchedule> schedules =
+                admissionScheduleRepository.findAllWithUserFlag(userId, name, ACADEMIC_YEAR, admissionType);
+
+        Set<Long> ownedUniversityScheduleIds = new HashSet<>(
                 userUniversityScheduleRepository.findAddedUniversityScheduleIds(userId)
         );
 
-        // 3) (대학 → AdmissionMethod 이름) 단위로 그룹핑
         return schedules.stream()
                 .collect(Collectors.groupingBy(
-                        asch -> asch.getAdmissionMethod().getUniversity(),
+                        admissionSchedule -> admissionSchedule.getAdmissionMethod().getUniversity(),
                         LinkedHashMap::new,
                         Collectors.toList()
                 ))
@@ -63,7 +65,6 @@ public class UniversityService {
                     University uni = univEntry.getKey();
                     List<AdmissionSchedule> schedList = univEntry.getValue();
 
-                    // 4) 전형별 Schedule DTO 묶기 (각 그룹 내에서 ID 기준 중복 제거)
                     List<AdmissionTypeDto> admissionList = schedList.stream()
                             .collect(Collectors.groupingBy(
                                     as -> as.getAdmissionMethod().getName(),
@@ -78,8 +79,7 @@ public class UniversityService {
                                 String admissionName = admEntry.getKey();
                                 List<UniversitySchedule> usList = admEntry.getValue();
 
-                                // AdmissionMethod별로 중복된 스케줄(ID 동일)은 첫 건만 유지
-                                List<UniversityScheduleDto> dtos = new ArrayList<>(
+                                List<UniversityScheduleDto> universityScheduleDtos = new ArrayList<>(
                                         usList.stream()
                                                 .collect(Collectors.toMap(
                                                         UniversitySchedule::getId,
@@ -92,17 +92,15 @@ public class UniversityService {
                                                 .toList()
                                 );
 
-                                return AdmissionTypeDto.of(admissionName, dtos);
+                                return AdmissionTypeDto.of(admissionName, universityScheduleDtos);
                             })
                             .toList();
 
-                    // 5) 이 대학(모든 전형)에 속한 스케줄 ID 집합을 따로 구해서 isAdded 계산
                     Set<Long> uniScheduleIds = schedList.stream()
                             .map(as -> as.getUniversitySchedule().getId())
                             .collect(Collectors.toSet());
 
-                    boolean isAdded = uniScheduleIds.stream()
-                            .allMatch(addedIds::contains);
+                    boolean isAdded = ownedUniversityScheduleIds.containsAll(uniScheduleIds);
 
                     return GetUniversityScheduleResponse.of(uni, admissionList, isAdded);
                 })

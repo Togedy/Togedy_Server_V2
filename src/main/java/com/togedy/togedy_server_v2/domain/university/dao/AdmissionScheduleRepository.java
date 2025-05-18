@@ -19,10 +19,12 @@ public interface AdmissionScheduleRepository extends JpaRepository<AdmissionSche
         WITH uus.user.id = :userId
     WHERE u.name LIKE CONCAT('%', :name, '%')
       AND us.academicYear = :year
+      AND (:admissionType IS NULL OR u.admissionType = :admissionType)
     """)
     List<AdmissionSchedule> findAllWithUserFlag(
             @Param("userId") Long userId,
-            @Param("name")   String name,
-            @Param("year")   Integer year
+            @Param("name") String name,
+            @Param("year") int year,
+            @Param("admissionType") String admissionType
     );
 }
