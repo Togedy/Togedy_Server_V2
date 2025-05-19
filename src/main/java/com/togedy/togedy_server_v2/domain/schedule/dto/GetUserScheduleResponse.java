@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.schedule.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,6 +13,7 @@ import java.time.LocalTime;
 
 @Getter
 @Builder
+@JsonIgnoreProperties({"dday"})
 public class GetUserScheduleResponse {
 
     private String userScheduleName;
@@ -32,7 +34,9 @@ public class GetUserScheduleResponse {
 
     private String memo;
 
-    private Boolean dDay;
+    @JsonProperty("d-day")
+    @Schema(name = "d-day", type = "boolean")
+    private boolean dDay;
 
     public static GetUserScheduleResponse from(UserSchedule userSchedule) {
         return GetUserScheduleResponse.builder()
