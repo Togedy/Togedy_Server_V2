@@ -61,7 +61,7 @@ public class CalendarService {
                 .findByUserIdAndYearAndMonth(userId, month.getYear(), month.getMonthValue())
                 .stream()
                 .map(MonthlyScheduleListDto::from)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private List<MonthlyScheduleListDto> findMonthlyUniversitySchedule(Long userId, YearMonth month) {
@@ -85,7 +85,7 @@ public class CalendarService {
                 .findByUserIdAndDate(userId, date)
                 .stream()
                 .map(DailyScheduleListDto::from)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     private List<DailyScheduleListDto> findDailyUniversitySchedule(Long userId, LocalDate date) {
