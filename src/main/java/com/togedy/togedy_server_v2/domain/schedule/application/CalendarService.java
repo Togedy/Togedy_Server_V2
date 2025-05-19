@@ -5,6 +5,7 @@ import com.togedy.togedy_server_v2.domain.schedule.dto.DailyScheduleListDto;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetDailyCalendarResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetMonthlyCalendarResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.MonthlyScheduleListDto;
+import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityScheduleRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
@@ -31,23 +32,45 @@ public class CalendarService {
     private final UserUniversityScheduleRepository userUniversityScheduleRepository;
 
     @Transactional(readOnly = true)
-    public GetMonthlyCalendarResponse findMonthlyCalendar(YearMonth yearMonth, Long userId) {
+    public GetMonthlyCalendarResponse findMonthlyCalendar(YearMonth month, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(RuntimeException::new);
 
-        List<MonthlyScheduleListDto> userSchedule = userScheduleRepository
-                .findByUserIdAndYearAndMonth(userId, yearMonth.getYear(), yearMonth.getMonthValue())
+        List<MonthlyScheduleListDto> monthlyUserSchedule = findMonthlyUserSchedule(userId, month);
+        monthlyUserSchedule.addAll(findMonthlyUniversitySchedule(userId, month));
+        monthlyUserSchedule.sort(scheduleComparator());
+
+        return GetMonthlyCalendarResponse.from(monthlyUserSchedule);
+    }
+
+    @Transactional(readOnly = true)
+    public GetDailyCalendarResponse findDailyCalendar(LocalDate date, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(RuntimeException::new);
+
+        List<DailyScheduleListDto> dailyScheduleList = new ArrayList<>(findDailyUserSchedule(userId, date));
+        dailyScheduleList.addAll(findDailyUniversitySchedule(userId, date));
+        dailyScheduleList.sort(scheduleComparator());
+
+        return GetDailyCalendarResponse.from(dailyScheduleList);
+    }
+
+
+    private List<MonthlyScheduleListDto> findMonthlyUserSchedule(Long userId, YearMonth month) {
+        return userScheduleRepository
+                .findByUserIdAndYearAndMonth(userId, month.getYear(), month.getMonthValue())
                 .stream()
                 .map(MonthlyScheduleListDto::from)
                 .toList();
+    }
 
-        List<MonthlyScheduleListDto> universitySchedule = userUniversityScheduleRepository
-                .findByUserIdAndYearAndMonth(userId, yearMonth.getYear(), yearMonth.getMonthValue())
+    private List<MonthlyScheduleListDto> findMonthlyUniversitySchedule(Long userId, YearMonth month) {
+        return userUniversityScheduleRepository
+                .findByUserIdAndYearAndMonth(userId, month.getYear(), month.getMonthValue())
                 .stream()
-                .flatMap(uus -> uus.getUniversitySchedule()
-                        .getAdmissionScheduleList().stream())
+                .flatMap(uus -> uus.getUniversitySchedule().getAdmissionScheduleList().stream())
                 .collect(Collectors.toMap(
-                        pivot -> pivot.getUniversitySchedule().getId(),
+                        as -> as.getUniversitySchedule().getId(),
                         Function.identity(),
                         (first, second) -> first,
                         LinkedHashMap::new
@@ -55,38 +78,23 @@ public class CalendarService {
                 .values().stream()
                 .map(MonthlyScheduleListDto::from)
                 .toList();
-
-        List<MonthlyScheduleListDto> scheduleList = new ArrayList<>();
-        scheduleList.addAll(userSchedule);
-        scheduleList.addAll(universitySchedule);
-
-        scheduleList.sort(Comparator.<MonthlyScheduleListDto>comparingLong(dto ->
-                        DateTimeUtils.durationInSeconds(dto.getStartDate(), dto.getStartTime(),
-                        dto.getEndDate(),   dto.getEndTime()))
-                .thenComparing(dto -> DateTimeUtils.toStartDateTime(dto.getStartDate(), dto.getStartTime()))
-                .reversed()
-        );
-
-        return GetMonthlyCalendarResponse.from(scheduleList);
     }
 
-
-    @Transactional(readOnly = true)
-    public GetDailyCalendarResponse findDailyCalendar(LocalDate date, Long userId) {
-
-        List<DailyScheduleListDto> userSchedule = userScheduleRepository
+    private List<DailyScheduleListDto> findDailyUserSchedule(Long userId, LocalDate date) {
+        return userScheduleRepository
                 .findByUserIdAndDate(userId, date)
                 .stream()
-                .map(DailyScheduleListDto::from)   // UserSchedule → DTO
+                .map(DailyScheduleListDto::from)
                 .toList();
+    }
 
-        List<DailyScheduleListDto> universitySchedule = userUniversityScheduleRepository
+    private List<DailyScheduleListDto> findDailyUniversitySchedule(Long userId, LocalDate date) {
+        return userUniversityScheduleRepository
                 .findByUserIdAndDate(userId, date)
                 .stream()
-                .flatMap(uus -> uus.getUniversitySchedule()
-                        .getAdmissionScheduleList().stream())
+                .flatMap(uus -> uus.getUniversitySchedule().getAdmissionScheduleList().stream())
                 .collect(Collectors.toMap(
-                        pivot -> pivot.getUniversitySchedule().getId(),
+                        as -> as.getUniversitySchedule().getId(),
                         Function.identity(),
                         (first, second) -> first,
                         LinkedHashMap::new
@@ -94,18 +102,16 @@ public class CalendarService {
                 .values().stream()
                 .map(DailyScheduleListDto::from)
                 .toList();
+    }
 
-        List<DailyScheduleListDto> scheduleList = new ArrayList<>();
-        scheduleList.addAll(userSchedule);
-        scheduleList.addAll(universitySchedule);
-
-        scheduleList.sort(Comparator.<DailyScheduleListDto>comparingLong(dto ->
-                                DateTimeUtils.durationInSeconds(dto.getStartDate(), dto.getStartTime(),
-                                        dto.getEndDate(),   dto.getEndTime()))
-                        .thenComparing(dto -> DateTimeUtils.toStartDateTime(dto.getStartDate(), dto.getStartTime()))
-                .reversed()
-        );
-
-        return GetDailyCalendarResponse.from(scheduleList);
+    private Comparator<ScheduleComparable> scheduleComparator() {
+        return Comparator
+                .<ScheduleComparable>comparingLong(sc ->
+                        DateTimeUtils.durationInSeconds(
+                                sc.getStartDate(), sc.getStartTime(),
+                                sc.getEndDate(),   sc.getEndTime()))
+                .thenComparing(sc ->
+                        DateTimeUtils.toStartDateTime(sc.getStartDate(), sc.getStartTime()))
+                .reversed();
     }
 }
