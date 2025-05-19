@@ -39,4 +39,10 @@ public class CalendarController {
         GetDailyCalendarResponse response = calendarService.findDailyCalendar(date, user.getId());
         return ApiUtil.success(response);
     }
+
+    @GetMapping("/d-day")
+    public ApiResponse<GetDdayScheduleResponse> readDdaySchedule(@AuthenticationPrincipal AuthUser user) {
+        GetDdayScheduleResponse response = calendarService.findDdaySchedule(user.getId());
+        return ApiUtil.success(response);
+    }
 }

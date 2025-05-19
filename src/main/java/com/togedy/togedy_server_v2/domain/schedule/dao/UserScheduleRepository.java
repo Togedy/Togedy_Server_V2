@@ -1,12 +1,14 @@
 package com.togedy.togedy_server_v2.domain.schedule.dao;
 
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
+import com.togedy.togedy_server_v2.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long> {
 
@@ -33,5 +35,13 @@ public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long
             @Param("userId") Long userId,
             @Param("date") LocalDate date
     );
+
+    @Query("""
+        SELECT us
+        FROM  UserSchedule us
+        WHERE us.user.id = :userId
+        AND us.dDay = true
+    """)
+    Optional<UserSchedule> findByUserIdAndDDayTrue(Long userId);
 
 }

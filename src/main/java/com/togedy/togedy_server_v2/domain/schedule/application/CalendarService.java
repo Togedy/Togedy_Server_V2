@@ -1,11 +1,13 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
+import com.togedy.togedy_server_v2.domain.schedule.api.GetDdayScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dto.DailyScheduleListDto;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetDailyCalendarResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetMonthlyCalendarResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.MonthlyScheduleListDto;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
+import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityScheduleRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -55,6 +58,20 @@ public class CalendarService {
         return GetDailyCalendarResponse.from(dailyScheduleList);
     }
 
+    @Transactional(readOnly = true)
+    public GetDdayScheduleResponse findDdaySchedule(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(RuntimeException::new);
+
+        Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
+
+        if (dDaySchedule.isPresent()) {
+            return GetDdayScheduleResponse.of(dDaySchedule.get(),
+                    DateTimeUtils.calculateRemainingDays(dDaySchedule.get().getStartDate()));
+        }
+
+        return GetDdayScheduleResponse.temp();
+    }
 
     private List<MonthlyScheduleListDto> findMonthlyUserSchedule(Long userId, YearMonth month) {
         return userScheduleRepository
