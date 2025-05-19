@@ -19,13 +19,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,72 +41,34 @@ public class UniversityService {
     private static final int ACADEMIC_YEAR = 2025;
 
     @Transactional(readOnly = true)
-    public List<GetUniversityScheduleResponse> findUniversityScheduleList(String name, String admissionType, Long userId) {
-
-        if (!admissionType.isBlank() || admissionType.equals("수시") || !admissionType.equals("정시")) {
+    public List<GetUniversityScheduleResponse> findUniversityScheduleList(
+            String name,
+            String admissionType,
+            Long   userId)
+    {
+        if (StringUtils.hasText(admissionType)
+                && !("수시".equals(admissionType) || "정시".equals(admissionType))) {
             throw new InvalidAdmissionTypeException();
         }
 
-        List<AdmissionSchedule> schedules =
-                admissionScheduleRepository.findAllWithUserFlag(userId, name, ACADEMIC_YEAR, admissionType);
+        User user = userRepository.findById(userId)
+                .orElseThrow(RuntimeException::new);
 
-        Set<Long> ownedUniversityScheduleIds = new HashSet<>(
-                userUniversityScheduleRepository.findAddedUniversityScheduleIds(userId)
-        );
+        List<AdmissionSchedule> schedules = admissionScheduleRepository
+                .findAllWithUserFlag(userId, name, ACADEMIC_YEAR, admissionType);
+
+        Set<Long> ownedIds = new HashSet<>
+                (userUniversityScheduleRepository.findAddedUniversityScheduleIds(userId));
 
         return schedules.stream()
                 .collect(Collectors.groupingBy(
-                        admissionSchedule -> admissionSchedule.getAdmissionMethod().getUniversity(),
+                        as -> as.getAdmissionMethod().getUniversity(),
                         LinkedHashMap::new,
                         Collectors.toList()
                 ))
                 .entrySet().stream()
-                .map(univEntry -> {
-                    University uni = univEntry.getKey();
-                    List<AdmissionSchedule> schedList = univEntry.getValue();
-
-                    List<AdmissionTypeDto> admissionList = schedList.stream()
-                            .collect(Collectors.groupingBy(
-                                    as -> as.getAdmissionMethod().getName(),
-                                    LinkedHashMap::new,
-                                    Collectors.mapping(
-                                            AdmissionSchedule::getUniversitySchedule,
-                                            Collectors.toList()
-                                    )
-                            ))
-                            .entrySet().stream()
-                            .map(admEntry -> {
-                                String admissionName = admEntry.getKey();
-                                List<UniversitySchedule> usList = admEntry.getValue();
-
-                                List<UniversityScheduleDto> universityScheduleDtos = new ArrayList<>(
-                                        usList.stream()
-                                                .collect(Collectors.toMap(
-                                                        UniversitySchedule::getId,
-                                                        Function.identity(),
-                                                        (first, second) -> first,
-                                                        LinkedHashMap::new
-                                                ))
-                                                .values().stream()
-                                                .map(UniversityScheduleDto::from)
-                                                .toList()
-                                );
-
-                                return AdmissionTypeDto.of(admissionName, universityScheduleDtos);
-                            })
-                            .toList();
-
-                    Set<Long> uniScheduleIds = schedList.stream()
-                            .map(as -> as.getUniversitySchedule().getId())
-                            .collect(Collectors.toSet());
-
-                    boolean isAdded = ownedUniversityScheduleIds.containsAll(uniScheduleIds);
-
-                    return GetUniversityScheduleResponse.of(uni, admissionList, isAdded);
-                })
-                .toList();
+                .map(e -> toResponse(e.getKey(), e.getValue(), ownedIds)).toList();
     }
-
 
     @Transactional
     public void generateUserUniversitySchedule(PostUniversityScheduleRequest request, Long userId) {
@@ -144,5 +106,40 @@ public class UniversityService {
         }
 
         userUniversityScheduleRepository.deleteAll(userUniversityScheduleList);
+    }
+
+    private GetUniversityScheduleResponse toResponse(
+            University uni,
+            List<AdmissionSchedule> list,
+            Set<Long> ownedIds
+    ) {
+        List<AdmissionTypeDto> admissionTypes = buildAdmissionList(list);
+
+        Set<Long> scheduleIds = list.stream()
+                .map(as -> as.getUniversitySchedule().getId())
+                .collect(Collectors.toSet());
+        boolean isAdded = ownedIds.containsAll(scheduleIds);
+
+        return GetUniversityScheduleResponse.of(uni, admissionTypes, isAdded);
+    }
+
+    private List<AdmissionTypeDto> buildAdmissionList(List<AdmissionSchedule> list) {
+        return list.stream()
+                .collect(Collectors.groupingBy(
+                        as -> as.getAdmissionMethod().getName(),
+                        LinkedHashMap::new,
+                        Collectors.mapping(
+                                AdmissionSchedule::getUniversitySchedule,
+                                Collectors.toCollection(LinkedHashSet::new)
+                        )
+                ))
+                .entrySet().stream()
+                .map(entry -> AdmissionTypeDto.of(
+                        entry.getKey(),
+                        entry.getValue().stream()
+                                .map(UniversityScheduleDto::from)
+                                .toList()
+                ))
+                .toList();
     }
 }
