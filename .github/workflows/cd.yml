@@ -28,6 +28,8 @@ jobs:
             MYSQL_HOST=${{ secrets.MYSQL_HOST }}
             MYSQL_USER=${{ secrets.MYSQL_USER }}
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
+            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
+            SWAGGER_URL=${{ secrets.SWAGGER_URL }}
             EOF
             
             cd ../script
