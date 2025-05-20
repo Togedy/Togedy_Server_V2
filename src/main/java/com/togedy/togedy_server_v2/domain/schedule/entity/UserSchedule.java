@@ -107,4 +107,8 @@ public class UserSchedule {
     public void update(Category category) {
         this.category = category;
     }
+
+    public void cancleDday() {
+        this.dDay = false;
+    }
 }

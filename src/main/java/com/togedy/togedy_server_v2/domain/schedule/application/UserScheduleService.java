@@ -16,6 +16,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 public class UserScheduleService {
@@ -26,12 +28,15 @@ public class UserScheduleService {
 
     @Transactional
     public void generateUserSchedule(PostUserScheduleRequest request, Long userId) {
-        //유저 예외 수정
         User user = userRepository.findById(userId)
                 .orElseThrow(RuntimeException::new);
 
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(CategoryNotFoundException::new);
+
+        if (request.isDDay()) {
+            clearDdaySchedule(userId);
+        }
 
         UserSchedule userSchedule = UserSchedule.builder()
                 .user(user)
@@ -71,6 +76,10 @@ public class UserScheduleService {
             throw new UserScheduleNotOwnedException();
         }
 
+        if (request.getDDay()) {
+            clearDdaySchedule(userId);
+        }
+
         userSchedule.update(request);
         userSchedule.update(category);
         userScheduleRepository.save(userSchedule);
@@ -86,5 +95,10 @@ public class UserScheduleService {
         }
 
         userScheduleRepository.delete(userSchedule);
+    }
+
+    private void clearDdaySchedule(Long userId) {
+        Optional<UserSchedule> userSchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
+        userSchedule.ifPresent(UserSchedule::cancleDday);
     }
 }
