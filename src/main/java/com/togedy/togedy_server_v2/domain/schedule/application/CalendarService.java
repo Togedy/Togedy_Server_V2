@@ -34,6 +34,13 @@ public class CalendarService {
     private final UserScheduleRepository userScheduleRepository;
     private final UserUniversityScheduleRepository userUniversityScheduleRepository;
 
+    /**
+     * 유저가 해당 월에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
+     *
+     * @param month     년도 및 월 정보(yyyy-MM)
+     * @param userId    유저ID
+     * @return          기간 순으로 정렬된 월별 개인 일정 및 대학 일정 DTO
+     */
     @Transactional(readOnly = true)
     public GetMonthlyCalendarResponse findMonthlyCalendar(YearMonth month, Long userId) {
         User user = userRepository.findById(userId)
@@ -46,6 +53,13 @@ public class CalendarService {
         return GetMonthlyCalendarResponse.from(monthlyUserSchedule);
     }
 
+    /**
+     * 유저가 해당 날짜에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
+     *
+     * @param date      년도, 월, 날짜 정보 (yyyy-MM-dd)
+     * @param userId    유저ID
+     * @return          기간 순으로 정렬된 일별 유저 및 대학 일정 DTO
+     */
     @Transactional(readOnly = true)
     public GetDailyCalendarResponse findDailyCalendar(LocalDate date, Long userId) {
         User user = userRepository.findById(userId)
@@ -58,6 +72,12 @@ public class CalendarService {
         return GetDailyCalendarResponse.from(dailyScheduleList);
     }
 
+    /**
+     * 유저가 D-Day 설정한 개인 일정을 조회한다.
+     *
+     * @param userId    유저ID
+     * @return          D-Day 설정한 개인 일정이 존재 여부 및 일정 정보 반환
+     */
     @Transactional(readOnly = true)
     public GetDdayScheduleResponse findDdaySchedule(Long userId) {
         User user = userRepository.findById(userId)
@@ -73,6 +93,13 @@ public class CalendarService {
         return GetDdayScheduleResponse.temp();
     }
 
+    /**
+     * 유저가 보유 중인 해당 월의 개인 일정을 조회한다.
+     *
+     * @param userId    유저ID
+     * @param month     년도 및 월 정보 (yyyy-MM)
+     * @return          월별 일정 DTO List
+     */
     private List<MonthlyScheduleListDto> findMonthlyUserSchedule(Long userId, YearMonth month) {
         return userScheduleRepository
                 .findByUserIdAndYearAndMonth(userId, month.getYear(), month.getMonthValue())
@@ -81,6 +108,13 @@ public class CalendarService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 유저가 보유 중인 해당 월의 대학 일정을 조회한다.
+     *
+     * @param userId    유저 ID
+     * @param month     년도 및 월 정보 (yyyy-MM)
+     * @return          월별 일정 DTO List
+     */
     private List<MonthlyScheduleListDto> findMonthlyUniversitySchedule(Long userId, YearMonth month) {
         return userUniversityScheduleRepository
                 .findByUserIdAndYearAndMonth(userId, month.getYear(), month.getMonthValue())
@@ -97,6 +131,13 @@ public class CalendarService {
                 .toList();
     }
 
+    /**
+     * 유저가 보유 중인 해당 날짜의 개인 일정을 조회한다.
+     *
+     * @param userId    유저ID
+     * @param date      년도, 월, 날짜 정보 (yyyy-MM-dd)
+     * @return          일별 일정 DTO List
+     */
     private List<DailyScheduleListDto> findDailyUserSchedule(Long userId, LocalDate date) {
         return userScheduleRepository
                 .findByUserIdAndDate(userId, date)
@@ -105,6 +146,13 @@ public class CalendarService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 유저가 보유 중인 해당 날짜의 대학 일정을 조회한다.
+     *
+     * @param userId    유저ID
+     * @param date      년도, 월, 날짜 정보 (yyyy-MM-dd)
+     * @return          일별 일정 DTO List
+     */
     private List<DailyScheduleListDto> findDailyUniversitySchedule(Long userId, LocalDate date) {
         return userUniversityScheduleRepository
                 .findByUserIdAndDate(userId, date)
@@ -121,6 +169,11 @@ public class CalendarService {
                 .toList();
     }
 
+    /**
+     * 일정의 시작 및 종료 날짜 혹은 시간을 기준으로 정렬한다.
+     *
+     * @return  기간 및 시작 시간 순으로 정렬하는 Comparator
+     */
     private Comparator<ScheduleComparable> scheduleComparator() {
         return Comparator
                 .<ScheduleComparable>comparingLong(sc ->

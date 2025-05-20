@@ -26,6 +26,12 @@ public class UserScheduleService {
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
 
+    /**
+     * 개인 일정을 생성한다. 해당 일정을 D-Day 설정하고자 한다면 기존의 D-Day 설정된 일정 상태를 변경한다.
+     *
+     * @param request   개인 일정 생성 DTO
+     * @param userId    유저ID
+     */
     @Transactional
     public void generateUserSchedule(PostUserScheduleRequest request, Long userId) {
         User user = userRepository.findById(userId)
@@ -53,6 +59,13 @@ public class UserScheduleService {
         userScheduleRepository.save(userSchedule);
     }
 
+    /**
+     * 유저가 보유 중인 개인 일정을 단일 조회한다.
+     *
+     * @param userScheduleId    조회할 개인 일정ID
+     * @param userId            유저ID
+     * @return                  개인 일정 정보 DTO
+     */
     @Transactional(readOnly = true)
     public GetUserScheduleResponse findUserSchedule(Long userScheduleId, Long userId) {
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
@@ -65,6 +78,13 @@ public class UserScheduleService {
         return GetUserScheduleResponse.from(userSchedule);
     }
 
+    /**
+     * 유저가 보유 중인 개인 일정 정보를 수정한다.
+     *
+     * @param request           개인 일정 수정 DTO
+     * @param userScheduleId    수정할 개인 일정ID
+     * @param userId            유저ID
+     */
     @Transactional
     public void modifyUserSchedule(PatchUserScheduleRequest request, Long userScheduleId, Long userId) {
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
@@ -85,6 +105,12 @@ public class UserScheduleService {
         userScheduleRepository.save(userSchedule);
     }
 
+    /**
+     * 유저가 보유 중인 개인 일정을 제거한다.
+     *
+     * @param userScheduleId    제거할 개인 일정 ID
+     * @param userId            유저ID
+     */
     @Transactional
     public void removeUserSchedule(Long userScheduleId, Long userId) {
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
@@ -97,6 +123,11 @@ public class UserScheduleService {
         userScheduleRepository.delete(userSchedule);
     }
 
+    /**
+     * D-Day 설정이 되어 있는 개인 일정 상태를 변경한다.
+     *
+     * @param userId    유저ID
+     */
     private void clearDdaySchedule(Long userId) {
         Optional<UserSchedule> userSchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
         userSchedule.ifPresent(UserSchedule::cancleDday);

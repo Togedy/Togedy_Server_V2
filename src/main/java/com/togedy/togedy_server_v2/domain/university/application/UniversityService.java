@@ -40,6 +40,14 @@ public class UniversityService {
 
     private static final int ACADEMIC_YEAR = 2025;
 
+    /**
+     * name을 포함하는 대학 일정을 조회한다. admissionType을 통해 수시 혹은 정시 일정을 필터링한다.
+     *
+     * @param name              조회하고자 하는 대학 일정
+     * @param admissionType     수시 혹은 정시 필터링
+     * @param userId            유저ID
+     * @return                  대학 일정 DTO
+     */
     @Transactional(readOnly = true)
     public List<GetUniversityScheduleResponse> findUniversityScheduleList(
             String name,
@@ -70,6 +78,12 @@ public class UniversityService {
                 .map(e -> toResponse(e.getKey(), e.getValue(), ownedIds)).toList();
     }
 
+    /**
+     * 대학 일정을 유저의 일정으로 추가한다.
+     *
+     * @param request   추가할 대학 일정 ID List
+     * @param userId    유저ID
+     */
     @Transactional
     public void generateUserUniversitySchedule(PostUniversityScheduleRequest request, Long userId) {
         User user = userRepository.findById(userId)
@@ -92,6 +106,12 @@ public class UniversityService {
         userUniversityScheduleRepository.saveAll(userUniversityScheduleList);
     }
 
+    /**
+     * 유저가 보유 중인 대학 일정을 제거한다.
+     *
+     * @param universityScheduleIdList  제거할 대학 일정 ID List
+     * @param userId                    유저ID
+     */
     @Transactional
     public void removeUserUniversitySchedule(List<Long> universityScheduleIdList, Long userId) {
         User user = userRepository.findById(userId)
@@ -108,6 +128,14 @@ public class UniversityService {
         userUniversityScheduleRepository.deleteAll(userUniversityScheduleList);
     }
 
+    /**
+     * 대학 일정 조회 응답을 생성한다. 유저의 해당 대학 일정 보유 여부를 포함한다.
+     *
+     * @param university            University 객체
+     * @param admissionSchedules    AdmissionSchedule 객체 List
+     * @param ownedIds              유저가 보유 중인 대학ID Set
+     * @return                      대학 일정 조회 DTO
+     */
     private GetUniversityScheduleResponse toResponse(
             University university,
             List<AdmissionSchedule> admissionSchedules,
@@ -123,6 +151,12 @@ public class UniversityService {
         return GetUniversityScheduleResponse.of(university, admissionTypes, isAdded);
     }
 
+    /**
+     * 전형 별로 DTO를 생성한다.
+     *
+     * @param admissionScheduleList AdmissionSchedule 객체 List
+     * @return                      전형 별로 생성된 대학 일정 DTO List
+     */
     private List<AdmissionTypeDto> buildAdmissionList(List<AdmissionSchedule> admissionScheduleList) {
         return admissionScheduleList.stream()
                 .collect(Collectors.groupingBy(
