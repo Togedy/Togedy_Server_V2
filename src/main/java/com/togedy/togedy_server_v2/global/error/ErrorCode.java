@@ -22,8 +22,20 @@ public enum ErrorCode {
     // USER (2000)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U2000", "사용자를 찾을 수 없습니다."),
     DUPLICATED_NICKNAME(HttpStatus.CONFLICT, "U2001", "이미 존재하는 닉네임입니다."),
+    DUPLICATED_EMAIL(HttpStatus.CONFLICT, "U2002", "이미 존재하는 이메일입니다."),
 
-    DUPLICATED_EMAIL(HttpStatus.CONFLICT, "U2002", "이미 존재하는 이메일입니다.");
+    // CATEGORY (3000)
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "C3000", "해당 카테고리를 찾을 수 없습니다."),
+    CATEGORY_NOT_OWNED(HttpStatus.UNAUTHORIZED, "C3001", "해당 유저의 카테고리가 아닙니다."),
+    DUPLICATE_CATEGORY(HttpStatus.BAD_REQUEST, "C3002", "이름과 색상이 동일한 카테고리가 존재합니다."),
+
+    // USER_SCHEDULE (4000)
+    USER_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "US4000", "해당 개인 일정을 찾을 수 없습니다."),
+    USER_SCHEDULE_NOT_OWNED(HttpStatus.UNAUTHORIZED, "US4001", "해당 유저의 개인 일정이 아닙니다."),
+
+    // UNIVERSITY_SCHEDULE (5000)
+    UNIVERSITY_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "UNS5000", "해당 대학 일정을 찾을 수 없습니다."),
+    INVALID_ADMISSION_TYPE(HttpStatus.BAD_REQUEST, "UNS5001", "유효하지 않은 입시 유형입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
