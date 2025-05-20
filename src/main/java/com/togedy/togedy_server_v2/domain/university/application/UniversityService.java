@@ -109,22 +109,22 @@ public class UniversityService {
     }
 
     private GetUniversityScheduleResponse toResponse(
-            University uni,
-            List<AdmissionSchedule> list,
+            University university,
+            List<AdmissionSchedule> admissionSchedules,
             Set<Long> ownedIds
     ) {
-        List<AdmissionTypeDto> admissionTypes = buildAdmissionList(list);
+        List<AdmissionTypeDto> admissionTypes = buildAdmissionList(admissionSchedules);
 
-        Set<Long> scheduleIds = list.stream()
+        Set<Long> scheduleIds = admissionSchedules.stream()
                 .map(as -> as.getUniversitySchedule().getId())
                 .collect(Collectors.toSet());
         boolean isAdded = ownedIds.containsAll(scheduleIds);
 
-        return GetUniversityScheduleResponse.of(uni, admissionTypes, isAdded);
+        return GetUniversityScheduleResponse.of(university, admissionTypes, isAdded);
     }
 
-    private List<AdmissionTypeDto> buildAdmissionList(List<AdmissionSchedule> list) {
-        return list.stream()
+    private List<AdmissionTypeDto> buildAdmissionList(List<AdmissionSchedule> admissionScheduleList) {
+        return admissionScheduleList.stream()
                 .collect(Collectors.groupingBy(
                         as -> as.getAdmissionMethod().getName(),
                         LinkedHashMap::new,
