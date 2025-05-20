@@ -9,6 +9,9 @@ import java.util.Objects;
 
 public class DateTimeUtils {
 
+    private DateTimeUtils(){
+    }
+
     public static long durationInSeconds(
             LocalDate startDate, LocalTime startTime,
             LocalDate endDate, LocalTime endTime
