@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.schedule.api;
+package com.togedy.togedy_server_v2.domain.schedule.dto;
 
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import lombok.Builder;

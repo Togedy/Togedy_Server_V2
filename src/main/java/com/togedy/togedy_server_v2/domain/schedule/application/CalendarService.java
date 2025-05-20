@@ -1,6 +1,6 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
-import com.togedy.togedy_server_v2.domain.schedule.api.GetDdayScheduleResponse;
+import com.togedy.togedy_server_v2.domain.schedule.dto.GetDdayScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dto.DailyScheduleListDto;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetDailyCalendarResponse;

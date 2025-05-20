@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.schedule.api;
 
 import com.togedy.togedy_server_v2.domain.schedule.application.CalendarService;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetDailyCalendarResponse;
+import com.togedy.togedy_server_v2.domain.schedule.dto.GetDdayScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetMonthlyCalendarResponse;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
