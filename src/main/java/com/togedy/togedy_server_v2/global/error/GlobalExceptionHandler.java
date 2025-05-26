@@ -17,7 +17,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ApiResponse<?>> handleCustomException(CustomException e) {
-        return handleException(e, ErrorResponse.of(e.getErrorCode(), e.getMessage()));
+        return handleException(e, ErrorResponse.from(e.getErrorCode()));
     }
 
     @ExceptionHandler(RuntimeException.class)
@@ -34,7 +34,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         return handleException(e, ErrorResponse.of(
                 ErrorCode.INVALID_INPUT_VALUE,
-                ErrorCode.INVALID_INPUT_VALUE.getMessage() + " " + errorMessage)
+                errorMessage)
         );
     }
 
