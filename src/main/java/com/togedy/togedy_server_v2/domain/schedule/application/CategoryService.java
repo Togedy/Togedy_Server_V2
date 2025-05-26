@@ -10,6 +10,7 @@ import com.togedy.togedy_server_v2.domain.schedule.dto.PostCategoryRequest;
 import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,7 +34,7 @@ public class CategoryService {
     @Transactional
     public void generateCategory(PostCategoryRequest request, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(UserNotFoundException::new);
 
         validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), user);
 
@@ -50,7 +51,7 @@ public class CategoryService {
     @Transactional(readOnly = true)
     public List<GetCategoryResponse> findAllCategoriesByUserId(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(UserNotFoundException::new);
         List<Category> categoryList = categoryRepository.findAllByUserId(userId);
 
         return categoryList.stream()
@@ -70,7 +71,7 @@ public class CategoryService {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(CategoryNotFoundException::new);
         User user = userRepository.findById(userId)
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(UserNotFoundException::new);
 
         if (!category.getUser().getId().equals(userId)) {
             throw new CategoryNotOwnedException();

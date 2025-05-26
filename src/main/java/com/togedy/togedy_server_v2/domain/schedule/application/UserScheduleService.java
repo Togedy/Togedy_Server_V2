@@ -12,6 +12,7 @@ import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,8 +36,7 @@ public class UserScheduleService {
     @Transactional
     public void generateUserSchedule(PostUserScheduleRequest request, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(RuntimeException::new);
-
+                .orElseThrow(UserNotFoundException::new);
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(CategoryNotFoundException::new);
 
@@ -68,6 +68,8 @@ public class UserScheduleService {
      */
     @Transactional(readOnly = true)
     public GetUserScheduleResponse findUserSchedule(Long userScheduleId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
                 .orElseThrow(UserScheduleNotFoundException::new);
 
@@ -87,6 +89,8 @@ public class UserScheduleService {
      */
     @Transactional
     public void modifyUserSchedule(PatchUserScheduleRequest request, Long userScheduleId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
                 .orElseThrow(UserScheduleNotFoundException::new);
         Category category = categoryRepository.findById(request.getCategoryId())
@@ -113,6 +117,8 @@ public class UserScheduleService {
      */
     @Transactional
     public void removeUserSchedule(Long userScheduleId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
                 .orElseThrow(UserScheduleNotFoundException::new);
 

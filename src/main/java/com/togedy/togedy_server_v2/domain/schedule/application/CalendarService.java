@@ -11,6 +11,7 @@ import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityScheduleRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.util.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -44,7 +45,7 @@ public class CalendarService {
     @Transactional(readOnly = true)
     public GetMonthlyCalendarResponse findMonthlyCalendar(YearMonth month, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(UserNotFoundException::new);
 
         List<MonthlyScheduleListDto> monthlyUserSchedule = findMonthlyUserSchedule(userId, month);
         monthlyUserSchedule.addAll(findMonthlyUniversitySchedule(userId, month));
@@ -63,7 +64,7 @@ public class CalendarService {
     @Transactional(readOnly = true)
     public GetDailyCalendarResponse findDailyCalendar(LocalDate date, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(UserNotFoundException::new);
 
         List<DailyScheduleListDto> dailyScheduleList = new ArrayList<>(findDailyUserSchedule(userId, date));
         dailyScheduleList.addAll(findDailyUniversitySchedule(userId, date));
@@ -81,7 +82,7 @@ public class CalendarService {
     @Transactional(readOnly = true)
     public GetDdayScheduleResponse findDdaySchedule(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(UserNotFoundException::new);
 
         Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
 

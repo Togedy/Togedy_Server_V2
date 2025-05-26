@@ -15,6 +15,7 @@ import com.togedy.togedy_server_v2.domain.university.exception.InvalidAdmissionT
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityScheduleNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -60,7 +61,7 @@ public class UniversityService {
         }
 
         User user = userRepository.findById(userId)
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(UserNotFoundException::new);
 
         List<AdmissionSchedule> schedules = admissionScheduleRepository
                 .findAllWithUserFlag(userId, name, ACADEMIC_YEAR, admissionType);
@@ -87,7 +88,7 @@ public class UniversityService {
     @Transactional
     public void generateUserUniversitySchedule(PostUniversityScheduleRequest request, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(UserNotFoundException::new);
         List<Long> universityScheduleIdList = request.getUniversityScheduleIdList();
         List<UniversitySchedule> universityScheduleList
                 = universityScheduleRepository.findAllById(universityScheduleIdList);
@@ -115,7 +116,7 @@ public class UniversityService {
     @Transactional
     public void removeUserUniversitySchedule(List<Long> universityScheduleIdList, Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(RuntimeException::new);
+                .orElseThrow(UserNotFoundException::new);
 
         List<UserUniversitySchedule> userUniversityScheduleList =
                 userUniversityScheduleRepository
