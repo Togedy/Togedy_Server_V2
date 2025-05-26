@@ -35,7 +35,7 @@ public class CategoryService {
         User user = userRepository.findById(userId)
                 .orElseThrow(RuntimeException::new);
 
-        if (categoryRepository.existsByColorAndName(request.getCategoryName(), request.getCategoryColor())) {
+        if (categoryRepository.existsByColorAndNameAndUser(request.getCategoryName(), request.getCategoryColor(), user)) {
             throw new DuplicateCategoryException();
         }
 
