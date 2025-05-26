@@ -108,7 +108,7 @@ public class UserSchedule {
         this.category = category;
     }
 
-    public void cancleDday() {
+    public void cancelDday() {
         this.dDay = false;
     }
 }

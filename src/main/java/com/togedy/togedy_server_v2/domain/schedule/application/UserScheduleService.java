@@ -130,6 +130,6 @@ public class UserScheduleService {
      */
     private void clearDdaySchedule(Long userId) {
         Optional<UserSchedule> userSchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
-        userSchedule.ifPresent(UserSchedule::cancleDday);
+        userSchedule.ifPresent(UserSchedule::cancelDday);
     }
 }
