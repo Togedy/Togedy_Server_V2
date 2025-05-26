@@ -35,9 +35,7 @@ public class CategoryService {
         User user = userRepository.findById(userId)
                 .orElseThrow(RuntimeException::new);
 
-        if (categoryRepository.existsByColorAndNameAndUser(request.getCategoryName(), request.getCategoryColor(), user)) {
-            throw new DuplicateCategoryException();
-        }
+        validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), user);
 
         Category category = new Category(user, request.getCategoryName(), request.getCategoryColor());
         categoryRepository.save(category);
@@ -71,10 +69,14 @@ public class CategoryService {
     public void modifyCategory(PatchCategoryRequest request, Long categoryId, Long userId) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(CategoryNotFoundException::new);
+        User user = userRepository.findById(userId)
+                .orElseThrow(RuntimeException::new);
 
         if (!category.getUser().getId().equals(userId)) {
             throw new CategoryNotOwnedException();
         }
+
+        validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), user);
 
         category.update(request);
     }
@@ -95,5 +97,11 @@ public class CategoryService {
         }
 
         categoryRepository.delete(category);
+    }
+
+    private void validateDuplicateCategory(String categoryName, String categoryColor, User user) {
+        if (categoryRepository.existsByColorAndNameAndUser(categoryName, categoryColor, user)) {
+            throw new DuplicateCategoryException();
+        }
     }
 }
