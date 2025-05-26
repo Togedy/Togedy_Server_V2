@@ -101,7 +101,7 @@ public class CategoryService {
     }
 
     private void validateDuplicateCategory(String categoryName, String categoryColor, User user) {
-        if (categoryRepository.existsByColorAndNameAndUser(categoryName, categoryColor, user)) {
+        if (categoryRepository.existsByNameAndColorAndUser(categoryName, categoryColor, user)) {
             throw new DuplicateCategoryException();
         }
     }

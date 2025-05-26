@@ -9,5 +9,5 @@ import java.util.List;
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findAllByUserId(Long userId);
 
-    boolean existsByColorAndNameAndUser(String color, String name, User user);
+    boolean existsByNameAndColorAndUser(String name, String color, User user);
 }
