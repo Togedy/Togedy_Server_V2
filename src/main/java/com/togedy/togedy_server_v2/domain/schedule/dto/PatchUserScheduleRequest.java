@@ -20,13 +20,13 @@ public class PatchUserScheduleRequest {
 
     private LocalDate startDate;
 
-    @Schema(type = "string", format = "time", example = "00:00")
+    @Schema(type = "string", format = "time", example = "00:00:00")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime startTime;
 
     private LocalDate endDate;
 
-    @Schema(type = "string", format = "time", example = "00:00")
+    @Schema(type = "string", format = "time", example = "00:00:00")
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime endTime;
 
