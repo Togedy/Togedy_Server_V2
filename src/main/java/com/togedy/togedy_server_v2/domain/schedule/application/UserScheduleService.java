@@ -93,19 +93,22 @@ public class UserScheduleService {
                 .orElseThrow(UserNotFoundException::new);
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
                 .orElseThrow(UserScheduleNotFoundException::new);
-        Category category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(CategoryNotFoundException::new);
+
+        if (request.getCategoryId() != null) {
+            Category category = categoryRepository.findById(request.getCategoryId())
+                    .orElseThrow(CategoryNotFoundException::new);
+            userSchedule.update(category);
+        }
 
         if (!userSchedule.getUser().getId().equals(userId)) {
             throw new UserScheduleNotOwnedException();
         }
 
-        if (request.getDDay()) {
+        if (Boolean.TRUE.equals(request.getDDay())) {
             clearDdaySchedule(userId);
         }
 
         userSchedule.update(request);
-        userSchedule.update(category);
         userScheduleRepository.save(userSchedule);
     }
 

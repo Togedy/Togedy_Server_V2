@@ -45,10 +45,10 @@ public class Category {
     }
 
     public void update(PatchCategoryRequest request) {
-        if (!request.getCategoryName().isBlank()) {
+        if (request.getCategoryName() != null) {
             this.name = request.getCategoryName();
         }
-        if (!request.getCategoryColor().isBlank()) {
+        if (request.getCategoryColor() != null) {
             this.color = request.getCategoryColor();
         }
     }
