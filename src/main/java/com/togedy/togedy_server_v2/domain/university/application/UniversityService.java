@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.university.application;
 
 import com.togedy.togedy_server_v2.domain.university.dao.AdmissionScheduleRepository;
+import com.togedy.togedy_server_v2.domain.university.dao.UniversityRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityScheduleRepository;
 import com.togedy.togedy_server_v2.domain.university.dto.AdmissionTypeDto;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
@@ -18,6 +19,8 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -38,6 +41,7 @@ public class UniversityService {
     private final UserUniversityScheduleRepository userUniversityScheduleRepository;
     private final UserRepository userRepository;
     private final AdmissionScheduleRepository admissionScheduleRepository;
+    private final UniversityRepository universityRepository;
 
     private static final int ACADEMIC_YEAR = 2025;
 
@@ -50,10 +54,13 @@ public class UniversityService {
      * @return                  대학 일정 DTO
      */
     @Transactional(readOnly = true)
-    public List<GetUniversityScheduleResponse> findUniversityScheduleList(
+    public Page<GetUniversityScheduleResponse> findUniversityScheduleList(
             String name,
             String admissionType,
-            Long   userId)
+            Long   userId,
+            int page,
+            int size
+    )
     {
         if (StringUtils.hasText(admissionType)
                 && !("수시".equals(admissionType) || "정시".equals(admissionType))) {
@@ -63,20 +70,17 @@ public class UniversityService {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        List<AdmissionSchedule> schedules = admissionScheduleRepository
-                .findAllWithUserFlag(userId, name, ACADEMIC_YEAR, admissionType);
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<University> universities = universityRepository.findByNameAndType(name, admissionType, pageRequest);
 
         Set<Long> ownedIds = new HashSet<>
                 (userUniversityScheduleRepository.findAddedUniversityScheduleIds(userId));
 
-        return schedules.stream()
-                .collect(Collectors.groupingBy(
-                        as -> as.getAdmissionMethod().getUniversity(),
-                        LinkedHashMap::new,
-                        Collectors.toList()
-                ))
-                .entrySet().stream()
-                .map(e -> toResponse(e.getKey(), e.getValue(), ownedIds)).toList();
+        return universities.map(u -> {
+            List<AdmissionSchedule> schedules = admissionScheduleRepository
+                    .findByUniversityAndYear(u.getId(), ACADEMIC_YEAR);
+            return toResponse(u, schedules, ownedIds);
+        });
     }
 
     /**
