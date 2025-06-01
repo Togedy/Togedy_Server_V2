@@ -1,6 +1,19 @@
 spring:
-  application:
-    name: togedy_server_v2
+  profiles:
+    group:
+      "local": "localDB"
+      "dev": "devDB"
+    active: dev
+
+---
+server:
+  port: 8080
+
+---
+spring:
+  config:
+    activate:
+      on-profile: "devDB"
 
   datasource:
     url: ${MYSQL_HOST}
@@ -15,3 +28,26 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+---
+
+jwt:
+  secret-key: ${JWT_SECRET_KEY}
+  access-expired-in: 7200000    # 2시간
+  refresh-expired-in: 604800000 # 7일
+
+swagger:
+  server:
+    url: ${SWAGGER_URL}
+
+springdoc:
+  swagger-ui:
+    path: /api-test
+    groups-order: DESC
+    tags-sorter: alpha
+    operations-sorter: default
+    persist-authorization: true
+    display-request-duration: true
