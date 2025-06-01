@@ -36,7 +36,7 @@ public class MonthlyScheduleListDto implements ScheduleComparable {
 
     private String universityAdmissionType;
 
-    private String categoryColor;
+    private CategoryDto category;
 
     public static MonthlyScheduleListDto from(AdmissionSchedule admissionSchedule) {
         return MonthlyScheduleListDto.builder()
@@ -48,6 +48,7 @@ public class MonthlyScheduleListDto implements ScheduleComparable {
                 .scheduleType(ScheduleType.UNIVERSITY)
                 .universityAdmissionStage(admissionSchedule.getUniversitySchedule().getAdmissionStage())
                 .universityAdmissionType(admissionSchedule.getAdmissionMethod().getUniversity().getAdmissionType())
+                .category(CategoryDto.temp())
                 .build();
     }
 
@@ -59,7 +60,7 @@ public class MonthlyScheduleListDto implements ScheduleComparable {
                 .endTime(userSchedule.getEndTime())
                 .scheduleName(userSchedule.getName())
                 .scheduleType(ScheduleType.USER)
-                .categoryColor(userSchedule.getCategory().getColor())
+                .category(CategoryDto.from(userSchedule.getCategory()))
                 .build();
     }
 }
