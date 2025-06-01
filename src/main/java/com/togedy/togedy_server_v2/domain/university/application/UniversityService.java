@@ -21,10 +21,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -70,15 +72,18 @@ public class UniversityService {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        PageRequest pageRequest = PageRequest.of(page, size);
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
         Page<University> universities = universityRepository.findByNameAndType(name, admissionType, pageRequest);
 
         Set<Long> ownedIds = new HashSet<>
                 (userUniversityScheduleRepository.findAddedUniversityScheduleIds(userId));
 
+        List<String> stageOrder = List.of("원서접수", "서류제출", "합격발표");
+
         return universities.map(u -> {
             List<AdmissionSchedule> schedules = admissionScheduleRepository
                     .findByUniversityAndYear(u.getId(), ACADEMIC_YEAR);
+            schedules.sort(Comparator.comparingInt(s -> stageOrder.indexOf(s.getUniversitySchedule().getAdmissionStage())));
             return toResponse(u, schedules, ownedIds);
         });
     }

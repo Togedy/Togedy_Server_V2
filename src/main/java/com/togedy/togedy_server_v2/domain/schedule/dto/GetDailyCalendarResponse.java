@@ -9,11 +9,11 @@ import java.util.List;
 @Builder
 public class GetDailyCalendarResponse {
 
-    List<DailyScheduleListDto> scheduleList;
+    List<DailyScheduleListDto> dailyScheduleList;
 
     public static GetDailyCalendarResponse from(List<DailyScheduleListDto> scheduleList) {
         return GetDailyCalendarResponse.builder()
-                .scheduleList(scheduleList)
+                .dailyScheduleList(scheduleList)
                 .build();
     }
 }
