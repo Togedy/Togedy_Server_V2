@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.schedule.api;
 
 import com.togedy.togedy_server_v2.domain.schedule.application.CalendarService;
+import com.togedy.togedy_server_v2.domain.schedule.dto.GetAnnouncementResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetDailyCalendarResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetDdayScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetMonthlyCalendarResponse;
@@ -53,6 +54,13 @@ public class CalendarController {
     @GetMapping("/d-day")
     public ApiResponse<GetDdayScheduleResponse> readDdaySchedule(@AuthenticationPrincipal AuthUser user) {
         GetDdayScheduleResponse response = calendarService.findDdaySchedule(user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "공지사항 조회", description = "공지사항을 조회한다.")
+    @GetMapping("/announcement")
+    public ApiResponse<GetAnnouncementResponse> readAnnouncement() {
+        GetAnnouncementResponse response = calendarService.findAnnouncement();
         return ApiUtil.success(response);
     }
 }

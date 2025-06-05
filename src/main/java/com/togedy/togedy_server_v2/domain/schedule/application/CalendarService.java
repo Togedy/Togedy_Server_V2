@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
+import com.togedy.togedy_server_v2.domain.schedule.dto.GetAnnouncementResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetDdayScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dto.DailyScheduleListDto;
@@ -34,6 +35,8 @@ public class CalendarService {
     private final UserRepository userRepository;
     private final UserScheduleRepository userScheduleRepository;
     private final UserUniversityScheduleRepository userUniversityScheduleRepository;
+
+    private static final String ANNOUNCEMENT = "공지사항";
 
     /**
      * 유저가 해당 월에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
@@ -92,6 +95,14 @@ public class CalendarService {
         }
 
         return GetDdayScheduleResponse.temp();
+    }
+
+    public GetAnnouncementResponse findAnnouncement() {
+        if (ANNOUNCEMENT.isBlank()) {
+            return GetAnnouncementResponse.temp();
+        }
+
+        return GetAnnouncementResponse.from(ANNOUNCEMENT);
     }
 
     /**
