@@ -97,6 +97,11 @@ public class CalendarService {
         return GetDdayScheduleResponse.temp();
     }
 
+    /**
+     * 공지사항을 조회한다.
+     *
+     * @return  공지사항 정보 반환
+     */
     public GetAnnouncementResponse findAnnouncement() {
         if (ANNOUNCEMENT.isBlank()) {
             return GetAnnouncementResponse.temp();
