@@ -39,18 +39,17 @@ public class JwtTokenProvider {
     }
 
     // 토큰 생성
-    public JwtTokenInfo generateTokenInfo(Long userId, String email) {
-        String accessToken = BEARER + createToken(userId, email, JWT_ACCESS_EXPIRED_IN);
-        String refreshToken = BEARER + createToken(userId, email, JWT_REFRESH_EXPIRED_IN);
+    public JwtTokenInfo generateTokenInfo(Long userId) {
+        String accessToken = BEARER + createToken(userId, JWT_ACCESS_EXPIRED_IN);
+        String refreshToken = BEARER + createToken(userId, JWT_REFRESH_EXPIRED_IN);
         return JwtTokenInfo.of(accessToken, refreshToken);
     }
 
-    public String createToken(Long userId, String email, Long expireInMs) {
+    public String createToken(Long userId, Long expireInMs) {
         Date now = new Date();
 
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
-                .claim("email", email)
                 .setIssuedAt(now)
                 .setExpiration(new Date(now.getTime() + expireInMs))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -89,17 +88,15 @@ public class JwtTokenProvider {
         Claims claims = parseClaims(token);
 
         Long userId = Long.parseLong(claims.getSubject());
-        String email = claims.get("email", String.class);
 
         AuthUser authUser = AuthUser.builder()
                 .id(userId)
-                .email(email)
                 .build();
 
         return new UsernamePasswordAuthenticationToken(authUser, null, null);
     }
 
-    private String removeBearerPrefix(String token) {
+    public String removeBearerPrefix(String token) {
         if (token == null) {
             return null;
         }
