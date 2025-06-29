@@ -4,6 +4,7 @@ import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.UserException;
+import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.error.ErrorCode;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenInfo;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenProvider;
@@ -36,5 +37,11 @@ public class UserService {
                 .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
 
         return jwtTokenProvider.generateTokenInfo(user.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public User loadUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
     }
 }
