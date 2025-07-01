@@ -21,8 +21,8 @@ public enum ErrorCode {
 
     // USER (2000)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U2000", "사용자를 찾을 수 없습니다."),
-    DUPLICATED_NICKNAME(HttpStatus.CONFLICT, "U2001", "이미 존재하는 닉네임입니다."),
-    DUPLICATED_EMAIL(HttpStatus.CONFLICT, "U2002", "이미 존재하는 이메일입니다."),
+    DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "U2001", "동일한 닉네임이 존재합니다."),
+    DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U2002", "동일한 이메일이 존재합니다."),
 
     // CATEGORY (3000)
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "C3000", "해당 카테고리를 찾을 수 없습니다."),
