@@ -26,7 +26,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String bearerToken = request.getHeader("Authorization");
 
         try {
-            // 토큰이 없거나 잘못된 형식
             if (bearerToken == null) {
                 if (requiresAuthentication(request)) {
                     throw new JwtMissingException();
@@ -40,7 +39,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new JwtInvalidFormatException();
             }
 
-            // 토큰 존재 → 검증
             String token = jwtTokenProvider.removeBearerPrefix(bearerToken);
             if (jwtTokenProvider.validateToken(token)) {
                 Authentication authentication = jwtTokenProvider.getAuthentication(token);
@@ -51,7 +49,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             filterChain.doFilter(request, response);
         } catch (JwtException e) {
-            // ExceptionFilter에서 처리
             throw e;
         }
     }
@@ -60,7 +57,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         return !(path.startsWith("/api/v2/users/sign-up")
                 || path.startsWith("/api/v2/users/login")
                 || path.startsWith("/swagger")
-                || path.startsWith("/v3/api-docs")
-                || path.startsWith("/h2-console"));
+                || path.startsWith("/v3/api-docs"));
     }
 }
