@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.global.config;
 
 import com.togedy.togedy_server_v2.global.security.jwt.JwtAuthenticationFilter;
+import com.togedy.togedy_server_v2.global.security.jwt.JwtExceptionFilter;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
@@ -50,6 +51,7 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .frameOptions(frameOptions -> frameOptions.disable())
                 )
+                .addFilterBefore(new JwtExceptionFilter(), JwtAuthenticationFilter.class)
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
