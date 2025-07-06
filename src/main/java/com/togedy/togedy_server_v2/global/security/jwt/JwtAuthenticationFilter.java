@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.global.security.jwt;
 
+import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

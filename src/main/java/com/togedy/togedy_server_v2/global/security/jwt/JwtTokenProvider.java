@@ -2,6 +2,8 @@ package com.togedy.togedy_server_v2.global.security.jwt;
 
 import com.togedy.togedy_server_v2.global.error.ErrorCode;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
+import com.togedy.togedy_server_v2.global.security.jwt.exception.*;
+import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -63,15 +65,15 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
-            throw new JwtException(ErrorCode.JWT_EXPIRED);
+            throw new JwtExpiredException();
         } catch (UnsupportedJwtException e) {
-            throw new JwtException(ErrorCode.JWT_UNSUPPORTED);
+            throw new JwtUnsupportedException();
         } catch (MalformedJwtException e) {
-            throw new JwtException(ErrorCode.JWT_MALFORMED);
+            throw new JwtMalformedException();
         } catch (SignatureException e) {
-            throw new JwtException(ErrorCode.JWT_INVALID_SIGNATURE);
+            throw new JwtInvalidSignatureException();
         } catch (IllegalArgumentException e) {
-            throw new JwtException(ErrorCode.JWT_INVALID);
+            throw new JwtInvalidException();
         }
     }
 
