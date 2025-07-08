@@ -1,11 +1,14 @@
 package com.togedy.togedy_server_v2.global.security.jwt;
 
+import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtException;
+import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtInvalidException;
+import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtInvalidFormatException;
+import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtMissingException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,20 +26,37 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String bearerToken = request.getHeader("Authorization");
 
         try {
-            if (bearerToken != null && bearerToken.startsWith(JwtTokenProvider.BEARER)) {
-                String token = bearerToken.substring(JwtTokenProvider.BEARER.length());
-
-                if (jwtTokenProvider.validateToken(token)) {
-                    Authentication authentication = jwtTokenProvider.getAuthentication(token);
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
+            if (bearerToken == null) {
+                if (requiresAuthentication(request)) {
+                    throw new JwtMissingException();
+                } else {
+                    filterChain.doFilter(request, response);
+                    return;
                 }
             }
+
+            if (!bearerToken.startsWith(JwtTokenProvider.BEARER)) {
+                throw new JwtInvalidFormatException();
+            }
+
+            String token = jwtTokenProvider.removeBearerPrefix(bearerToken);
+            if (jwtTokenProvider.validateToken(token)) {
+                Authentication authentication = jwtTokenProvider.getAuthentication(token);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } else {
+                throw new JwtInvalidException();
+            }
+
             filterChain.doFilter(request, response);
         } catch (JwtException e) {
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json;charset=UTF-8");
-            response.getWriter().write("{\"message\": \"" + e.getMessage() + "\"}");
+            throw e;
         }
-
+    }
+    private boolean requiresAuthentication(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return !(path.startsWith("/api/v2/users/sign-up")
+                || path.startsWith("/api/v2/users/login")
+                || path.startsWith("/swagger")
+                || path.startsWith("/v3/api-docs"));
     }
 }

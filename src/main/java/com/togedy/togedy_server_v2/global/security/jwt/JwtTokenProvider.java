@@ -2,6 +2,8 @@ package com.togedy.togedy_server_v2.global.security.jwt;
 
 import com.togedy.togedy_server_v2.global.error.ErrorCode;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
+import com.togedy.togedy_server_v2.global.security.jwt.exception.*;
+import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtException;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -11,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -40,18 +41,17 @@ public class JwtTokenProvider {
     }
 
     // 토큰 생성
-    public JwtTokenInfo generateTokenInfo(Long userId, String email) {
-        String accessToken = BEARER + createToken(userId, email, JWT_ACCESS_EXPIRED_IN);
-        String refreshToken = BEARER + createToken(userId, email, JWT_REFRESH_EXPIRED_IN);
+    public JwtTokenInfo generateTokenInfo(Long userId) {
+        String accessToken = BEARER + createToken(userId, JWT_ACCESS_EXPIRED_IN);
+        String refreshToken = BEARER + createToken(userId, JWT_REFRESH_EXPIRED_IN);
         return JwtTokenInfo.of(accessToken, refreshToken);
     }
 
-    public String createToken(Long userId, String email, Long expireInMs) {
+    public String createToken(Long userId, Long expireInMs) {
         Date now = new Date();
 
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
-                .claim("email", email)
                 .setIssuedAt(now)
                 .setExpiration(new Date(now.getTime() + expireInMs))
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -65,15 +65,15 @@ public class JwtTokenProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (ExpiredJwtException e) {
-            throw new JwtException(ErrorCode.JWT_EXPIRED);
+            throw new JwtExpiredException();
         } catch (UnsupportedJwtException e) {
-            throw new JwtException(ErrorCode.JWT_UNSUPPORTED);
+            throw new JwtUnsupportedException();
         } catch (MalformedJwtException e) {
-            throw new JwtException(ErrorCode.JWT_MALFORMED);
+            throw new JwtMalformedException();
         } catch (SignatureException e) {
-            throw new JwtException(ErrorCode.JWT_INVALID_SIGNATURE);
+            throw new JwtInvalidSignatureException();
         } catch (IllegalArgumentException e) {
-            throw new JwtException(ErrorCode.JWT_INVALID);
+            throw new JwtInvalidException();
         }
     }
 
@@ -90,19 +90,23 @@ public class JwtTokenProvider {
         Claims claims = parseClaims(token);
 
         Long userId = Long.parseLong(claims.getSubject());
-        String email = claims.get("email", String.class);
 
         AuthUser authUser = AuthUser.builder()
                 .id(userId)
-                .email(email)
                 .build();
 
         return new UsernamePasswordAuthenticationToken(authUser, null, null);
     }
 
-    private String removeBearerPrefix(String token) {
-        return token != null && token.startsWith(BEARER)
-                ? token.substring(BEARER.length())
-                : token;
+    public String removeBearerPrefix(String token) {
+        if (token == null) {
+            return null;
+        }
+
+        if (token.startsWith(BEARER)) {
+            return token.substring(BEARER.length());
+        }
+
+        return token;
     }
 }
