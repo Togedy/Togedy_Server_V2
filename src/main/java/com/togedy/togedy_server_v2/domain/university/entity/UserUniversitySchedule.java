@@ -36,12 +36,12 @@ public class UserUniversitySchedule {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "university_schedule_id", nullable = false)
-    private UniversitySchedule universitySchedule;
+    @JoinColumn(name = "university_admission_method_id", nullable = false)
+    private UniversityAdmissionMethod universityAdmissionMethod;
 
     @Builder
-    public UserUniversitySchedule(User user, UniversitySchedule universitySchedule) {
+    public UserUniversitySchedule(User user, UniversityAdmissionMethod universityAdmissionMethod) {
         this.user = user;
-        this.universitySchedule = universitySchedule;
+        this.universityAdmissionMethod = universityAdmissionMethod;
     }
 }

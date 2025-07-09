@@ -46,4 +46,7 @@ public class UniversityAdmissionMethod {
 
     @OneToMany(mappedBy = "universityAdmissionMethod", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<UniversityAdmissionSchedule> universityAdmissionScheduleList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "universityAdmissionMethod", fetch = FetchType.LAZY)
+    private List<UserUniversitySchedule> userUniversityScheduleList = new ArrayList<>();
 }

@@ -3,7 +3,6 @@ package com.togedy.togedy_server_v2.domain.university.entity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -51,8 +50,5 @@ public class UniversitySchedule {
 
     @OneToMany(mappedBy = "universitySchedule", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<UniversityAdmissionSchedule> universityAdmissionScheduleList = new ArrayList<>();
-
-    @OneToMany(mappedBy = "universitySchedule", fetch = FetchType.LAZY)
-    private List<UserUniversitySchedule> userUniversityScheduleList = new ArrayList<>();
 
 }
