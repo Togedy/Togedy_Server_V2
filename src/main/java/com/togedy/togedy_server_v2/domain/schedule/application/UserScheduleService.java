@@ -1,8 +1,8 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
-import com.togedy.togedy_server_v2.domain.schedule.Exception.CategoryNotFoundException;
-import com.togedy.togedy_server_v2.domain.schedule.Exception.UserScheduleNotFoundException;
-import com.togedy.togedy_server_v2.domain.schedule.Exception.UserScheduleNotOwnedException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotFoundException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.UserScheduleNotFoundException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.UserScheduleNotOwnedException;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetUserScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
