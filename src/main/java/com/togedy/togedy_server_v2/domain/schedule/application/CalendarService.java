@@ -136,7 +136,7 @@ public class CalendarService {
         return userUniversityScheduleRepository
                 .findByUserIdAndYearAndMonth(userId, month.getYear(), month.getMonthValue())
                 .stream()
-                .flatMap(uus -> uus.getUniversitySchedule().getAdmissionScheduleList().stream())
+                .flatMap(uus -> uus.getUniversitySchedule().getUniversityAdmissionScheduleList().stream())
                 .collect(Collectors.toMap(
                         as -> as.getUniversitySchedule().getId(),
                         Function.identity(),
@@ -174,7 +174,7 @@ public class CalendarService {
         return userUniversityScheduleRepository
                 .findByUserIdAndDate(userId, date)
                 .stream()
-                .flatMap(uus -> uus.getUniversitySchedule().getAdmissionScheduleList().stream())
+                .flatMap(uus -> uus.getUniversitySchedule().getUniversityAdmissionScheduleList().stream())
                 .collect(Collectors.toMap(
                         as -> as.getUniversitySchedule().getId(),
                         Function.identity(),

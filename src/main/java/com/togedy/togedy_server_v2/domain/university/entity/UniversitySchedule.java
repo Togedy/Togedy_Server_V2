@@ -15,7 +15,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Immutable;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +50,7 @@ public class UniversitySchedule {
     private int academicYear;
 
     @OneToMany(mappedBy = "universitySchedule", orphanRemoval = true, cascade = CascadeType.ALL)
-    private List<AdmissionSchedule> admissionScheduleList = new ArrayList<>();
+    private List<UniversityAdmissionSchedule> universityAdmissionScheduleList = new ArrayList<>();
 
     @OneToMany(mappedBy = "universitySchedule", fetch = FetchType.LAZY)
     private List<UserUniversitySchedule> userUniversityScheduleList = new ArrayList<>();

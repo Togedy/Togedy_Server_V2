@@ -14,7 +14,7 @@ import org.hibernate.annotations.Immutable;
 
 @Entity
 @Table(name = "university",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"university_name", "admission_type"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"university_name", "university_admission_type"})
 )
 @Immutable
 @Getter
@@ -29,7 +29,7 @@ public class University {
     @Column(name = "university_name", nullable = false)
     private String name;
 
-    @Column(name = "admission_type", nullable = false)
+    @Column(name = "university_admission_type", nullable = false)
     private String admissionType;
 
 }

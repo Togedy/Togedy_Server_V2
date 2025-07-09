@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleType;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
-import com.togedy.togedy_server_v2.domain.university.entity.AdmissionSchedule;
+import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionSchedule;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -53,17 +53,17 @@ public class DailyScheduleListDto implements ScheduleComparable {
                 .build();
     }
 
-    public static DailyScheduleListDto from(AdmissionSchedule admissionSchedule) {
+    public static DailyScheduleListDto from(UniversityAdmissionSchedule universityAdmissionSchedule) {
         return DailyScheduleListDto.builder()
-                .scheduleId(admissionSchedule.getUniversitySchedule().getId())
+                .scheduleId(universityAdmissionSchedule.getUniversitySchedule().getId())
                 .scheduleType(ScheduleType.UNIVERSITY)
-                .scheduleName(admissionSchedule.getAdmissionMethod().getUniversity().getName())
-                .universityAdmissionStage(admissionSchedule.getUniversitySchedule().getAdmissionStage())
-                .universityAdmissionType(admissionSchedule.getAdmissionMethod().getUniversity().getAdmissionType())
-                .startDate(admissionSchedule.getUniversitySchedule().getStartDate())
-                .startTime(admissionSchedule.getUniversitySchedule().getStartTime())
-                .endDate(admissionSchedule.getUniversitySchedule().getEndDate())
-                .endTime(admissionSchedule.getUniversitySchedule().getEndTime())
+                .scheduleName(universityAdmissionSchedule.getUniversityAdmissionMethod().getUniversity().getName())
+                .universityAdmissionStage(universityAdmissionSchedule.getUniversitySchedule().getAdmissionStage())
+                .universityAdmissionType(universityAdmissionSchedule.getUniversityAdmissionMethod().getUniversity().getAdmissionType())
+                .startDate(universityAdmissionSchedule.getUniversitySchedule().getStartDate())
+                .startTime(universityAdmissionSchedule.getUniversitySchedule().getStartTime())
+                .endDate(universityAdmissionSchedule.getUniversitySchedule().getEndDate())
+                .endTime(universityAdmissionSchedule.getUniversitySchedule().getEndTime())
                 .category(CategoryDto.temp())
                 .build();
     }

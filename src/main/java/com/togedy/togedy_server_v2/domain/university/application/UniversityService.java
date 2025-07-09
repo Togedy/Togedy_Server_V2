@@ -8,7 +8,7 @@ import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleRe
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityScheduleRepository;
 import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityScheduleRequest;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
-import com.togedy.togedy_server_v2.domain.university.entity.AdmissionSchedule;
+import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionSchedule;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversitySchedule;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversitySchedule;
@@ -81,7 +81,7 @@ public class UniversityService {
         List<String> stageOrder = List.of("원서접수", "서류제출", "합격발표");
 
         return universities.map(u -> {
-            List<AdmissionSchedule> schedules = admissionScheduleRepository
+            List<UniversityAdmissionSchedule> schedules = admissionScheduleRepository
                     .findByUniversityAndYear(u.getId(), ACADEMIC_YEAR);
             schedules.sort(Comparator.comparingInt(s -> stageOrder.indexOf(s.getUniversitySchedule().getAdmissionStage())));
             return toResponse(u, schedules, ownedIds);
@@ -142,18 +142,18 @@ public class UniversityService {
      * 대학 일정 조회 응답을 생성한다. 유저의 해당 대학 일정 보유 여부를 포함한다.
      *
      * @param university            University 객체
-     * @param admissionSchedules    AdmissionSchedule 객체 List
+     * @param universityAdmissionSchedules    AdmissionSchedule 객체 List
      * @param ownedIds              유저가 보유 중인 대학ID Set
      * @return                      대학 일정 조회 DTO
      */
     private GetUniversityScheduleResponse toResponse(
             University university,
-            List<AdmissionSchedule> admissionSchedules,
+            List<UniversityAdmissionSchedule> universityAdmissionSchedules,
             Set<Long> ownedIds
     ) {
-        List<AdmissionTypeDto> admissionTypes = buildAdmissionList(admissionSchedules);
+        List<AdmissionTypeDto> admissionTypes = buildAdmissionList(universityAdmissionSchedules);
 
-        Set<Long> scheduleIds = admissionSchedules.stream()
+        Set<Long> scheduleIds = universityAdmissionSchedules.stream()
                 .map(as -> as.getUniversitySchedule().getId())
                 .collect(Collectors.toSet());
         boolean isAdded = ownedIds.containsAll(scheduleIds);
@@ -164,16 +164,16 @@ public class UniversityService {
     /**
      * 전형 별로 DTO를 생성한다.
      *
-     * @param admissionScheduleList AdmissionSchedule 객체 List
+     * @param universityAdmissionScheduleList AdmissionSchedule 객체 List
      * @return                      전형 별로 생성된 대학 일정 DTO List
      */
-    private List<AdmissionTypeDto> buildAdmissionList(List<AdmissionSchedule> admissionScheduleList) {
-        return admissionScheduleList.stream()
+    private List<AdmissionTypeDto> buildAdmissionList(List<UniversityAdmissionSchedule> universityAdmissionScheduleList) {
+        return universityAdmissionScheduleList.stream()
                 .collect(Collectors.groupingBy(
-                        as -> as.getAdmissionMethod().getName(),
+                        as -> as.getUniversityAdmissionMethod().getName(),
                         LinkedHashMap::new,
                         Collectors.mapping(
-                                AdmissionSchedule::getUniversitySchedule,
+                                UniversityAdmissionSchedule::getUniversitySchedule,
                                 Collectors.toCollection(LinkedHashSet::new)
                         )
                 ))
