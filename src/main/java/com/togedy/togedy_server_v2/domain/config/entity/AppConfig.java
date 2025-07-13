@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.global.entity;
+package com.togedy.togedy_server_v2.domain.config.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
