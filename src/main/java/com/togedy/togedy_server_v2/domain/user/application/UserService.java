@@ -3,8 +3,9 @@ package com.togedy.togedy_server_v2.domain.user.application;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.exception.UserException;
-import com.togedy.togedy_server_v2.global.error.ErrorCode;
+import com.togedy.togedy_server_v2.domain.user.exception.DuplicateEmailException;
+import com.togedy.togedy_server_v2.domain.user.exception.DuplicateNicknameException;
+import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenInfo;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
@@ -21,10 +22,10 @@ public class UserService {
     @Transactional
     public Long generateUser(CreateUserRequest request) {
         if (userRepository.existsByNickname(request.getNickname())) {
-            throw new UserException(ErrorCode.DUPLICATED_NICKNAME);
+            throw new DuplicateNicknameException();
         }
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new UserException(ErrorCode.DUPLICATED_EMAIL);
+            throw new DuplicateEmailException();
         }
 
         User user = User.create(request.getNickname(), request.getEmail());
@@ -33,8 +34,14 @@ public class UserService {
 
     public JwtTokenInfo signInUser(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserException(ErrorCode.USER_NOT_FOUND));
+                .orElseThrow(UserNotFoundException::new);
 
-        return jwtTokenProvider.generateTokenInfo(user.getId(), user.getEmail());
+        return jwtTokenProvider.generateTokenInfo(user.getId());
+    }
+
+    @Transactional(readOnly = true)
+    public User loadUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
     }
 }

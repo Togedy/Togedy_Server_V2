@@ -14,13 +14,6 @@ public class AuthUser implements UserDetails {
 
     private final Long id;
 
-    private final String email;
-
-    public AuthUser(Long id, String email) {
-        this.id = id;
-        this.email = email;
-    }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return Collections.emptyList();
@@ -33,6 +26,6 @@ public class AuthUser implements UserDetails {
 
     @Override
     public String getUsername() {
-        return email;
+        return id.toString();
     }
 }
