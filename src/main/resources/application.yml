@@ -36,8 +36,8 @@ spring:
 
 jwt:
   secret-key: ${JWT_SECRET_KEY}
-  access-expired-in: 7200000    # 2시간
-  refresh-expired-in: 604800000 # 7일
+  access-expired-in: 2592000000    # 2시간
+  refresh-expired-in: 2592000000 # 7일
 
 swagger:
   server:
