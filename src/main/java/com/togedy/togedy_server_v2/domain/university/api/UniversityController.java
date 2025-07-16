@@ -41,21 +41,21 @@ public class UniversityController {
         return ApiUtil.success(response);
     }
 
-    @Operation(summary = "대학 일정 추가", description = "해당 대학 일정들을 유저의 일정으로 추가한다.")
-    @PostMapping("")
-    public ApiResponse<Void> createUserUniversitySchedule(
-            @RequestBody PostUniversityScheduleRequest request,
-            @AuthenticationPrincipal AuthUser user) {
-        universityService.generateUserUniversitySchedule(request, user.getId());
-        return ApiUtil.successOnly();
-    }
-
-    @Operation(summary = "대학 일정 제거", description = "해당 대학 일정들을 유저 일정에서 제거한다.")
-    @DeleteMapping("")
-    public ApiResponse<Void> deleteUserUniversitySchedule(
-            @RequestParam List<Long> universityScheduleIdList,
-            @AuthenticationPrincipal AuthUser user) {
-        universityService.removeUserUniversitySchedule(universityScheduleIdList, user.getId());
-        return ApiUtil.successOnly();
-    }
+//    @Operation(summary = "대학 일정 추가", description = "해당 대학 일정들을 유저의 일정으로 추가한다.")
+//    @PostMapping("")
+//    public ApiResponse<Void> createUserUniversitySchedule(
+//            @RequestBody PostUniversityScheduleRequest request,
+//            @AuthenticationPrincipal AuthUser user) {
+//        universityService.generateUserUniversitySchedule(request, user.getId());
+//        return ApiUtil.successOnly();
+//    }
+//
+//    @Operation(summary = "대학 일정 제거", description = "해당 대학 일정들을 유저 일정에서 제거한다.")
+//    @DeleteMapping("")
+//    public ApiResponse<Void> deleteUserUniversitySchedule(
+//            @RequestParam List<Long> universityScheduleIdList,
+//            @AuthenticationPrincipal AuthUser user) {
+//        universityService.removeUserUniversitySchedule(universityScheduleIdList, user.getId());
+//        return ApiUtil.successOnly();
+//    }
 }
