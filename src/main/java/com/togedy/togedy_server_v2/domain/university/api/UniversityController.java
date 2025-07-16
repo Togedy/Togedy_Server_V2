@@ -26,7 +26,7 @@ public class UniversityController {
 
     @Operation(summary = "대학 일정 조회", description = "대학 일정 정보를 조회한다.")
     @GetMapping("")
-    public ApiResponse<List<GetUniversityResponse>> readUniversityScheduleList(
+    public ApiResponse<List<GetUniversityResponse>> readUniversityList(
             @RequestParam(name = "name", defaultValue = "대학교") String name,
             @RequestParam(name = "admission-type", required = false) String admissionType,
             @RequestParam(name = "page", defaultValue = "0") int page,
