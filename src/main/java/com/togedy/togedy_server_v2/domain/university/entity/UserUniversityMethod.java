@@ -38,9 +38,4 @@ public class UserUniversityMethod {
     @JoinColumn(name = "university_admission_method_id", nullable = false)
     private UniversityAdmissionMethod universityAdmissionMethod;
 
-    @Builder
-    public UserUniversitySchedule(User user, UniversityAdmissionMethod universityAdmissionMethod) {
-        this.user = user;
-        this.universityAdmissionMethod = universityAdmissionMethod;
-    }
 }
