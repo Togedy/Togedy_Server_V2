@@ -12,23 +12,22 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "user_university_schedule",
+@Table(name = "user_university_method",
         uniqueConstraints = @UniqueConstraint(
                 columnNames = {"user_id", "university_schedule_id"}
         )
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserUniversitySchedule {
+public class UserUniversityMethod {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_university_schedule_id", nullable = false)
+    @Column(name = "user_university_method_id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
