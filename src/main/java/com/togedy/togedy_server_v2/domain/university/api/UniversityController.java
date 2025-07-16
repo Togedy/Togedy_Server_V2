@@ -1,8 +1,7 @@
 package com.togedy.togedy_server_v2.domain.university.api;
 
 import com.togedy.togedy_server_v2.domain.university.application.UniversityService;
-import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
-import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityScheduleRequest;
+import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
@@ -10,10 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,14 +26,14 @@ public class UniversityController {
 
     @Operation(summary = "대학 일정 조회", description = "대학 일정 정보를 조회한다.")
     @GetMapping("")
-    public ApiResponse<List<GetUniversityScheduleResponse>> readUniversityScheduleList(
-            @RequestParam(name = "name") String name,
+    public ApiResponse<List<GetUniversityResponse>> readUniversityScheduleList(
+            @RequestParam(name = "name", defaultValue = "대학교") String name,
             @RequestParam(name = "admission-type", required = false) String admissionType,
             @RequestParam(name = "page", defaultValue = "0") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
             @AuthenticationPrincipal AuthUser user){
-        List<GetUniversityScheduleResponse> response =
-                universityService.findUniversityScheduleList(name, admissionType, user.getId(), page, size).getContent();
+        List<GetUniversityResponse> response =
+                universityService.findUniversityList(name, admissionType, user.getId(), page, size).getContent();
         return ApiUtil.success(response);
     }
 

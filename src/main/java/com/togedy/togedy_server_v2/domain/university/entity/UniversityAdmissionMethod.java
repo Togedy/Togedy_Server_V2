@@ -48,5 +48,5 @@ public class UniversityAdmissionMethod {
     private List<UniversityAdmissionSchedule> universityAdmissionScheduleList = new ArrayList<>();
 
     @OneToMany(mappedBy = "universityAdmissionMethod", fetch = FetchType.LAZY)
-    private List<UserUniversitySchedule> userUniversityScheduleList = new ArrayList<>();
+    private List<UserUniversityMethod> userUniversityMethodList = new ArrayList<>();
 }
