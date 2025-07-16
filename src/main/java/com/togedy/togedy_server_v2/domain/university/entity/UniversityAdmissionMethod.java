@@ -37,7 +37,7 @@ public class UniversityAdmissionMethod {
     @Column(name = "university_admission_method_id")
     private Long id;
 
-    @Column(name = "university_admission_method_name", nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
