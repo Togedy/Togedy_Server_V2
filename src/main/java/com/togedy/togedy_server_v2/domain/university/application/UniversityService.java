@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -87,12 +88,12 @@ public class UniversityService {
         List<UniversityAdmissionMethodDto> universityAdmissionMethodDtoList = new ArrayList<>();
 
         for (UniversityAdmissionMethod universityAdmissionMethod : universityAdmissionMethodList) {
-            List<UniversityScheduleDto> universityScheduleDtoList = new ArrayList<>();
-            List<UniversityAdmissionSchedule> universityAdmissionScheduleList = universityAdmissionMethod.getUniversityAdmissionScheduleList();
-            for (UniversityAdmissionSchedule universityAdmissionSchedule : universityAdmissionScheduleList) {
-                UniversitySchedule universitySchedule = universityAdmissionSchedule.getUniversitySchedule();
-                universityScheduleDtoList.add(UniversityScheduleDto.from(universitySchedule));
-            }
+            List<UniversityScheduleDto> universityScheduleDtoList =
+                    universityAdmissionMethod.getUniversityAdmissionScheduleList().stream()
+                            .map(universityAdmissionSchedule ->
+                                    UniversityScheduleDto.from(universityAdmissionSchedule.getUniversitySchedule()))
+                            .toList();
+
             universityAdmissionMethodDtoList.add(UniversityAdmissionMethodDto.of(universityAdmissionMethod, universityScheduleDtoList));
         }
 
