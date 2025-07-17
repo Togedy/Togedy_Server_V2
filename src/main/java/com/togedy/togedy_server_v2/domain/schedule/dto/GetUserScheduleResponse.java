@@ -30,13 +30,13 @@ public class GetUserScheduleResponse {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime endTime;
 
-    private Long categoryId;
-
     private String memo;
 
     @JsonProperty("d-day")
     @Schema(name = "d-day", type = "boolean")
     private boolean dDay;
+
+    private CategoryDto category;
 
     public static GetUserScheduleResponse from(UserSchedule userSchedule) {
         return GetUserScheduleResponse.builder()
@@ -45,7 +45,7 @@ public class GetUserScheduleResponse {
                 .startTime(userSchedule.getStartTime())
                 .endDate(userSchedule.getEndDate())
                 .endTime(userSchedule.getEndTime())
-                .categoryId(userSchedule.getCategory().getId())
+                .category(CategoryDto.from(userSchedule.getCategory()))
                 .memo(userSchedule.getMemo())
                 .dDay(userSchedule.isDDay())
                 .build();
