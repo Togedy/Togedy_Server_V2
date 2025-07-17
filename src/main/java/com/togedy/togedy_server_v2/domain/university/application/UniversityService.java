@@ -84,10 +84,10 @@ public class UniversityService {
         List<UniversityAdmissionMethod> universityAdmissionMethodList
                 = universityAdmissionMethodRepository.findAllByUniversity(university);
 
-        List<UniversityScheduleDto> universityScheduleDtoList = new ArrayList<>();
         List<UniversityAdmissionMethodDto> universityAdmissionMethodDtoList = new ArrayList<>();
 
         for (UniversityAdmissionMethod universityAdmissionMethod : universityAdmissionMethodList) {
+            List<UniversityScheduleDto> universityScheduleDtoList = new ArrayList<>();
             List<UniversityAdmissionSchedule> universityAdmissionScheduleList = universityAdmissionMethod.getUniversityAdmissionScheduleList();
             for (UniversityAdmissionSchedule universityAdmissionSchedule : universityAdmissionScheduleList) {
                 UniversitySchedule universitySchedule = universityAdmissionSchedule.getUniversitySchedule();
