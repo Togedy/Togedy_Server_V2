@@ -13,8 +13,6 @@ public class UniversityAdmissionMethodDto {
 
     private String universityAdmissionMethod;
     private Long universityAdmissionMethodId;
-    @JsonProperty("isAdded")
-    private boolean added;
     private List<UniversityScheduleDto> universityScheduleList;
 
     public static UniversityAdmissionMethodDto of(UniversityAdmissionMethod universityAdmissionMethod, List<UniversityScheduleDto> universityScheduleList) {
