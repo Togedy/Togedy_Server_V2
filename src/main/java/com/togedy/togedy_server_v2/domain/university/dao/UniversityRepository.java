@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface UniversityRepository extends JpaRepository<University, Long> {
 
     @Query("""
@@ -20,4 +22,6 @@ public interface UniversityRepository extends JpaRepository<University, Long> {
             @Param("admissionType") String admissionType,
             Pageable pageable
     );
+
+    Optional<University> findById(Long universityId);
 }

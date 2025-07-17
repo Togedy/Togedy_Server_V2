@@ -20,4 +20,6 @@ public interface UniversityAdmissionMethodRepository extends JpaRepository<Unive
         AND uam.university = :university
     """)
     List<UniversityAdmissionMethod> findAllByUniversityAndUser(University university, User user);
+
+    List<UniversityAdmissionMethod> findAllByUniversity(University university);
 }

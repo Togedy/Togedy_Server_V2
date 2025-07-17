@@ -3,10 +3,16 @@ package com.togedy.togedy_server_v2.domain.university.application;
 import com.togedy.togedy_server_v2.domain.university.dao.AdmissionScheduleRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityAdmissionMethodRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityRepository;
+import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityScheduleRepository;
+import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodDto;
+import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
+import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionSchedule;
+import com.togedy.togedy_server_v2.domain.university.entity.UniversitySchedule;
+import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
@@ -18,6 +24,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -61,6 +68,33 @@ public class UniversityService {
         });
     }
 
+    public GetUniversityScheduleResponse findUniversitySchedule(Long universityId, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        University university = universityRepository.findById(universityId)
+                .orElseThrow(UniversityNotFoundException::new);
+
+        List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList =
+                universityAdmissionMethodRepository.findAllByUniversityAndUser(university, user);
+
+        List<UniversityAdmissionMethod> universityAdmissionMethodList
+                = universityAdmissionMethodRepository.findAllByUniversity(university);
+
+        List<UniversityScheduleDto> universityScheduleDtoList = new ArrayList<>();
+        List<UniversityAdmissionMethodDto> universityAdmissionMethodDtoList = new ArrayList<>();
+
+        for (UniversityAdmissionMethod universityAdmissionMethod : universityAdmissionMethodList) {
+            List<UniversityAdmissionSchedule> universityAdmissionScheduleList = universityAdmissionMethod.getUniversityAdmissionScheduleList();
+            for (UniversityAdmissionSchedule universityAdmissionSchedule : universityAdmissionScheduleList) {
+                UniversitySchedule universitySchedule = universityAdmissionSchedule.getUniversitySchedule();
+                universityScheduleDtoList.add(UniversityScheduleDto.from(universitySchedule));
+            }
+            universityAdmissionMethodDtoList.add(UniversityAdmissionMethodDto.of(universityAdmissionMethod, universityScheduleDtoList));
+        }
+
+        return GetUniversityScheduleResponse.of(university, addedUniversityAdmissionMethodList, universityAdmissionMethodDtoList);
+    }
 
 
 //    /**
