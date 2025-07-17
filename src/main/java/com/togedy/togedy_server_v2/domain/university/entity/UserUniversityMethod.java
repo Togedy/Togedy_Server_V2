@@ -12,6 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -38,4 +39,9 @@ public class UserUniversityMethod {
     @JoinColumn(name = "university_admission_method_id", nullable = false)
     private UniversityAdmissionMethod universityAdmissionMethod;
 
+    @Builder
+    public UserUniversityMethod(User user, UniversityAdmissionMethod universityAdmissionMethod) {
+        this.user = user;
+        this.universityAdmissionMethod = universityAdmissionMethod;
+    }
 }

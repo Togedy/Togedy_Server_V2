@@ -1,18 +1,21 @@
 package com.togedy.togedy_server_v2.domain.university.application;
 
-import com.togedy.togedy_server_v2.domain.university.dao.AdmissionScheduleRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityAdmissionMethodRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityRepository;
+import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityScheduleRepository;
+import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodDto;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionSchedule;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversitySchedule;
+import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoundException;
+import com.togedy.togedy_server_v2.domain.university.exception.UniversityScheduleNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
@@ -35,8 +38,8 @@ public class UniversityService {
     private final UniversityScheduleRepository universityScheduleRepository;
     private final UniversityAdmissionMethodRepository universityAdmissionMethodRepository;
     private final UserRepository userRepository;
-    private final AdmissionScheduleRepository admissionScheduleRepository;
     private final UniversityRepository universityRepository;
+    private final UserUniversityMethodRepository userUniversityMethodRepository;
 
     private static final int ACADEMIC_YEAR = 2025;
 
@@ -94,6 +97,30 @@ public class UniversityService {
         }
 
         return GetUniversityScheduleResponse.of(university, addedUniversityAdmissionMethodList, universityAdmissionMethodDtoList);
+    }
+
+    @Transactional
+    public void generateUserUniversityAdmissionMethod(PostUniversityAdmissionMethodRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        List<Long> universityAdmissionMethodIdList = request.getUniversityAdmissionMethodIdList();
+
+        List<UniversityAdmissionMethod> universityScheduleList
+                = universityAdmissionMethodRepository.findAllById(universityAdmissionMethodIdList);
+
+        if (universityScheduleList.size() != universityAdmissionMethodIdList.size()) {
+            throw new UniversityScheduleNotFoundException();
+        }
+
+        List<UserUniversityMethod> userUniversityScheduleList = universityScheduleList.stream()
+                .map(us -> UserUniversityMethod.builder()
+                        .user(user)
+                        .universityAdmissionMethod(us)
+                        .build())
+                .toList();
+
+        userUniversityMethodRepository.saveAll(userUniversityScheduleList);
     }
 
 

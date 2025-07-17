@@ -3,6 +3,7 @@ package com.togedy.togedy_server_v2.domain.university.api;
 import com.togedy.togedy_server_v2.domain.university.application.UniversityService;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
+import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
@@ -12,6 +13,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -49,14 +52,14 @@ public class UniversityController {
         return ApiUtil.success(response);
     }
 
-//    @Operation(summary = "대학 일정 추가", description = "해당 대학 일정들을 유저의 일정으로 추가한다.")
-//    @PostMapping("")
-//    public ApiResponse<Void> createUserUniversitySchedule(
-//            @RequestBody PostUniversityScheduleRequest request,
-//            @AuthenticationPrincipal AuthUser user) {
-//        universityService.generateUserUniversitySchedule(request, user.getId());
-//        return ApiUtil.successOnly();
-//    }
+    @Operation(summary = "대학 일정 추가", description = "대학 전형들을 추가한다.")
+    @PostMapping("")
+    public ApiResponse<Void> createUserUniversitySchedule(
+            @RequestBody PostUniversityAdmissionMethodRequest request,
+            @AuthenticationPrincipal AuthUser user) {
+        universityService.generateUserUniversityAdmissionMethod(request, user.getId());
+        return ApiUtil.successOnly();
+    }
 //
 //    @Operation(summary = "대학 일정 제거", description = "해당 대학 일정들을 유저 일정에서 제거한다.")
 //    @DeleteMapping("")

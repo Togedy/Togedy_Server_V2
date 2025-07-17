@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PostUniversityScheduleRequest {
+public class PostUniversityAdmissionMethodRequest {
 
-    List<Long> universityScheduleIdList;
+    List<Long> universityAdmissionMethodIdList;
 }

@@ -40,7 +40,10 @@ public enum ErrorCode {
     INVALID_ADMISSION_TYPE(HttpStatus.BAD_REQUEST, "UNS5001", "유효하지 않은 입시 유형입니다."),
 
     // UNIVERSITY (6000)
-    UNIVERSITY_NOT_FOUND(HttpStatus.NOT_FOUND, "UN6001", "해당 대학을 찾을 수 없습니다.");
+    UNIVERSITY_NOT_FOUND(HttpStatus.NOT_FOUND, "UN6001", "해당 대학을 찾을 수 없습니다."),
+
+    // UNIVERSITY_ADMISSION_METHOD (7000)
+    UNIVERSITY_ADMISSION_METHOD_NOT_FOUND(HttpStatus.NOT_FOUND, "UAM7001", "해당 대학 입시 전형을 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
