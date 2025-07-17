@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -60,13 +61,14 @@ public class UniversityController {
         universityService.generateUserUniversityAdmissionMethod(request, user.getId());
         return ApiUtil.successOnly();
     }
-//
-//    @Operation(summary = "대학 일정 제거", description = "해당 대학 일정들을 유저 일정에서 제거한다.")
-//    @DeleteMapping("")
-//    public ApiResponse<Void> deleteUserUniversitySchedule(
-//            @RequestParam List<Long> universityScheduleIdList,
-//            @AuthenticationPrincipal AuthUser user) {
-//        universityService.removeUserUniversitySchedule(universityScheduleIdList, user.getId());
-//        return ApiUtil.successOnly();
-//    }
+
+    @Operation(summary = "대학 전형 제거", description = "유저가 추가한 대학 전형을 제거한다.")
+    @DeleteMapping("")
+    public ApiResponse<Void> deleteUserUniversityMethod(
+            @RequestParam List<Long> universityAdmissionMethodIdList,
+            @AuthenticationPrincipal AuthUser user)
+    {
+        universityService.removeUserUniversityMethod(universityAdmissionMethodIdList, user.getId());
+        return ApiUtil.successOnly();
+    }
 }

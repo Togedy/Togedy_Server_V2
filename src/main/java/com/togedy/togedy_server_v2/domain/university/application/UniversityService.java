@@ -123,6 +123,22 @@ public class UniversityService {
         userUniversityMethodRepository.saveAll(userUniversityScheduleList);
     }
 
+    @Transactional
+    public void removeUserUniversityMethod(List<Long> universityScheduleIdList, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        List<UserUniversityMethod> userUniversityMethodList =
+                userUniversityMethodRepository
+                        .findByUserAndUniversityAdmissionMethodIdIn(user, universityScheduleIdList);
+
+        if (userUniversityMethodList.isEmpty()) {
+            throw new UniversityScheduleNotFoundException();
+        }
+
+        userUniversityMethodRepository.deleteAll(userUniversityMethodList);
+    }
+
 
 //    /**
 //     * name을 포함하는 대학 일정을 조회한다. admissionType을 통해 수시 혹은 정시 일정을 필터링한다.
