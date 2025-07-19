@@ -11,8 +11,6 @@ import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMeth
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
-import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionSchedule;
-import com.togedy.togedy_server_v2.domain.university.entity.UniversitySchedule;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoundException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityScheduleNotFoundException;
@@ -29,7 +27,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j

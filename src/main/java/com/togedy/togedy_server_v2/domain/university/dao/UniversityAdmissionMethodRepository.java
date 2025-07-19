@@ -15,9 +15,9 @@ public interface UniversityAdmissionMethodRepository extends JpaRepository<Unive
     @Query("""
         SELECT uam
         FROM UniversityAdmissionMethod uam
-        JOIN FETCH uam.userUniversityMethodList uum
+            JOIN FETCH uam.userUniversityMethodList uum
         WHERE uum.user = :user
-        AND uam.university = :university
+            AND uam.university = :university
     """)
     List<UniversityAdmissionMethod> findAllByUniversityAndUser(University university, User user);
 
