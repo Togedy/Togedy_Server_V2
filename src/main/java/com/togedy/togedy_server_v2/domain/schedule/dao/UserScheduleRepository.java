@@ -1,7 +1,6 @@
 package com.togedy.togedy_server_v2.domain.schedule.dao;
 
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
-import com.togedy.togedy_server_v2.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,8 +15,8 @@ public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long
        SELECT us
        FROM UserSchedule us
        WHERE us.user.id = :userId
-       AND YEAR(us.startDate)  = :year
-       AND MONTH(us.startDate) = :month
+       AND :year BETWEEN YEAR(us.startDate) AND YEAR(us.endDate)
+       AND :month BETWEEN YEAR(us.startDate) AND YEAR(us.endDate)
     """)
     List<UserSchedule> findByUserIdAndYearAndMonth(
             @Param("userId") Long userId,
@@ -26,10 +25,10 @@ public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long
     );
 
     @Query("""
-       SELECT us
-       FROM UserSchedule us
-       WHERE us.user.id = :userId
-       AND DATE(us.startDate) = :date
+        SELECT us
+        FROM UserSchedule us
+        WHERE us.user.id    = :userId
+        AND :date BETWEEN us.startDate AND us.endDate
     """)
     List<UserSchedule> findByUserIdAndDate(
             @Param("userId") Long userId,

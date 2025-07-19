@@ -26,6 +26,8 @@ public class DailyScheduleListDto implements ScheduleComparable {
 
     private String universityAdmissionType;
 
+    private String universityAdmissionMethod;
+
     private LocalDate startDate;
 
     @Schema(type = "string", format = "time", example = "00:00:00")
@@ -60,6 +62,7 @@ public class DailyScheduleListDto implements ScheduleComparable {
                 .scheduleName(universityAdmissionSchedule.getUniversityAdmissionMethod().getUniversity().getName())
                 .universityAdmissionStage(universityAdmissionSchedule.getUniversitySchedule().getAdmissionStage())
                 .universityAdmissionType(universityAdmissionSchedule.getUniversityAdmissionMethod().getUniversity().getAdmissionType())
+                .universityAdmissionMethod(universityAdmissionSchedule.getUniversityAdmissionMethod().getName())
                 .startDate(universityAdmissionSchedule.getUniversitySchedule().getStartDate())
                 .startTime(universityAdmissionSchedule.getUniversitySchedule().getStartTime())
                 .endDate(universityAdmissionSchedule.getUniversitySchedule().getEndDate())
