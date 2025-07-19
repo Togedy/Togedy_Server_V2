@@ -100,9 +100,10 @@ public class CalendarService {
     /**
      * 유저가 보유 중인 해당 월의 개인 일정을 조회한다.
      *
-     * @param userId    유저ID
-     * @param month     년도 및 월 정보 (yyyy-MM)
-     * @return          월별 일정 DTO List
+     * @param userId        유저ID
+     * @param startOfMonth  일정 시작 날짜
+     * @param endOfMonth    일정 종료 날짜
+     * @return              월별 일정 DTO List
      */
     private List<MonthlyScheduleListDto> findMonthlyUserSchedule(
             Long userId,
@@ -119,9 +120,10 @@ public class CalendarService {
     /**
      * 유저가 보유 중인 해당 월의 대학 일정을 조회한다.
      *
-     * @param userId    유저 ID
-     * @param month     년도 및 월 정보 (yyyy-MM)
-     * @return          월별 일정 DTO List
+     * @param userId        유저 ID
+     * @param startOfMonth  일정 시작 날짜
+     * @param endOfMonth    일정 종료 날짜
+     * @return              월별 일정 DTO List
      */
     private List<MonthlyScheduleListDto> findMonthlyUniversitySchedule(
             Long userId,

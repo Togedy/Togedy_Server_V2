@@ -43,7 +43,7 @@ public class UniversityController {
         return ApiUtil.success(response);
     }
 
-    @Operation(summary = "대학 일정 상세 조회", description = "대학 전형별 일정을 조회한다.")
+    @Operation(summary = "대학 전형별 일정 상세 조회", description = "대학 전형별 일정을 조회한다.")
     @GetMapping("/{universityId}/schedule")
     public ApiResponse<GetUniversityScheduleResponse> readUniversitySchedule(
             @PathVariable Long universityId,
