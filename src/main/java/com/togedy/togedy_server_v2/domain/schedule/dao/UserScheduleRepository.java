@@ -12,23 +12,23 @@ import java.util.Optional;
 public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long> {
 
     @Query("""
-       SELECT us
-       FROM UserSchedule us
-       WHERE us.user.id = :userId
-       AND :year BETWEEN YEAR(us.startDate) AND YEAR(us.endDate)
-       AND :month BETWEEN YEAR(us.startDate) AND YEAR(us.endDate)
+        SELECT us
+        FROM UserSchedule us
+        WHERE us.user.id = :userId
+            AND us.startDate <= :endOfMonth
+            AND COALESCE(us.endDate, us.startDate) >= :startOfMonth
     """)
     List<UserSchedule> findByUserIdAndYearAndMonth(
             @Param("userId") Long userId,
-            @Param("year") int year,
-            @Param("month") int month
+            @Param("startOfMonth") LocalDate startOfMonth,
+            @Param("endOfMonth") LocalDate endOfMonth
     );
 
     @Query("""
         SELECT us
         FROM UserSchedule us
-        WHERE us.user.id    = :userId
-        AND :date BETWEEN us.startDate AND us.endDate
+        WHERE us.user.id = :userId
+            AND :date BETWEEN us.startDate AND COALESCE(us.endDate, us.startDate)
     """)
     List<UserSchedule> findByUserIdAndDate(
             @Param("userId") Long userId,
@@ -39,7 +39,7 @@ public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long
         SELECT us
         FROM  UserSchedule us
         WHERE us.user.id = :userId
-        AND us.dDay = true
+         AND us.dDay = true
     """)
     Optional<UserSchedule> findByUserIdAndDDayTrue(Long userId);
 

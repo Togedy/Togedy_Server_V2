@@ -16,27 +16,27 @@ public interface UserUniversityMethodRepository extends JpaRepository<UserUniver
     @Query("""
         SELECT uum
         FROM UserUniversityMethod uum
-        JOIN FETCH uum.universityAdmissionMethod uam
-        JOIN FETCH uam.universityAdmissionScheduleList uasl
-        JOIN FETCH uasl.universitySchedule us
+            JOIN FETCH uum.universityAdmissionMethod uam
+            JOIN FETCH uam.universityAdmissionScheduleList uasl
+            JOIN FETCH uasl.universitySchedule us
         WHERE uum.user.id = :userId
-        AND YEAR(us.startDate) = :year
-        AND MONTH(us.startDate) = :month
+            AND us.startDate <= :endOfMonth
+            AND COALESCE(us.endDate, us.startDate) >= :startOfMonth 
     """)
     List<UserUniversityMethod> findByUserIdAndYearAndMonth(
             @Param("userId") Long userId,
-            @Param("year") int year,
-            @Param("month") int month
+            @Param("startOfMonth") LocalDate startOfMonth,
+            @Param("endOfMonth") LocalDate endOfMonth
     );
 
     @Query("""
         SELECT uum
         FROM UserUniversityMethod uum
-        JOIN FETCH uum.universityAdmissionMethod uam
-        JOIN FETCH uam.universityAdmissionScheduleList uasl
-        JOIN FETCH uasl.universitySchedule us
-        WHERE uum.id = :userId
-        AND :date BETWEEN us.startDate AND us.endDate
+            JOIN FETCH uum.universityAdmissionMethod uam
+            JOIN FETCH uam.universityAdmissionScheduleList uasl
+            JOIN FETCH uasl.universitySchedule us
+        WHERE uum.user.id = :userId
+            AND :date BETWEEN us.startDate AND COALESCE(us.endDate, us.startDate)
     """)
     List<UserUniversityMethod> findByUserIdAndDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 }

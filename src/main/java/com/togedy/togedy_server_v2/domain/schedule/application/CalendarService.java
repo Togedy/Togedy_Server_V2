@@ -47,8 +47,11 @@ public class CalendarService {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        List<MonthlyScheduleListDto> monthlyUserSchedule = findMonthlyUserSchedule(userId, month);
-        monthlyUserSchedule.addAll(findMonthlyUniversitySchedule(userId, month));
+        LocalDate startOfMonth = month.atDay(1);
+        LocalDate endOfMonth = month.atEndOfMonth();
+
+        List<MonthlyScheduleListDto> monthlyUserSchedule = findMonthlyUserSchedule(userId, startOfMonth, endOfMonth);
+        monthlyUserSchedule.addAll(findMonthlyUniversitySchedule(userId, startOfMonth, endOfMonth));
         monthlyUserSchedule.sort(scheduleComparator());
 
         return GetMonthlyCalendarResponse.from(monthlyUserSchedule);
@@ -101,9 +104,13 @@ public class CalendarService {
      * @param month     년도 및 월 정보 (yyyy-MM)
      * @return          월별 일정 DTO List
      */
-    private List<MonthlyScheduleListDto> findMonthlyUserSchedule(Long userId, YearMonth month) {
+    private List<MonthlyScheduleListDto> findMonthlyUserSchedule(
+            Long userId,
+            LocalDate startOfMonth,
+            LocalDate endOfMonth
+    ) {
         return userScheduleRepository
-                .findByUserIdAndYearAndMonth(userId, month.getYear(), month.getMonthValue())
+                .findByUserIdAndYearAndMonth(userId, startOfMonth, endOfMonth)
                 .stream()
                 .map(MonthlyScheduleListDto::from)
                 .collect(Collectors.toList());
@@ -116,9 +123,13 @@ public class CalendarService {
      * @param month     년도 및 월 정보 (yyyy-MM)
      * @return          월별 일정 DTO List
      */
-    private List<MonthlyScheduleListDto> findMonthlyUniversitySchedule(Long userId, YearMonth month) {
+    private List<MonthlyScheduleListDto> findMonthlyUniversitySchedule(
+            Long userId,
+            LocalDate startOfMonth,
+            LocalDate endOfMonth
+    ) {
         return userUniversityMethodRepository
-                .findByUserIdAndYearAndMonth(userId, month.getYear(), month.getMonthValue())
+                .findByUserIdAndYearAndMonth(userId, startOfMonth, endOfMonth)
                 .stream()
                 .flatMap(uus -> uus.getUniversityAdmissionMethod().getUniversityAdmissionScheduleList().stream())
                 .collect(Collectors.toMap(
