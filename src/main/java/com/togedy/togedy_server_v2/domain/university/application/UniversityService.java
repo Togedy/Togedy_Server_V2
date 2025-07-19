@@ -41,6 +41,16 @@ public class UniversityService {
 
     private static final int ACADEMIC_YEAR = 2025;
 
+    /***
+     * 대학명, 입시 전형에 해당하는 대학 정보를 조회한다.
+     *
+     * @param name              대학명
+     * @param admissionType     입시 전형(수시, 정시)
+     * @param userId            유저ID
+     * @param page              페이지
+     * @param size              크기
+     * @return                  대학별 정보
+     */
     @Transactional(readOnly = true)
     public Page<GetUniversityResponse> findUniversityList(
             String name,
@@ -69,6 +79,13 @@ public class UniversityService {
         });
     }
 
+    /***
+     * 해당 대학의 전형별 일정을 조회한다.
+     *
+     * @param universityId  대학ID
+     * @param userId        유저ID
+     * @return              해당 대학의 전형별 일정
+     */
     public GetUniversityScheduleResponse findUniversitySchedule(Long universityId, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
@@ -97,6 +114,12 @@ public class UniversityService {
         return GetUniversityScheduleResponse.of(university, addedUniversityAdmissionMethodList, universityAdmissionMethodDtoList);
     }
 
+    /***
+     * 유저가 대학 전형들을 추가한다.
+     *
+     * @param request   대학 전형ID 리스트
+     * @param userId    유저ID
+     */
     @Transactional
     public void generateUserUniversityAdmissionMethod(PostUniversityAdmissionMethodRequest request, Long userId) {
         User user = userRepository.findById(userId)
@@ -121,6 +144,11 @@ public class UniversityService {
         userUniversityMethodRepository.saveAll(userUniversityScheduleList);
     }
 
+    /***
+     * 유저가 보유한 대학 전형을 제거한다.
+     * @param universityScheduleIdList  대학 전형ID 리스트
+     * @param userId                    유저ID
+     */
     @Transactional
     public void removeUserUniversityMethod(List<Long> universityScheduleIdList, Long userId) {
         User user = userRepository.findById(userId)
