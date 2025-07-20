@@ -62,7 +62,11 @@ public class UniversityService {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        PageRequest pageRequest = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "name"));
+        if ("전체".equals(admissionType)) {
+            admissionType = null;
+        }
+
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
         Page<University> universities = universityRepository.findByNameAndType(name, admissionType, pageRequest);
 
         return universities.map(university -> {

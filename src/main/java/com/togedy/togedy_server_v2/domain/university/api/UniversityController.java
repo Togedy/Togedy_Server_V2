@@ -34,8 +34,8 @@ public class UniversityController {
     @GetMapping("")
     public ApiResponse<List<GetUniversityResponse>> readUniversityList(
             @RequestParam(name = "name", defaultValue = "대학교") String name,
-            @RequestParam(name = "admission-type", required = false) String admissionType,
-            @RequestParam(name = "page", defaultValue = "0") int page,
+            @RequestParam(name = "admission-type", defaultValue = "전체", required = false) String admissionType,
+            @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
             @AuthenticationPrincipal AuthUser user){
         List<GetUniversityResponse> response =
