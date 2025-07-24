@@ -1,6 +1,5 @@
 package com.togedy.togedy_server_v2.domain.university.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import lombok.Builder;
 import lombok.Getter;
