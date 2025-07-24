@@ -1,12 +1,13 @@
 package com.togedy.togedy_server_v2.domain.university.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
+import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import lombok.Builder;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Getter
 @Builder
@@ -16,19 +17,23 @@ import java.util.List;
 public class GetUniversityScheduleResponse {
 
     private String universityName;
-    private String admissionType;
-    @JsonProperty("isAdded")
-    private boolean added;
-    private List<AdmissionTypeDto> admissionList;
+    private String universityAdmissionType;
+    private List<String> addedUniversityAdmissionMethodList;
+    private List<UniversityAdmissionMethodDto> universityAdmissionMethodList;
 
-    public static GetUniversityScheduleResponse of(University university,
-                                                   List<AdmissionTypeDto> admissionList,
-                                                   boolean isAdded) {
+    public static GetUniversityScheduleResponse of(
+            University university,
+            List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList,
+            List<UniversityAdmissionMethodDto> admissionList)
+    {
         return GetUniversityScheduleResponse.builder()
                 .universityName(university.getName())
-                .admissionType(university.getAdmissionType())
-                .added(isAdded)
-                .admissionList(admissionList)
+                .universityAdmissionType(university.getAdmissionType())
+                .addedUniversityAdmissionMethodList(
+                        addedUniversityAdmissionMethodList.stream()
+                        .map(UniversityAdmissionMethod::getName)
+                                .collect(Collectors.toList()))
+                .universityAdmissionMethodList(admissionList)
                 .build();
     }
 }

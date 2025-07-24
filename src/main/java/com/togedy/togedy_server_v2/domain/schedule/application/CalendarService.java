@@ -8,7 +8,7 @@ import com.togedy.togedy_server_v2.domain.schedule.dto.GetMonthlyCalendarRespons
 import com.togedy.togedy_server_v2.domain.schedule.dto.MonthlyScheduleListDto;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
-import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityScheduleRepository;
+import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
@@ -33,7 +33,7 @@ public class CalendarService {
 
     private final UserRepository userRepository;
     private final UserScheduleRepository userScheduleRepository;
-    private final UserUniversityScheduleRepository userUniversityScheduleRepository;
+    private final UserUniversityMethodRepository userUniversityMethodRepository;
 
     /**
      * 유저가 해당 월에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
@@ -47,8 +47,11 @@ public class CalendarService {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        List<MonthlyScheduleListDto> monthlyUserSchedule = findMonthlyUserSchedule(userId, month);
-        monthlyUserSchedule.addAll(findMonthlyUniversitySchedule(userId, month));
+        LocalDate startOfMonth = month.atDay(1);
+        LocalDate endOfMonth = month.atEndOfMonth();
+
+        List<MonthlyScheduleListDto> monthlyUserSchedule = findMonthlyUserSchedule(userId, startOfMonth, endOfMonth);
+        monthlyUserSchedule.addAll(findMonthlyUniversitySchedule(userId, startOfMonth, endOfMonth));
         monthlyUserSchedule.sort(scheduleComparator());
 
         return GetMonthlyCalendarResponse.from(monthlyUserSchedule);
@@ -97,13 +100,18 @@ public class CalendarService {
     /**
      * 유저가 보유 중인 해당 월의 개인 일정을 조회한다.
      *
-     * @param userId    유저ID
-     * @param month     년도 및 월 정보 (yyyy-MM)
-     * @return          월별 일정 DTO List
+     * @param userId        유저ID
+     * @param startOfMonth  일정 시작 날짜
+     * @param endOfMonth    일정 종료 날짜
+     * @return              월별 일정 DTO List
      */
-    private List<MonthlyScheduleListDto> findMonthlyUserSchedule(Long userId, YearMonth month) {
+    private List<MonthlyScheduleListDto> findMonthlyUserSchedule(
+            Long userId,
+            LocalDate startOfMonth,
+            LocalDate endOfMonth
+    ) {
         return userScheduleRepository
-                .findByUserIdAndYearAndMonth(userId, month.getYear(), month.getMonthValue())
+                .findByUserIdAndYearAndMonth(userId, startOfMonth, endOfMonth)
                 .stream()
                 .map(MonthlyScheduleListDto::from)
                 .collect(Collectors.toList());
@@ -112,17 +120,22 @@ public class CalendarService {
     /**
      * 유저가 보유 중인 해당 월의 대학 일정을 조회한다.
      *
-     * @param userId    유저 ID
-     * @param month     년도 및 월 정보 (yyyy-MM)
-     * @return          월별 일정 DTO List
+     * @param userId        유저 ID
+     * @param startOfMonth  일정 시작 날짜
+     * @param endOfMonth    일정 종료 날짜
+     * @return              월별 일정 DTO List
      */
-    private List<MonthlyScheduleListDto> findMonthlyUniversitySchedule(Long userId, YearMonth month) {
-        return userUniversityScheduleRepository
-                .findByUserIdAndYearAndMonth(userId, month.getYear(), month.getMonthValue())
+    private List<MonthlyScheduleListDto> findMonthlyUniversitySchedule(
+            Long userId,
+            LocalDate startOfMonth,
+            LocalDate endOfMonth
+    ) {
+        return userUniversityMethodRepository
+                .findByUserIdAndYearAndMonth(userId, startOfMonth, endOfMonth)
                 .stream()
-                .flatMap(uus -> uus.getUniversitySchedule().getAdmissionScheduleList().stream())
+                .flatMap(uus -> uus.getUniversityAdmissionMethod().getUniversityAdmissionScheduleList().stream())
                 .collect(Collectors.toMap(
-                        as -> as.getUniversitySchedule().getId(),
+                        uas -> uas.getUniversitySchedule().getId(),
                         Function.identity(),
                         (first, second) -> first,
                         LinkedHashMap::new
@@ -155,10 +168,10 @@ public class CalendarService {
      * @return          일별 일정 DTO List
      */
     private List<DailyScheduleListDto> findDailyUniversitySchedule(Long userId, LocalDate date) {
-        return userUniversityScheduleRepository
+        return userUniversityMethodRepository
                 .findByUserIdAndDate(userId, date)
                 .stream()
-                .flatMap(uus -> uus.getUniversitySchedule().getAdmissionScheduleList().stream())
+                .flatMap(uum -> uum.getUniversityAdmissionMethod().getUniversityAdmissionScheduleList().stream())
                 .collect(Collectors.toMap(
                         as -> as.getUniversitySchedule().getId(),
                         Function.identity(),
