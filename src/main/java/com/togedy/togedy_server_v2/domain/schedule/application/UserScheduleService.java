@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
+import com.togedy.togedy_server_v2.domain.schedule.Exception.CategoryNotOwnedException;
 import com.togedy.togedy_server_v2.domain.schedule.Exception.UserScheduleNotFoundException;
 import com.togedy.togedy_server_v2.domain.schedule.Exception.UserScheduleNotOwnedException;
 import com.togedy.togedy_server_v2.domain.schedule.Exception.CategoryNotFoundException;
@@ -39,6 +40,10 @@ public class UserScheduleService {
                 .orElseThrow(UserNotFoundException::new);
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(CategoryNotFoundException::new);
+
+        if (!category.getUser().equals(user)) {
+            throw new CategoryNotOwnedException();
+        }
 
         if (request.isDDay()) {
             clearDdaySchedule(userId);
