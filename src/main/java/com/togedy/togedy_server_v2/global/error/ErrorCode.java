@@ -37,7 +37,16 @@ public enum ErrorCode {
 
     // UNIVERSITY_SCHEDULE (5000)
     UNIVERSITY_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "UNS5000", "해당 대학 일정을 찾을 수 없습니다."),
-    INVALID_ADMISSION_TYPE(HttpStatus.BAD_REQUEST, "UNS5001", "유효하지 않은 입시 유형입니다.");
+    INVALID_ADMISSION_TYPE(HttpStatus.BAD_REQUEST, "UNS5001", "유효하지 않은 입시 유형입니다."),
+
+    // APP_CONFIG (6000)
+    APP_CONFIG_NOT_FOUND(HttpStatus.NOT_FOUND, "A6000", "앱 설정이 존재하지 않습니다."),
+
+    // UNIVERSITY (7000)
+    UNIVERSITY_NOT_FOUND(HttpStatus.NOT_FOUND, "UN6001", "해당 대학을 찾을 수 없습니다."),
+
+    // UNIVERSITY_ADMISSION_METHOD (8000)
+    UNIVERSITY_ADMISSION_METHOD_NOT_FOUND(HttpStatus.NOT_FOUND, "UAM7001", "해당 대학 입시 전형을 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

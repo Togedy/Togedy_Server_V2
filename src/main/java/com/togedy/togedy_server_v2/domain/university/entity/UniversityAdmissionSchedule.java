@@ -1,6 +1,5 @@
 package com.togedy.togedy_server_v2.domain.university.entity;
 
-import com.togedy.togedy_server_v2.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -12,36 +11,29 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "user_university_schedule",
+@Table(name = "university_admission_schedule",
         uniqueConstraints = @UniqueConstraint(
-                columnNames = {"user_id", "university_schedule_id"}
+                columnNames = {"university_admission_method_id", "university_schedule_id"}
         )
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserUniversitySchedule {
+public class UniversityAdmissionSchedule {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_university_schedule_id", nullable = false)
+    @Column(name = "university_admission_schedule_id")
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "university_admission_method_id", nullable = false, updatable = false)
+    private UniversityAdmissionMethod universityAdmissionMethod;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "university_schedule_id", nullable = false)
+    @JoinColumn(name = "university_schedule_id", nullable = false, updatable = false)
     private UniversitySchedule universitySchedule;
-
-    @Builder
-    public UserUniversitySchedule(User user, UniversitySchedule universitySchedule) {
-        this.user = user;
-        this.universitySchedule = universitySchedule;
-    }
 }

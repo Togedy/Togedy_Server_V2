@@ -7,17 +7,21 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Optional;
+
 public interface UniversityRepository extends JpaRepository<University, Long> {
 
     @Query("""
-      SELECT u
+        SELECT u
         FROM University u
-       WHERE u.name LIKE CONCAT('%', :name, '%')
-         AND (:admissionType IS NULL OR u.admissionType = :admissionType)
+        WHERE u.name LIKE CONCAT('%', :name, '%')
+            AND (:admissionType IS NULL OR u.admissionType = :admissionType)
     """)
     Page<University> findByNameAndType(
             @Param("name")          String name,
             @Param("admissionType") String admissionType,
             Pageable pageable
     );
+
+    Optional<University> findById(Long universityId);
 }

@@ -2,7 +2,8 @@ package com.togedy.togedy_server_v2.domain.university.api;
 
 import com.togedy.togedy_server_v2.domain.university.application.UniversityService;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
-import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityScheduleRequest;
+import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
+import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,34 +30,45 @@ public class UniversityController {
 
     private final UniversityService universityService;
 
-    @Operation(summary = "대학 일정 조회", description = "대학 일정 정보를 조회한다.")
+    @Operation(summary = "대학 조회", description = "대학 정보를 조회한다.")
     @GetMapping("")
-    public ApiResponse<List<GetUniversityScheduleResponse>> readUniversityScheduleList(
-            @RequestParam(name = "name") String name,
-            @RequestParam(name = "admission-type", required = false) String admissionType,
-            @RequestParam(name = "page", defaultValue = "0") int page,
+    public ApiResponse<List<GetUniversityResponse>> readUniversityList(
+            @RequestParam(name = "name", defaultValue = "대학교") String name,
+            @RequestParam(name = "admission-type", defaultValue = "전체", required = false) String admissionType,
+            @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
             @AuthenticationPrincipal AuthUser user){
-        List<GetUniversityScheduleResponse> response =
-                universityService.findUniversityScheduleList(name, admissionType, user.getId(), page, size).getContent();
+        List<GetUniversityResponse> response =
+                universityService.findUniversityList(name, admissionType, user.getId(), page, size).getContent();
         return ApiUtil.success(response);
     }
 
-    @Operation(summary = "대학 일정 추가", description = "해당 대학 일정들을 유저의 일정으로 추가한다.")
+    @Operation(summary = "대학 전형별 일정 상세 조회", description = "대학 전형별 일정을 조회한다.")
+    @GetMapping("/{universityId}/schedule")
+    public ApiResponse<GetUniversityScheduleResponse> readUniversitySchedule(
+            @PathVariable Long universityId,
+            @AuthenticationPrincipal AuthUser user)
+    {
+        GetUniversityScheduleResponse response = universityService.findUniversitySchedule(universityId, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "대학 일정 추가", description = "대학 전형들을 추가한다.")
     @PostMapping("")
     public ApiResponse<Void> createUserUniversitySchedule(
-            @RequestBody PostUniversityScheduleRequest request,
+            @RequestBody PostUniversityAdmissionMethodRequest request,
             @AuthenticationPrincipal AuthUser user) {
-        universityService.generateUserUniversitySchedule(request, user.getId());
+        universityService.generateUserUniversityAdmissionMethod(request, user.getId());
         return ApiUtil.successOnly();
     }
 
-    @Operation(summary = "대학 일정 제거", description = "해당 대학 일정들을 유저 일정에서 제거한다.")
+    @Operation(summary = "대학 전형 제거", description = "유저가 추가한 대학 전형을 제거한다.")
     @DeleteMapping("")
-    public ApiResponse<Void> deleteUserUniversitySchedule(
-            @RequestParam List<Long> universityScheduleIdList,
-            @AuthenticationPrincipal AuthUser user) {
-        universityService.removeUserUniversitySchedule(universityScheduleIdList, user.getId());
+    public ApiResponse<Void> deleteUserUniversityMethod(
+            @RequestParam List<Long> universityAdmissionMethodIdList,
+            @AuthenticationPrincipal AuthUser user)
+    {
+        universityService.removeUserUniversityMethod(universityAdmissionMethodIdList, user.getId());
         return ApiUtil.successOnly();
     }
 }
