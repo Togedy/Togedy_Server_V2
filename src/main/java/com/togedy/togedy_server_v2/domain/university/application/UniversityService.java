@@ -12,8 +12,8 @@ import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
+import com.togedy.togedy_server_v2.domain.university.exception.UniversityAdmissionMethodNotFoundException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoundException;
-import com.togedy.togedy_server_v2.domain.university.exception.UniversityScheduleNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
@@ -136,7 +136,7 @@ public class UniversityService {
                 = universityAdmissionMethodRepository.findAllById(universityAdmissionMethodIdList);
 
         if (universityScheduleList.size() != universityAdmissionMethodIdList.size()) {
-            throw new UniversityScheduleNotFoundException();
+            throw new UniversityAdmissionMethodNotFoundException();
         }
 
         List<UserUniversityMethod> userUniversityScheduleList = universityScheduleList.stream()
@@ -164,7 +164,7 @@ public class UniversityService {
                         .findByUserAndUniversityAdmissionMethodIdIn(user, universityScheduleIdList);
 
         if (userUniversityMethodList.isEmpty()) {
-            throw new UniversityScheduleNotFoundException();
+            throw new UniversityAdmissionMethodNotFoundException();
         }
 
         userUniversityMethodRepository.deleteAll(userUniversityMethodList);
