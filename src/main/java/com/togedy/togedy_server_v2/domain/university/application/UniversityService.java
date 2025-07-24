@@ -163,7 +163,7 @@ public class UniversityService {
                 userUniversityMethodRepository
                         .findByUserAndUniversityAdmissionMethodIdIn(user, universityAdmissionMethodIdList);
 
-        if (userUniversityMethodList.isEmpty()) {
+        if (userUniversityMethodList.size() != universityAdmissionMethodIdList.size()) {
             throw new UniversityAdmissionMethodNotFoundException();
         }
 
