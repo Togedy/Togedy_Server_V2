@@ -8,9 +8,10 @@ import org.springframework.http.HttpStatus;
 @RequiredArgsConstructor
 public enum ErrorCode {
 
-    // GLOBAL
-    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G500", "서버 내부에 문제가 발생했습니다."),
-    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "G400", "올바르지 않은 값 또는 형식입니다."),
+    // GLOBAL(0000)
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G0000", "서버 내부에 문제가 발생했습니다."),
+    INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "G0001", "올바르지 않은 값 또는 형식입니다."),
+    APP_CONFIG_NOT_FOUND(HttpStatus.NOT_FOUND, "G0002", "앱 설정이 존재하지 않습니다."),
 
     // JWT (1000)
     JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "J1000", "만료된 토큰입니다."),
@@ -35,17 +36,12 @@ public enum ErrorCode {
     USER_SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "US4000", "해당 개인 일정을 찾을 수 없습니다."),
     USER_SCHEDULE_NOT_OWNED(HttpStatus.UNAUTHORIZED, "US4001", "해당 유저의 개인 일정이 아닙니다."),
 
-    // UNIVERSITY_SCHEDULE (5000)
-    INVALID_ADMISSION_TYPE(HttpStatus.BAD_REQUEST, "UNS5001", "유효하지 않은 입시 유형입니다."),
+    // UNIVERSITY (5000)
+    UNIVERSITY_NOT_FOUND(HttpStatus.NOT_FOUND, "UN5000", "해당 대학을 찾을 수 없습니다."),
+    INVALID_ADMISSION_TYPE(HttpStatus.BAD_REQUEST, "UN7001", "유효하지 않은 입시 유형입니다."),
 
-    // APP_CONFIG (6000)
-    APP_CONFIG_NOT_FOUND(HttpStatus.NOT_FOUND, "A6000", "앱 설정이 존재하지 않습니다."),
-
-    // UNIVERSITY (7000)
-    UNIVERSITY_NOT_FOUND(HttpStatus.NOT_FOUND, "UN7000", "해당 대학을 찾을 수 없습니다."),
-
-    // UNIVERSITY_ADMISSION_METHOD (8000)
-    UNIVERSITY_ADMISSION_METHOD_NOT_FOUND(HttpStatus.NOT_FOUND, "UAM8000", "해당 대학 입시 전형을 찾을 수 없습니다.");
+    // UNIVERSITY_ADMISSION_METHOD (6000)
+    UNIVERSITY_ADMISSION_METHOD_NOT_FOUND(HttpStatus.NOT_FOUND, "UAM6000", "해당 대학 입시 전형을 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
