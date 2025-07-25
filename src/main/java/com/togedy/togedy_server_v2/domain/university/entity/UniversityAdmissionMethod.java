@@ -22,11 +22,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "university_admission_method",
-        uniqueConstraints = @UniqueConstraint(
-        columnNames = {"university_id",
-                "university_admission_method_name"}
-        )
-)
+        uniqueConstraints = @UniqueConstraint(columnNames = {"university_id", "name"}))
 @Immutable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
