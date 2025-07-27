@@ -12,8 +12,8 @@ import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
+import com.togedy.togedy_server_v2.domain.university.exception.UniversityAdmissionMethodNotFoundException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoundException;
-import com.togedy.togedy_server_v2.domain.university.exception.UniversityScheduleNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
@@ -132,39 +132,39 @@ public class UniversityService {
 
         List<Long> universityAdmissionMethodIdList = request.getUniversityAdmissionMethodIdList();
 
-        List<UniversityAdmissionMethod> universityScheduleList
+        List<UniversityAdmissionMethod> universityAdmissionMethodList
                 = universityAdmissionMethodRepository.findAllById(universityAdmissionMethodIdList);
 
-        if (universityScheduleList.size() != universityAdmissionMethodIdList.size()) {
-            throw new UniversityScheduleNotFoundException();
+        if (universityAdmissionMethodList.size() != universityAdmissionMethodIdList.size()) {
+            throw new UniversityAdmissionMethodNotFoundException();
         }
 
-        List<UserUniversityMethod> userUniversityScheduleList = universityScheduleList.stream()
+        List<UserUniversityMethod> userUniversityMethodList = universityAdmissionMethodList.stream()
                 .map(us -> UserUniversityMethod.builder()
                         .user(user)
                         .universityAdmissionMethod(us)
                         .build())
                 .toList();
 
-        userUniversityMethodRepository.saveAll(userUniversityScheduleList);
+        userUniversityMethodRepository.saveAll(userUniversityMethodList);
     }
 
     /***
      * 유저가 보유한 대학 전형을 제거한다.
-     * @param universityScheduleIdList  대학 전형ID 리스트
+     * @param universityAdmissionMethodIdList  대학 전형ID 리스트
      * @param userId                    유저ID
      */
     @Transactional
-    public void removeUserUniversityMethod(List<Long> universityScheduleIdList, Long userId) {
+    public void removeUserUniversityMethod(List<Long> universityAdmissionMethodIdList, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         List<UserUniversityMethod> userUniversityMethodList =
                 userUniversityMethodRepository
-                        .findByUserAndUniversityAdmissionMethodIdIn(user, universityScheduleIdList);
+                        .findByUserAndUniversityAdmissionMethodIdIn(user, universityAdmissionMethodIdList);
 
-        if (userUniversityMethodList.isEmpty()) {
-            throw new UniversityScheduleNotFoundException();
+        if (userUniversityMethodList.size() != universityAdmissionMethodIdList.size()) {
+            throw new UniversityAdmissionMethodNotFoundException();
         }
 
         userUniversityMethodRepository.deleteAll(userUniversityMethodList);

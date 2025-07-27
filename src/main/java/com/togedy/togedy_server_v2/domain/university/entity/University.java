@@ -14,7 +14,7 @@ import org.hibernate.annotations.Immutable;
 
 @Entity
 @Table(name = "university",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"university_name", "university_admission_type"})
+        uniqueConstraints = @UniqueConstraint(columnNames = {"name", "admission_type"})
 )
 @Immutable
 @Getter

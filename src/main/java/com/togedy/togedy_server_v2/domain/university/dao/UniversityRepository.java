@@ -22,6 +22,4 @@ public interface UniversityRepository extends JpaRepository<University, Long> {
             @Param("admissionType") String admissionType,
             Pageable pageable
     );
-
-    Optional<University> findById(Long universityId);
 }
