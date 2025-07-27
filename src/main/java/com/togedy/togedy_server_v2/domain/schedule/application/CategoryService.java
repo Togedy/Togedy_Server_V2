@@ -48,7 +48,6 @@ public class CategoryService {
      * @param userId    유저ID
      * @return          유저가 보유한 카테고리 정보 DTO List
      */
-    @Transactional(readOnly = true)
     public List<GetCategoryResponse> findAllCategoriesByUserId(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);

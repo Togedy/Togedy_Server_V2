@@ -71,7 +71,6 @@ public class UserScheduleService {
      * @param userId            유저ID
      * @return                  개인 일정 정보 DTO
      */
-    @Transactional(readOnly = true)
     public GetUserScheduleResponse findUserSchedule(Long userScheduleId, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);

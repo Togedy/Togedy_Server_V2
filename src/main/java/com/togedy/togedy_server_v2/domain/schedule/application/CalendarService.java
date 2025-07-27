@@ -42,7 +42,6 @@ public class CalendarService {
      * @param userId    유저ID
      * @return          기간 순으로 정렬된 월별 개인 일정 및 대학 일정 DTO
      */
-    @Transactional(readOnly = true)
     public GetMonthlyCalendarResponse findMonthlyCalendar(YearMonth month, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
@@ -64,7 +63,6 @@ public class CalendarService {
      * @param userId    유저ID
      * @return          기간 순으로 정렬된 일별 유저 및 대학 일정 DTO
      */
-    @Transactional(readOnly = true)
     public GetDailyCalendarResponse findDailyCalendar(LocalDate date, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
@@ -82,7 +80,6 @@ public class CalendarService {
      * @param userId    유저ID
      * @return          D-Day 설정한 개인 일정이 존재 여부 및 일정 정보 반환
      */
-    @Transactional(readOnly = true)
     public GetDdayScheduleResponse findDdaySchedule(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);

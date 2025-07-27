@@ -51,7 +51,6 @@ public class UniversityService {
      * @param size              크기
      * @return                  대학별 정보
      */
-    @Transactional(readOnly = true)
     public Page<GetUniversityResponse> findUniversityList(
             String name,
             String admissionType,
@@ -90,7 +89,6 @@ public class UniversityService {
      * @param userId        유저ID
      * @return              해당 대학의 전형별 일정
      */
-    @Transactional(readOnly = true)
     public GetUniversityScheduleResponse findUniversitySchedule(Long universityId, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
