@@ -20,7 +20,7 @@ public class ConfigController {
     private final ConfigService configService;
 
     @Operation(summary = "공지사항 조회", description = "공지사항을 조회한다.")
-    @GetMapping("/calendar/announcement")
+    @GetMapping("/calendars/announcement")
     public ApiResponse<GetAnnouncementResponse> readAnnouncement() {
         GetAnnouncementResponse response = configService.findAnnouncement();
         return ApiUtil.success(response);
