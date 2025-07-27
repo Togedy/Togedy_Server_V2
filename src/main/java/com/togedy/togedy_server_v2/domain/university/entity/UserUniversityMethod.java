@@ -17,18 +17,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "user_university_schedule",
+@Table(name = "user_university_method",
         uniqueConstraints = @UniqueConstraint(
-                columnNames = {"user_id", "university_schedule_id"}
+                columnNames = {"user_id", "university_admission_method_id"}
         )
 )
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserUniversitySchedule {
+public class UserUniversityMethod {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_university_schedule_id", nullable = false)
+    @Column(name = "user_university_method_id", nullable = false)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,12 +36,12 @@ public class UserUniversitySchedule {
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "university_schedule_id", nullable = false)
-    private UniversitySchedule universitySchedule;
+    @JoinColumn(name = "university_admission_method_id", nullable = false)
+    private UniversityAdmissionMethod universityAdmissionMethod;
 
     @Builder
-    public UserUniversitySchedule(User user, UniversitySchedule universitySchedule) {
+    public UserUniversityMethod(User user, UniversityAdmissionMethod universityAdmissionMethod) {
         this.user = user;
-        this.universitySchedule = universitySchedule;
+        this.universityAdmissionMethod = universityAdmissionMethod;
     }
 }

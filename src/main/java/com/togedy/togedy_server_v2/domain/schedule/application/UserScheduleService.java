@@ -1,8 +1,9 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
-import com.togedy.togedy_server_v2.domain.schedule.Exception.CategoryNotFoundException;
-import com.togedy.togedy_server_v2.domain.schedule.Exception.UserScheduleNotFoundException;
-import com.togedy.togedy_server_v2.domain.schedule.Exception.UserScheduleNotOwnedException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotOwnedException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.UserScheduleNotFoundException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.UserScheduleNotOwnedException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotFoundException;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetUserScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
@@ -39,6 +40,10 @@ public class UserScheduleService {
                 .orElseThrow(UserNotFoundException::new);
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(CategoryNotFoundException::new);
+
+        if (!category.getUser().equals(user)) {
+            throw new CategoryNotOwnedException();
+        }
 
         if (request.isDDay()) {
             clearDdaySchedule(userId);

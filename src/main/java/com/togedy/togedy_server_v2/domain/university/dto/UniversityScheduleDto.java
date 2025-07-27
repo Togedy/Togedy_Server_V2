@@ -11,7 +11,6 @@ import java.time.LocalTime;
 @Builder
 public class UniversityScheduleDto {
 
-    private Long universityScheduleId;
     private String universityAdmissionStage;
     private LocalDate startDate;
     private LocalTime startTime;
@@ -20,7 +19,6 @@ public class UniversityScheduleDto {
 
     public static UniversityScheduleDto from(UniversitySchedule universitySchedule) {
         return UniversityScheduleDto.builder()
-                .universityScheduleId(universitySchedule.getId())
                 .universityAdmissionStage(universitySchedule.getAdmissionStage())
                 .startDate(universitySchedule.getStartDate())
                 .startTime(universitySchedule.getStartTime())

@@ -1,8 +1,8 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
-import com.togedy.togedy_server_v2.domain.schedule.Exception.CategoryNotFoundException;
-import com.togedy.togedy_server_v2.domain.schedule.Exception.CategoryNotOwnedException;
-import com.togedy.togedy_server_v2.domain.schedule.Exception.DuplicateCategoryException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotFoundException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotOwnedException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.DuplicateCategoryException;
 import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetCategoryResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.PatchCategoryRequest;

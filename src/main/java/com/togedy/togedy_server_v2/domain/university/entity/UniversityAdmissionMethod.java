@@ -21,29 +21,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "admission_method",
-        uniqueConstraints = @UniqueConstraint(
-        columnNames = {"university_id",
-                "admission_method_name"}
-        )
-)
+@Table(name = "university_admission_method",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"university_id", "name"}))
 @Immutable
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class AdmissionMethod {
+public class UniversityAdmissionMethod {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "admission_method_id")
+    @Column(name = "university_admission_method_id")
     private Long id;
 
-    @Column(name = "admission_method_name", nullable = false)
+    @Column(name = "name", nullable = false)
     private String name;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "university_id", nullable = false, updatable = false)
     private University university;
 
-    @OneToMany(mappedBy = "admissionMethod", orphanRemoval = true, cascade = CascadeType.ALL)
-    private List<AdmissionSchedule> admissionScheduleList = new ArrayList<>();
+    @OneToMany(mappedBy = "universityAdmissionMethod", orphanRemoval = true, cascade = CascadeType.ALL)
+    private List<UniversityAdmissionSchedule> universityAdmissionScheduleList = new ArrayList<>();
+
+    @OneToMany(mappedBy = "universityAdmissionMethod", fetch = FetchType.LAZY)
+    private List<UserUniversityMethod> userUniversityMethodList = new ArrayList<>();
 }
