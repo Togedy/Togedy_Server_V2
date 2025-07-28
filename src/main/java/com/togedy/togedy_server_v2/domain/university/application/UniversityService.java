@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,6 +43,10 @@ public class UniversityService {
     private final UniversityRepository universityRepository;
     private final UserUniversityMethodRepository userUniversityMethodRepository;
     private final UserService userService;
+
+    private static final List<String> STAGE_ORDER = List.of(
+            "원서접수", "서류제출", "합격발표"
+    );
 
     private static final int ACADEMIC_YEAR = 2025;
 
@@ -120,6 +125,9 @@ public class UniversityService {
                             .getUniversityAdmissionScheduleList()
                             .stream()
                             .map(uas -> UniversityScheduleDto.from(uas.getUniversitySchedule()))
+                            .sorted(Comparator.comparingInt(
+                                    dto -> STAGE_ORDER.indexOf(dto.getUniversityAdmissionStage())
+                            ))
                             .collect(Collectors.toList());
                     return UniversityAdmissionMethodDto.of(method, scheduleDtos);
                 })
