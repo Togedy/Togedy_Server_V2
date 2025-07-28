@@ -38,7 +38,12 @@ public class CategoryService {
 
         validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), userId);
 
-        Category category = new Category(user, request.getCategoryName(), request.getCategoryColor());
+        Category category = Category.builder()
+                .name(request.getCategoryName())
+                .color(request.getCategoryColor())
+                .user(user)
+                .build();
+
         categoryRepository.save(category);
     }
 
