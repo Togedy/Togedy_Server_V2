@@ -17,7 +17,6 @@ import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoun
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -73,7 +72,7 @@ public class UniversityService {
             int count = universityAdmissionMethodRepository.countByUniversity(university);
 
             List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList
-                    = universityAdmissionMethodRepository.findAllByUniversityAndUser(university, userId);
+                    = universityAdmissionMethodRepository.findAllByUniversityAndUserId(university, userId);
 
             return GetUniversityResponse.of(
                     university,
@@ -97,7 +96,7 @@ public class UniversityService {
                 .orElseThrow(UniversityNotFoundException::new);
 
         List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList =
-                universityAdmissionMethodRepository.findAllByUniversityAndUser(university, userId);
+                universityAdmissionMethodRepository.findAllByUniversityAndUserId(university, userId);
 
         List<UniversityAdmissionMethod> universityAdmissionMethodList
                 = universityAdmissionMethodRepository.findAllByUniversity(university);

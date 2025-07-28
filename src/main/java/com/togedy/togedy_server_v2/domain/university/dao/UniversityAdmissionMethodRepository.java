@@ -2,7 +2,6 @@ package com.togedy.togedy_server_v2.domain.university.dao;
 
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
-import com.togedy.togedy_server_v2.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
@@ -19,7 +18,7 @@ public interface UniversityAdmissionMethodRepository extends JpaRepository<Unive
         WHERE uum.user.id = :userId
             AND uam.university = :university
     """)
-    List<UniversityAdmissionMethod> findAllByUniversityAndUser(University university, Long userId);
+    List<UniversityAdmissionMethod> findAllByUniversityAndUserId(University university, Long userId);
 
     @Query("""
         SELECT uam
