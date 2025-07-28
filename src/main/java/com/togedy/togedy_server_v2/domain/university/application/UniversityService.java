@@ -69,8 +69,7 @@ public class UniversityService {
         }
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
-        Page<University> universities = universityRepository.findByNameAndType(name, admissionType, pageRequest);
-        List<University> universityList = universities.getContent();
+        List<University> universityList = universityRepository.findByNameAndType(name, admissionType, pageRequest);
         List<Long> universityIdList = universityList.stream()
                 .map(University::getId)
                 .toList();
