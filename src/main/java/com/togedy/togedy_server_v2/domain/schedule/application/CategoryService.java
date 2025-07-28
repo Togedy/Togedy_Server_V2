@@ -105,6 +105,13 @@ public class CategoryService {
         categoryRepository.delete(category);
     }
 
+    /**
+     * 이름 및 색상이 동일한 카테고리가 이미 존재하는지 검증한다.
+     *
+     * @param categoryName  카테고리명
+     * @param categoryColor 카테고리 색상
+     * @param userId        유저ID
+     */
     private void validateDuplicateCategory(String categoryName, String categoryColor, Long userId) {
         if (categoryRepository.existsByNameAndColorAndUserId(categoryName, categoryColor, userId)) {
             throw new DuplicateCategoryException();

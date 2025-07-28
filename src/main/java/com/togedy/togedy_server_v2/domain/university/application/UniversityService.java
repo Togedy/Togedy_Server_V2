@@ -169,7 +169,7 @@ public class UniversityService {
      * 유저가 보유한 대학 전형을 제거한다.
      *
      * @param universityAdmissionMethodIdList  대학 전형ID 리스트
-     * @param userId                    유저ID
+     * @param userId                           유저ID
      */
     @Transactional
     public void removeUserUniversityMethod(List<Long> universityAdmissionMethodIdList, Long userId) {
