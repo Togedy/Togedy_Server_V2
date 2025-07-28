@@ -36,7 +36,7 @@ public class CategoryService {
     public void generateCategory(PostCategoryRequest request, Long userId) {
         User user = userService.loadUserById(userId);
 
-        validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), user);
+        validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), userId);
 
         Category category = new Category(user, request.getCategoryName(), request.getCategoryColor());
         categoryRepository.save(category);
@@ -75,7 +75,7 @@ public class CategoryService {
             throw new CategoryNotOwnedException();
         }
 
-        validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), user);
+        validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), userId);
 
         category.update(request);
     }
@@ -100,8 +100,8 @@ public class CategoryService {
         categoryRepository.delete(category);
     }
 
-    private void validateDuplicateCategory(String categoryName, String categoryColor, User user) {
-        if (categoryRepository.existsByNameAndColorAndUser(categoryName, categoryColor, user)) {
+    private void validateDuplicateCategory(String categoryName, String categoryColor, Long userId) {
+        if (categoryRepository.existsByNameAndColorAndUserId(categoryName, categoryColor, userId)) {
             throw new DuplicateCategoryException();
         }
     }

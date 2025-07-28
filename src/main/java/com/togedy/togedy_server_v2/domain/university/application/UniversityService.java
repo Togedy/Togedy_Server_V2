@@ -73,7 +73,7 @@ public class UniversityService {
             int count = universityAdmissionMethodRepository.countByUniversity(university);
 
             List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList
-                    = universityAdmissionMethodRepository.findAllByUniversityAndUser(university, user);
+                    = universityAdmissionMethodRepository.findAllByUniversityAndUser(university, userId);
 
             return GetUniversityResponse.of(
                     university,
@@ -97,7 +97,7 @@ public class UniversityService {
                 .orElseThrow(UniversityNotFoundException::new);
 
         List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList =
-                universityAdmissionMethodRepository.findAllByUniversityAndUser(university, user);
+                universityAdmissionMethodRepository.findAllByUniversityAndUser(university, userId);
 
         List<UniversityAdmissionMethod> universityAdmissionMethodList
                 = universityAdmissionMethodRepository.findAllByUniversity(university);
@@ -158,7 +158,7 @@ public class UniversityService {
 
         List<UserUniversityMethod> userUniversityMethodList =
                 userUniversityMethodRepository
-                        .findByUserAndUniversityAdmissionMethodIdIn(user, universityAdmissionMethodIdList);
+                        .findByUserIdAndUniversityAdmissionMethodIdIn(userId, universityAdmissionMethodIdList);
 
         if (userUniversityMethodList.size() != universityAdmissionMethodIdList.size()) {
             throw new UniversityAdmissionMethodNotFoundException();

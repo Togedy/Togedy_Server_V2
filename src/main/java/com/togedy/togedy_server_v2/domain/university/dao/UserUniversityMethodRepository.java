@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface UserUniversityMethodRepository extends JpaRepository<UserUniversityMethod, Long> {
 
-    List<UserUniversityMethod> findByUserAndUniversityAdmissionMethodIdIn(User user, List<Long> id);
+    List<UserUniversityMethod> findByUserIdAndUniversityAdmissionMethodIdIn(Long userId, List<Long> id);
 
     @Query("""
         SELECT uum
