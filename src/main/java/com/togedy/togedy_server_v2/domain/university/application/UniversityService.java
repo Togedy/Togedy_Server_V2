@@ -14,6 +14,7 @@ import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityAdmissionMethodNotFoundException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoundException;
+import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
@@ -38,6 +39,7 @@ public class UniversityService {
     private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
     private final UserUniversityMethodRepository userUniversityMethodRepository;
+    private final UserService userService;
 
     private static final int ACADEMIC_YEAR = 2025;
 
@@ -58,8 +60,7 @@ public class UniversityService {
             int page,
             int size
     ) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        User user = userService.loadUserById(userId);
 
         if ("전체".equals(admissionType)) {
             admissionType = null;
@@ -90,8 +91,7 @@ public class UniversityService {
      * @return              해당 대학의 전형별 일정
      */
     public GetUniversityScheduleResponse findUniversitySchedule(Long universityId, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        User user = userService.loadUserById(userId);
 
         University university = universityRepository.findById(universityId)
                 .orElseThrow(UniversityNotFoundException::new);
@@ -125,8 +125,7 @@ public class UniversityService {
      */
     @Transactional
     public void generateUserUniversityAdmissionMethod(PostUniversityAdmissionMethodRequest request, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        User user = userService.loadUserById(userId);
 
         List<Long> universityAdmissionMethodIdList = request.getUniversityAdmissionMethodIdList();
 
@@ -149,13 +148,13 @@ public class UniversityService {
 
     /***
      * 유저가 보유한 대학 전형을 제거한다.
+     *
      * @param universityAdmissionMethodIdList  대학 전형ID 리스트
      * @param userId                    유저ID
      */
     @Transactional
     public void removeUserUniversityMethod(List<Long> universityAdmissionMethodIdList, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        User user = userService.loadUserById(userId);
 
         List<UserUniversityMethod> userUniversityMethodList =
                 userUniversityMethodRepository
