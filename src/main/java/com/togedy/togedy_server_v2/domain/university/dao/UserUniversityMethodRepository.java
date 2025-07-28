@@ -19,6 +19,7 @@ public interface UserUniversityMethodRepository extends JpaRepository<UserUniver
             JOIN FETCH uum.universityAdmissionMethod uam
             JOIN FETCH uam.universityAdmissionScheduleList uasl
             JOIN FETCH uasl.universitySchedule us
+            JOIN FETCH uam.university u
         WHERE uum.user.id = :userId
             AND us.startDate <= :endOfMonth
             AND COALESCE(us.endDate, us.startDate) >= :startOfMonth 
@@ -35,6 +36,7 @@ public interface UserUniversityMethodRepository extends JpaRepository<UserUniver
             JOIN FETCH uum.universityAdmissionMethod uam
             JOIN FETCH uam.universityAdmissionScheduleList uasl
             JOIN FETCH uasl.universitySchedule us
+            JOIN FETCH uam.university u
         WHERE uum.user.id = :userId
             AND :date BETWEEN us.startDate AND COALESCE(us.endDate, us.startDate)
     """)
