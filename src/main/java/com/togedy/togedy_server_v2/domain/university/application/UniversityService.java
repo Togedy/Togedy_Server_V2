@@ -112,20 +112,18 @@ public class UniversityService {
         List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList =
                 universityAdmissionMethodRepository.findAllByUniversityAndUserId(university, userId);
 
-        List<UniversityAdmissionMethod> universityAdmissionMethodList
-                = universityAdmissionMethodRepository.findAllByUniversity(university);
-
-        List<UniversityAdmissionMethodDto> universityAdmissionMethodDtoList = new ArrayList<>();
-
-        for (UniversityAdmissionMethod universityAdmissionMethod : universityAdmissionMethodList) {
-            List<UniversityScheduleDto> universityScheduleDtoList =
-                    universityAdmissionMethod.getUniversityAdmissionScheduleList().stream()
-                            .map(universityAdmissionSchedule ->
-                                    UniversityScheduleDto.from(universityAdmissionSchedule.getUniversitySchedule()))
-                            .toList();
-
-            universityAdmissionMethodDtoList.add(UniversityAdmissionMethodDto.of(universityAdmissionMethod, universityScheduleDtoList));
-        }
+        List<UniversityAdmissionMethodDto> universityAdmissionMethodDtoList = universityAdmissionMethodRepository
+                .findAllByUniversity(university)
+                .stream()
+                .map(method -> {
+                    List<UniversityScheduleDto> scheduleDtos = method
+                            .getUniversityAdmissionScheduleList()
+                            .stream()
+                            .map(uas -> UniversityScheduleDto.from(uas.getUniversitySchedule()))
+                            .collect(Collectors.toList());
+                    return UniversityAdmissionMethodDto.of(method, scheduleDtos);
+                })
+                .toList();
 
         return GetUniversityScheduleResponse.of(university, addedUniversityAdmissionMethodList, universityAdmissionMethodDtoList);
     }
