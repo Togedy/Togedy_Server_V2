@@ -26,7 +26,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -52,7 +55,7 @@ public class UniversityService {
      * @param size              크기
      * @return                  대학별 정보
      */
-    public Page<GetUniversityResponse> findUniversityList(
+    public List<GetUniversityResponse> findUniversityList(
             String name,
             String admissionType,
             Long userId,
@@ -67,19 +70,31 @@ public class UniversityService {
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
         Page<University> universities = universityRepository.findByNameAndType(name, admissionType, pageRequest);
+        List<University> universityList = universities.getContent();
+        List<Long> universityIdList = universityList.stream()
+                .map(University::getId)
+                .toList();
 
-        return universities.map(university -> {
-            int count = universityAdmissionMethodRepository.countByUniversity(university);
+        Map<Long, Long> universityAdmissionCountMap = universityAdmissionMethodRepository
+                .findCountByUniversityIds(universityIdList)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
 
-            List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList
-                    = universityAdmissionMethodRepository.findAllByUniversityAndUserId(university, userId);
+        Map<Long, List<UniversityAdmissionMethod>> addedAdmissionMethodMap =
+                universityAdmissionMethodRepository
+                        .findAllByUniversityIdsAndUserId(universityIdList, userId)
+                        .stream()
+                        .collect(Collectors.groupingBy(m -> m.getUniversity().getId()));
 
-            return GetUniversityResponse.of(
-                    university,
-                    count,
-                    addedUniversityAdmissionMethodList
-            );
-        });
+        return universityList.stream()
+                .map(university -> GetUniversityResponse.of(
+                       university,
+                       universityAdmissionCountMap.getOrDefault(university.getId(), 0L).intValue(),
+                       addedAdmissionMethodMap.getOrDefault(university.getId(), Collections.emptyList())
+               )).toList();
     }
 
     /***

@@ -39,7 +39,7 @@ public class UniversityController {
             @RequestParam(name = "size", defaultValue = "20") int size,
             @AuthenticationPrincipal AuthUser user){
         List<GetUniversityResponse> response =
-                universityService.findUniversityList(name, admissionType, user.getId(), page, size).getContent();
+                universityService.findUniversityList(name, admissionType, user.getId(), page, size);
         return ApiUtil.success(response);
     }
 
