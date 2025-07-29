@@ -9,6 +9,7 @@ import com.togedy.togedy_server_v2.domain.university.dao.UniversityScheduleRepos
 import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodDto;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
+import com.togedy.togedy_server_v2.domain.university.entity.AdmissionType;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
@@ -68,10 +69,7 @@ public class UniversityService {
             int size
     ) {
         User user = userService.loadUserById(userId);
-
-        if ("전체".equals(admissionType)) {
-            admissionType = null;
-        }
+        String filterType = AdmissionType.ofValue(admissionType);
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
         List<University> universityList = universityRepository.findByNameAndType(name, admissionType, pageRequest);
