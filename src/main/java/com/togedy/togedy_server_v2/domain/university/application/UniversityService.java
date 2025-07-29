@@ -69,7 +69,7 @@ public class UniversityService {
         String filterType = AdmissionType.ofValue(admissionType);
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
-        List<University> universityList = universityRepository.findByNameAndType(name, admissionType, pageRequest);
+        List<University> universityList = universityRepository.findByNameAndType(name, filterType, pageRequest);
         List<Long> universityIdList = universityList.stream()
                 .map(University::getId)
                 .toList();
