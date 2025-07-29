@@ -66,7 +66,6 @@ public class UniversityService {
             int page,
             int size
     ) {
-        User user = userService.loadUserById(userId);
         String filterType = AdmissionType.ofValue(admissionType);
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
@@ -105,8 +104,6 @@ public class UniversityService {
      * @return              해당 대학의 전형별 일정
      */
     public GetUniversityScheduleResponse findUniversitySchedule(Long universityId, Long userId) {
-        User user = userService.loadUserById(userId);
-
         University university = universityRepository.findById(universityId)
                 .orElseThrow(UniversityNotFoundException::new);
 
@@ -169,8 +166,6 @@ public class UniversityService {
      */
     @Transactional
     public void removeUserUniversityMethod(List<Long> universityAdmissionMethodIdList, Long userId) {
-        User user = userService.loadUserById(userId);
-
         List<UserUniversityMethod> userUniversityMethodList =
                 userUniversityMethodRepository
                         .findByUserIdAndUniversityAdmissionMethodIdIn(userId, universityAdmissionMethodIdList);

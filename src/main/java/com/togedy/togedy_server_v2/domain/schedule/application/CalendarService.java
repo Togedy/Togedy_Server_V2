@@ -11,7 +11,6 @@ import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
-import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.util.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -43,8 +42,6 @@ public class CalendarService {
      * @return          기간 순으로 정렬된 월별 개인 일정 및 대학 일정 DTO
      */
     public GetMonthlyCalendarResponse findMonthlyCalendar(YearMonth month, Long userId) {
-        User user = userService.loadUserById(userId);
-
         LocalDate startOfMonth = month.atDay(1);
         LocalDate endOfMonth = month.atEndOfMonth();
 
@@ -63,8 +60,6 @@ public class CalendarService {
      * @return          기간 순으로 정렬된 일별 유저 및 대학 일정 DTO
      */
     public GetDailyCalendarResponse findDailyCalendar(LocalDate date, Long userId) {
-        User user = userService.loadUserById(userId);
-
         List<DailyScheduleListDto> dailyScheduleList = new ArrayList<>(findDailyUserSchedule(userId, date));
         dailyScheduleList.addAll(findDailyUniversitySchedule(userId, date));
         dailyScheduleList.sort(scheduleComparator());
@@ -79,8 +74,6 @@ public class CalendarService {
      * @return          D-Day 설정한 개인 일정이 존재 여부 및 일정 정보 반환
      */
     public GetDdayScheduleResponse findDdaySchedule(Long userId) {
-        User user = userService.loadUserById(userId);
-
         Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
 
         if (dDaySchedule.isPresent()) {

@@ -54,8 +54,6 @@ public class CategoryService {
      * @return          유저가 보유한 카테고리 정보 DTO List
      */
     public List<GetCategoryResponse> findAllCategoriesByUserId(Long userId) {
-        User user = userService.loadUserById(userId);
-
         List<Category> categoryList = categoryRepository.findAllByUserId(userId);
 
         return categoryList.stream()
@@ -74,7 +72,6 @@ public class CategoryService {
     public void modifyCategory(PatchCategoryRequest request, Long categoryId, Long userId) {
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(CategoryNotFoundException::new);
-        User user = userService.loadUserById(userId);
 
         if (!category.getUser().getId().equals(userId)) {
             throw new CategoryNotOwnedException();
@@ -93,8 +90,6 @@ public class CategoryService {
      */
     @Transactional
     public void removeCategory(Long categoryId, Long userId) {
-        User user = userService.loadUserById(userId);
-
         Category category = categoryRepository.findById(categoryId)
                 .orElseThrow(CategoryNotFoundException::new);
 

@@ -72,7 +72,6 @@ public class UserScheduleService {
      * @return                  개인 일정 정보 DTO
      */
     public GetUserScheduleResponse findUserSchedule(Long userScheduleId, Long userId) {
-        User user = userService.loadUserById(userId);
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
                 .orElseThrow(UserScheduleNotFoundException::new);
 
@@ -92,7 +91,6 @@ public class UserScheduleService {
      */
     @Transactional
     public void modifyUserSchedule(PatchUserScheduleRequest request, Long userScheduleId, Long userId) {
-        User user = userService.loadUserById(userId);
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
                 .orElseThrow(UserScheduleNotFoundException::new);
 
@@ -122,7 +120,6 @@ public class UserScheduleService {
      */
     @Transactional
     public void removeUserSchedule(Long userScheduleId, Long userId) {
-        User user = userService.loadUserById(userId);
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
                 .orElseThrow(UserScheduleNotFoundException::new);
 
