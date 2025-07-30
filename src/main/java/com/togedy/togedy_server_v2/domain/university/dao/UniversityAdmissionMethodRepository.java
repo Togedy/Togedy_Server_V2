@@ -18,8 +18,13 @@ public interface UniversityAdmissionMethodRepository extends JpaRepository<Unive
             JOIN FETCH uam.userUniversityMethodList uum
         WHERE uum.user.id = :userId
             AND uam.university = :university
+            AND uam.academicYear = :academicYear
     """)
-    List<UniversityAdmissionMethod> findAllByUniversityAndUserId(University university, Long userId);
+    List<UniversityAdmissionMethod> findAllByUniversityAndUserIdAndAcademicYear(
+            @Param("university") University university,
+            @Param("userId") Long userId,
+            @Param("academicYear") int academicYear
+    );
 
     @Query("""
         SELECT uam
@@ -27,10 +32,12 @@ public interface UniversityAdmissionMethodRepository extends JpaRepository<Unive
             JOIN FETCH uam.userUniversityMethodList uum
         WHERE uum.user.id = :userId
             AND uam.university.id IN :universityIds
+            AND uam.academicYear = :academicYear
     """)
-    List<UniversityAdmissionMethod> findAllByUniversityIdsAndUserId(
+    List<UniversityAdmissionMethod> findAllByUniversityIdsAndUserIdAndAcademicYear(
             @Param("universityIds") List<Long> universityIds,
-            @Param("userId") Long userId
+            @Param("userId") Long userId,
+            @Param("academicYear") int academicYear
     );
 
     @Query("""
@@ -39,8 +46,12 @@ public interface UniversityAdmissionMethodRepository extends JpaRepository<Unive
             JOIN FETCH uam.universityAdmissionScheduleList uasl
             JOIN FETCH uasl.universitySchedule us
         WHERE uam.university = :university
+            AND uam.academicYear = :academicYear
     """)
-    List<UniversityAdmissionMethod> findAllByUniversity(University university);
+    List<UniversityAdmissionMethod> findAllByUniversityAndAcademicYear(
+            @Param("university") University university,
+            @Param("academicYear") int academicYear
+    );
 
 
     @Query("""
@@ -48,7 +59,11 @@ public interface UniversityAdmissionMethodRepository extends JpaRepository<Unive
         FROM UniversityAdmissionMethod uam
             JOIN uam.university u
         WHERE u.id IN :ids
+            AND uam.academicYear = :academicYear
         GROUP BY u.id
     """)
-    List<Object[]> findCountByUniversityIds(@Param("ids") List<Long> universityIdList);
+    List<Object[]> findCountByUniversityIdsAnAndAcademicYear(
+            @Param("ids") List<Long> universityIdList,
+            @Param("academicYear") int academicYear
+    );
 }

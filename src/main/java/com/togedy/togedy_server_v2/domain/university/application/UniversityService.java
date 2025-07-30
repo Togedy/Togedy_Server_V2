@@ -47,7 +47,7 @@ public class UniversityService {
             "원서접수", "서류제출", "합격발표"
     );
 
-    private static final int ACADEMIC_YEAR = 2025;
+    private static final int ACADEMIC_YEAR = 2026;
 
     /***
      * 대학명, 입시 전형에 해당하는 대학 정보를 조회한다.
@@ -75,7 +75,7 @@ public class UniversityService {
                 .toList();
 
         Map<Long, Long> universityAdmissionCountMap = universityAdmissionMethodRepository
-                .findCountByUniversityIds(universityIdList)
+                .findCountByUniversityIdsAnAndAcademicYear(universityIdList, ACADEMIC_YEAR)
                 .stream()
                 .collect(Collectors.toMap(
                         row -> (Long) row[0],
@@ -84,7 +84,7 @@ public class UniversityService {
 
         Map<Long, List<UniversityAdmissionMethod>> addedAdmissionMethodMap =
                 universityAdmissionMethodRepository
-                        .findAllByUniversityIdsAndUserId(universityIdList, userId)
+                        .findAllByUniversityIdsAndUserIdAndAcademicYear(universityIdList, userId, ACADEMIC_YEAR)
                         .stream()
                         .collect(Collectors.groupingBy(m -> m.getUniversity().getId()));
 
@@ -108,10 +108,14 @@ public class UniversityService {
                 .orElseThrow(UniversityNotFoundException::new);
 
         List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList =
-                universityAdmissionMethodRepository.findAllByUniversityAndUserId(university, userId);
+                universityAdmissionMethodRepository.findAllByUniversityAndUserIdAndAcademicYear(
+                        university,
+                        userId,
+                        ACADEMIC_YEAR
+                );
 
         List<UniversityAdmissionMethodDto> universityAdmissionMethodDtoList = universityAdmissionMethodRepository
-                .findAllByUniversity(university)
+                .findAllByUniversityAndAcademicYear(university, ACADEMIC_YEAR)
                 .stream()
                 .map(method -> {
                     List<UniversityScheduleDto> scheduleDtos = method
