@@ -5,7 +5,6 @@ import com.togedy.togedy_server_v2.domain.university.dao.UniversityRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
-import com.togedy.togedy_server_v2.domain.university.dao.UniversityScheduleRepository;
 import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodDto;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
@@ -36,7 +35,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UniversityService {
 
-    private final UniversityScheduleRepository universityScheduleRepository;
     private final UniversityAdmissionMethodRepository universityAdmissionMethodRepository;
     private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
