@@ -9,13 +9,11 @@ import com.togedy.togedy_server_v2.domain.schedule.dto.MonthlyScheduleListDto;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
+import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
-import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.util.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -34,6 +32,7 @@ public class CalendarService {
     private final UserRepository userRepository;
     private final UserScheduleRepository userScheduleRepository;
     private final UserUniversityMethodRepository userUniversityMethodRepository;
+    private final UserService userService;
 
     /**
      * 유저가 해당 월에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
@@ -42,11 +41,7 @@ public class CalendarService {
      * @param userId    유저ID
      * @return          기간 순으로 정렬된 월별 개인 일정 및 대학 일정 DTO
      */
-    @Transactional(readOnly = true)
     public GetMonthlyCalendarResponse findMonthlyCalendar(YearMonth month, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
         LocalDate startOfMonth = month.atDay(1);
         LocalDate endOfMonth = month.atEndOfMonth();
 
@@ -64,11 +59,7 @@ public class CalendarService {
      * @param userId    유저ID
      * @return          기간 순으로 정렬된 일별 유저 및 대학 일정 DTO
      */
-    @Transactional(readOnly = true)
     public GetDailyCalendarResponse findDailyCalendar(LocalDate date, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
         List<DailyScheduleListDto> dailyScheduleList = new ArrayList<>(findDailyUserSchedule(userId, date));
         dailyScheduleList.addAll(findDailyUniversitySchedule(userId, date));
         dailyScheduleList.sort(scheduleComparator());
@@ -82,11 +73,7 @@ public class CalendarService {
      * @param userId    유저ID
      * @return          D-Day 설정한 개인 일정이 존재 여부 및 일정 정보 반환
      */
-    @Transactional(readOnly = true)
     public GetDdayScheduleResponse findDdaySchedule(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
         Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
 
         if (dDaySchedule.isPresent()) {

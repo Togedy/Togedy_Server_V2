@@ -36,6 +36,9 @@ public class UniversityAdmissionMethod {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "academic_year", columnDefinition = "YEAR", nullable = false, updatable = false)
+    private int academicYear;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "university_id", nullable = false, updatable = false)
     private University university;

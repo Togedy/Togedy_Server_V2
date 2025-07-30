@@ -14,6 +14,7 @@ public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long
     @Query("""
         SELECT us
         FROM UserSchedule us
+            JOIN FETCH us.category c
         WHERE us.user.id = :userId
             AND us.startDate <= :endOfMonth
             AND COALESCE(us.endDate, us.startDate) >= :startOfMonth
@@ -27,6 +28,7 @@ public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long
     @Query("""
         SELECT us
         FROM UserSchedule us
+            JOIN FETCH us.category c
         WHERE us.user.id = :userId
             AND :date BETWEEN us.startDate AND COALESCE(us.endDate, us.startDate)
     """)

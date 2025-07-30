@@ -11,9 +11,9 @@ import com.togedy.togedy_server_v2.domain.schedule.dto.PatchUserScheduleRequest;
 import com.togedy.togedy_server_v2.domain.schedule.dto.PostUserScheduleRequest;
 import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
+import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +27,7 @@ public class UserScheduleService {
     private final UserScheduleRepository userScheduleRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final UserService userService;
 
     /**
      * 개인 일정을 생성한다. 해당 일정을 D-Day 설정하고자 한다면 기존의 D-Day 설정된 일정 상태를 변경한다.
@@ -36,8 +37,7 @@ public class UserScheduleService {
      */
     @Transactional
     public void generateUserSchedule(PostUserScheduleRequest request, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        User user = userService.loadUserById(userId);
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(CategoryNotFoundException::new);
 
@@ -71,10 +71,7 @@ public class UserScheduleService {
      * @param userId            유저ID
      * @return                  개인 일정 정보 DTO
      */
-    @Transactional(readOnly = true)
     public GetUserScheduleResponse findUserSchedule(Long userScheduleId, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
                 .orElseThrow(UserScheduleNotFoundException::new);
 
@@ -94,8 +91,6 @@ public class UserScheduleService {
      */
     @Transactional
     public void modifyUserSchedule(PatchUserScheduleRequest request, Long userScheduleId, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
                 .orElseThrow(UserScheduleNotFoundException::new);
 
@@ -125,8 +120,6 @@ public class UserScheduleService {
      */
     @Transactional
     public void removeUserSchedule(Long userScheduleId, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
         UserSchedule userSchedule = userScheduleRepository.findById(userScheduleId)
                 .orElseThrow(UserScheduleNotFoundException::new);
 
