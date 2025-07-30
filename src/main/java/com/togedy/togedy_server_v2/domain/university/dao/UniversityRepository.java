@@ -17,7 +17,7 @@ public interface UniversityRepository extends JpaRepository<University, Long> {
             AND (:admissionType IS NULL OR u.admissionType = :admissionType)
     """)
     List<University> findByNameAndType(
-            @Param("name")          String name,
+            @Param("name")  String name,
             @Param("admissionType") String admissionType,
             Pageable pageable
     );

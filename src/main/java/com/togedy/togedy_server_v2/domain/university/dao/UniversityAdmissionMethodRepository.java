@@ -10,8 +10,6 @@ import java.util.List;
 
 public interface UniversityAdmissionMethodRepository extends JpaRepository<UniversityAdmissionMethod, Long> {
 
-    int countByUniversity(University university);
-
     @Query("""
         SELECT uam
         FROM UniversityAdmissionMethod uam

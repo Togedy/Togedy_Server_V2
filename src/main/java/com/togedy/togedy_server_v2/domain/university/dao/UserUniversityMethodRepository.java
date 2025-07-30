@@ -1,7 +1,6 @@
 package com.togedy.togedy_server_v2.domain.university.dao;
 
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
-import com.togedy.togedy_server_v2.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
