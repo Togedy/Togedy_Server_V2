@@ -55,7 +55,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean requiresAuthentication(HttpServletRequest request) {
         String path = request.getRequestURI();
         return !(path.startsWith("/api/v2/users/sign-up")
-                || path.startsWith("/api/v2/users/login")
+                || path.startsWith("/api/v2/auth/login")
                 || path.startsWith("/swagger")
                 || path.startsWith("/v3/api-docs"));
     }

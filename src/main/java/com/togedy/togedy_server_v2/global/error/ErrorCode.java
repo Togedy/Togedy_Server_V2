@@ -21,6 +21,7 @@ public enum ErrorCode {
     JWT_INVALID(HttpStatus.UNAUTHORIZED, "J1004", "유효하지 않은 토큰입니다."),
     JWT_MISSING(HttpStatus.UNAUTHORIZED, "J1005", "토큰이 존재하지 않습니다."),
     JWT_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "J1006", "잘못된 토큰 형식입니다."),
+    JWT_REFRESH_MISMATCH(HttpStatus.UNAUTHORIZED, "J1007", "리프레시 토큰이 서버와 일치하지 않습니다."),
 
     // USER (2000)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U2000", "사용자를 찾을 수 없습니다."),
