@@ -32,13 +32,6 @@ public class UserService {
         return userRepository.save(user).getId();
     }
 
-    public JwtTokenInfo signInUser(String email) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(UserNotFoundException::new);
-
-        return jwtTokenProvider.generateTokenInfo(user.getId());
-    }
-
     @Transactional(readOnly = true)
     public User loadUserById(Long userId) {
         return userRepository.findById(userId)
