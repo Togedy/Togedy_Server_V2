@@ -42,7 +42,7 @@ public class AuthController {
             리프레시 토큰을 이용해 새로운 액세스 토큰을 발급한다.
             
             """)
-    @PostMapping("reissue")
+    @PostMapping("/reissue")
     public ApiResponse<JwtTokenInfo> reissue(@Validated @RequestBody TokenRequest request) {
         return ApiUtil.success(authService.reissueToken(request.getRefreshToken()));
     }
