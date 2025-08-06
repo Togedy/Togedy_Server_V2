@@ -3,7 +3,7 @@ package com.togedy.togedy_server_v2.global.security.jwt;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtException;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtInvalidException;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtInvalidFormatException;
-import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtMissingException;
+import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtNotFoundException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -28,7 +28,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             if (bearerToken == null) {
                 if (requiresAuthentication(request)) {
-                    throw new JwtMissingException();
+                    throw new JwtNotFoundException();
                 } else {
                     filterChain.doFilter(request, response);
                     return;

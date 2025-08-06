@@ -7,7 +7,7 @@ import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenInfo;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenProvider;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtInvalidException;
-import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtMissingException;
+import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtNotFoundException;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtRefreshMismatchException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -39,7 +39,7 @@ public class AuthService {
         Long userId = Long.parseLong(jwtTokenProvider.getAuthentication(refreshToken).getName());
 
         String storedToken = refreshTokenRepository.findByUserId(userId)
-                .orElseThrow(JwtMissingException::new);
+                .orElseThrow(JwtNotFoundException::new);
 
         if(!storedToken.equals(refreshToken)) {
             refreshTokenRepository.deleteByUserId(userId);
