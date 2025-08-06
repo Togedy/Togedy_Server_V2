@@ -17,7 +17,6 @@ public class RefreshTokenRepository {
     private static final String REFRESH_TOKEN_PREFIX = "refreshToken:";
 
     public void save(Long userId, String refreshToken) {
-        log.info(">>> Redis Save: userId={}, token={}", userId, refreshToken);
         redisTemplate.opsForValue().set(REFRESH_TOKEN_PREFIX + userId, refreshToken, Duration.ofDays(7));
     }
 
