@@ -43,7 +43,7 @@ public class AuthController {
             
             """)
     @PostMapping("/reissue")
-    public ApiResponse<JwtTokenInfo> reissue(@Validated @RequestBody TokenRequest request) {
+    public ApiResponse<JwtTokenInfo> reissue(@RequestBody TokenRequest request) {
         return ApiUtil.success(authService.reissueToken(request.getRefreshToken()));
     }
 
