@@ -47,6 +47,7 @@ public class AuthService {
         }
 
         JwtTokenInfo newTokenInfo = jwtTokenProvider.generateTokenInfo(userId);
+        refreshTokenRepository.deleteByUserId(userId);
         refreshTokenRepository.save(userId, newTokenInfo.getRefreshToken());
         return newTokenInfo;
     }
