@@ -3,7 +3,7 @@ package com.togedy.togedy_server_v2.global.security.jwt;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtException;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtInvalidException;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtInvalidFormatException;
-import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtMissingException;
+import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtNotFoundException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,11 +24,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal (HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String bearerToken = request.getHeader("Authorization");
+        String requestURI = request.getRequestURI();
 
         try {
+            if (requestURI.startsWith("/api/v2/auth/reissue")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             if (bearerToken == null) {
                 if (requiresAuthentication(request)) {
-                    throw new JwtMissingException();
+                    throw new JwtNotFoundException();
                 } else {
                     filterChain.doFilter(request, response);
                     return;
@@ -55,7 +61,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private boolean requiresAuthentication(HttpServletRequest request) {
         String path = request.getRequestURI();
         return !(path.startsWith("/api/v2/users/sign-up")
-                || path.startsWith("/api/v2/users/login")
+                || path.startsWith("/api/v2/auth/login")
                 || path.startsWith("/swagger")
                 || path.startsWith("/v3/api-docs"));
     }
