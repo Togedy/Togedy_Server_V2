@@ -25,6 +25,15 @@ jobs:
           --health-timeout=5s
           --health-retries=3
 
+      redis:
+        image: redis:7-alpine
+        ports: [ "6379:6379" ]
+        options: >-
+          --health-cmd="redis-cli ping || exit 1"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,8 +44,10 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Install MySQL client
-        run: sudo apt-get update && sudo apt-get install -y default-mysql-client
+      - name: Install MySQL & Redis clients
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-mysql-client redis-tools
 
       - name: Cache Gradle packages
         uses: actions/cache@v3
@@ -56,17 +67,27 @@ jobs:
             sleep 1
           done
 
+      - name: Wait for Redis
+        run: |
+          for i in {1..60}; do
+            redis-cli -h 127.0.0.1 -p 6379 ping | grep -q PONG && break
+            echo "Waiting for Redis ($i/60)..."; sleep 1
+          done
+
       - name: Permission gradlew
         run: chmod +x gradlew
 
       - name: Build & Test
         env:
-          SPRING_DATASOURCE_URL:      jdbc:mysql://127.0.0.1:3306/testdb
+          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/testdb
           SPRING_DATASOURCE_USERNAME: root
           SPRING_DATASOURCE_PASSWORD: testdb
           SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
           SWAGGER_URL: ${{ secrets.SWAGGER_URL }}
+
+          SPRING_DATA_REDIS_HOST: 127.0.0.1
+          SPRING_DATA_REDIS_PORT: 6379
         run: ./gradlew clean build --info
 
       - name: Post result
