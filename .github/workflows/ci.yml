@@ -83,7 +83,7 @@ jobs:
 
           SPRING_DATA_REDIS_HOST: 127.0.0.1
           SPRING_DATA_REDIS_PORT: 6379
-        run: ./gradlew clean build --info
+        run: ./gradlew build --build-cache --info
 
       - name: Post result
         uses: EnricoMi/publish-unit-test-result-action@v2
