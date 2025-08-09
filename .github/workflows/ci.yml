@@ -49,15 +49,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y default-mysql-client redis-tools
 
-      - name: Cache Gradle packages
-        uses: actions/cache@v3
+      - name: Setup Gradle (with caching)
+        uses: gradle/actions/setup-gradle@v3
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
 
       - name: Wait for MySQL to be ready
         run: |
