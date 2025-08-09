@@ -24,8 +24,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal (HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
         String bearerToken = request.getHeader("Authorization");
+        String requestURI = request.getRequestURI();
 
         try {
+            if (requestURI.startsWith("/api/v2/auth/reissue")) {
+                filterChain.doFilter(request, response);
+                return;
+            }
+
             if (bearerToken == null) {
                 if (requiresAuthentication(request)) {
                     throw new JwtNotFoundException();
