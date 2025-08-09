@@ -83,6 +83,7 @@ jobs:
 
           SPRING_DATA_REDIS_HOST: 127.0.0.1
           SPRING_DATA_REDIS_PORT: 6379
+          SPRING_DATA_REDIS_PASSWORD: ""
         run: ./gradlew build --build-cache --info
 
       - name: Post result
