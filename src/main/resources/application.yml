@@ -52,6 +52,7 @@ springdoc:
     persist-authorization: true
     display-request-duration: true
 
+
 ---
 spring:
   data:
