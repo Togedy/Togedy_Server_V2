@@ -33,13 +33,13 @@ public class UniversityController {
     @Operation(summary = "대학 조회", description = "대학 정보를 조회한다.")
     @GetMapping("")
     public ApiResponse<List<GetUniversityResponse>> readUniversityList(
-            @RequestParam(name = "name", defaultValue = "대학교") String name,
-            @RequestParam(name = "admission-type", defaultValue = "전체", required = false) String admissionType,
+            @RequestParam(name = "name", defaultValue = "대학") String name,
+            @RequestParam(name = "admission-type", defaultValue = "전체") String admissionType,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
             @AuthenticationPrincipal AuthUser user){
         List<GetUniversityResponse> response =
-                universityService.findUniversityList(name, admissionType, user.getId(), page, size).getContent();
+                universityService.findUniversityList(name, admissionType, user.getId(), page, size);
         return ApiUtil.success(response);
     }
 
