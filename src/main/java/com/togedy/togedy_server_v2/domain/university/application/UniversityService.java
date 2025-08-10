@@ -12,6 +12,7 @@ import com.togedy.togedy_server_v2.domain.university.entity.AdmissionType;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
+import com.togedy.togedy_server_v2.domain.university.exception.DuplicateUniversityAdmissionMethodException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityAdmissionMethodNotFoundException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
@@ -145,6 +146,10 @@ public class UniversityService {
 
         UniversityAdmissionMethod universityAdmissionMethod = universityAdmissionMethodRepository.findById(universityAdmissionMethodId)
                 .orElseThrow(UniversityAdmissionMethodNotFoundException::new);
+
+        if (userUniversityMethodRepository.existsByUniversityAdmissionMethodIdAndUserId(universityAdmissionMethodId, userId)) {
+            throw new DuplicateUniversityAdmissionMethodException();
+        }
 
         UserUniversityMethod userUniversityMethod = UserUniversityMethod.builder()
                 .user(user)
