@@ -15,6 +15,7 @@ import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod
 import com.togedy.togedy_server_v2.domain.university.exception.DuplicateUniversityAdmissionMethodException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityAdmissionMethodNotFoundException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoundException;
+import com.togedy.togedy_server_v2.domain.university.exception.UserUniversityMethodNotOwnedException;
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
@@ -169,7 +170,7 @@ public class UniversityService {
     public void removeUserUniversityMethod(Long universityAdmissionMethodId, Long userId) {
         UserUniversityMethod userUniversityMethod =
                 userUniversityMethodRepository.findByUniversityAdmissionMethodIdAndUserId(universityAdmissionMethodId, userId)
-                        .orElseThrow(UniversityAdmissionMethodNotFoundException::new);
+                        .orElseThrow(UserUniversityMethodNotOwnedException::new);
 
         userUniversityMethodRepository.delete(userUniversityMethod);
     }

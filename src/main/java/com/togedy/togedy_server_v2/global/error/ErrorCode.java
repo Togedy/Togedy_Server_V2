@@ -43,7 +43,10 @@ public enum ErrorCode {
 
     // UNIVERSITY_ADMISSION_METHOD (6000)
     UNIVERSITY_ADMISSION_METHOD_NOT_FOUND(HttpStatus.NOT_FOUND, "UAM6000", "해당 대학 입시 전형을 찾을 수 없습니다."),
-    DUPLICATE_UNIVERSITY_ADMISSION_METHOD(HttpStatus.BAD_REQUEST, "UAM6001", "이미 추가한 대학 입시 전형입니다.");
+    DUPLICATE_UNIVERSITY_ADMISSION_METHOD(HttpStatus.BAD_REQUEST, "UAM6001", "이미 추가한 대학 입시 전형입니다."),
+
+    // USER_UNIVERSITY_METHOD (7000)
+    USER_UNIVERSITY_METHOD_NOT_OWNED(HttpStatus.FORBIDDEN, "UUM7000", "해당 유저가 보유하지 않은 대학 입시 전형입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
