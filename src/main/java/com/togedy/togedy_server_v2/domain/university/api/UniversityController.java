@@ -37,7 +37,8 @@ public class UniversityController {
             @RequestParam(name = "admission-type", defaultValue = "전체") String admissionType,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
-            @AuthenticationPrincipal AuthUser user){
+            @AuthenticationPrincipal AuthUser user)
+    {
         List<GetUniversityResponse> response =
                 universityService.findUniversityList(name, admissionType, user.getId(), page, size);
         return ApiUtil.success(response);
@@ -53,11 +54,12 @@ public class UniversityController {
         return ApiUtil.success(response);
     }
 
-    @Operation(summary = "대학 일정 추가", description = "대학 전형들을 추가한다.")
+    @Operation(summary = "대학 일정 추가", description = "대학 전형을 추가한다.")
     @PostMapping("")
     public ApiResponse<Void> createUserUniversitySchedule(
             @RequestBody PostUniversityAdmissionMethodRequest request,
-            @AuthenticationPrincipal AuthUser user) {
+            @AuthenticationPrincipal AuthUser user)
+    {
         universityService.generateUserUniversityAdmissionMethod(request, user.getId());
         return ApiUtil.successOnly();
     }

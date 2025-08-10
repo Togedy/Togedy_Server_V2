@@ -134,7 +134,7 @@ public class UniversityService {
     /***
      * 유저가 대학 전형들을 추가한다.
      *
-     * @param request   대학 전형ID 리스트
+     * @param request   대학 전형ID
      * @param userId    유저ID
      */
     @Transactional
@@ -157,7 +157,7 @@ public class UniversityService {
     /***
      * 유저가 보유한 대학 전형을 제거한다.
      *
-     * @param universityAdmissionMethodIdList  대학 전형ID 리스트
+     * @param universityAdmissionMethodId  대학 전형ID
      * @param userId                           유저ID
      */
     @Transactional
