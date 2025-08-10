@@ -141,23 +141,17 @@ public class UniversityService {
     public void generateUserUniversityAdmissionMethod(PostUniversityAdmissionMethodRequest request, Long userId) {
         User user = userService.loadUserById(userId);
 
-        List<Long> universityAdmissionMethodIdList = request.getUniversityAdmissionMethodIdList();
+        Long universityAdmissionMethodId = request.getUniversityAdmissionMethodId();
 
-        List<UniversityAdmissionMethod> universityAdmissionMethodList
-                = universityAdmissionMethodRepository.findAllById(universityAdmissionMethodIdList);
+        UniversityAdmissionMethod universityAdmissionMethod = universityAdmissionMethodRepository.findById(universityAdmissionMethodId)
+                .orElseThrow(UniversityAdmissionMethodNotFoundException::new);
 
-        if (universityAdmissionMethodList.size() != universityAdmissionMethodIdList.size()) {
-            throw new UniversityAdmissionMethodNotFoundException();
-        }
+        UserUniversityMethod userUniversityMethod = UserUniversityMethod.builder()
+                .user(user)
+                .universityAdmissionMethod(universityAdmissionMethod)
+                .build();
 
-        List<UserUniversityMethod> userUniversityMethodList = universityAdmissionMethodList.stream()
-                .map(us -> UserUniversityMethod.builder()
-                        .user(user)
-                        .universityAdmissionMethod(us)
-                        .build())
-                .toList();
-
-        userUniversityMethodRepository.saveAll(userUniversityMethodList);
+        userUniversityMethodRepository.save(userUniversityMethod);
     }
 
     /***
@@ -167,16 +161,12 @@ public class UniversityService {
      * @param userId                           유저ID
      */
     @Transactional
-    public void removeUserUniversityMethod(List<Long> universityAdmissionMethodIdList, Long userId) {
-        List<UserUniversityMethod> userUniversityMethodList =
-                userUniversityMethodRepository
-                        .findByUserIdAndUniversityAdmissionMethodIdIn(userId, universityAdmissionMethodIdList);
+    public void removeUserUniversityMethod(Long universityAdmissionMethodId, Long userId) {
+        UserUniversityMethod userUniversityMethod =
+                userUniversityMethodRepository.findByUniversityAdmissionMethodIdAndUserId(universityAdmissionMethodId, userId)
+                        .orElseThrow(UniversityAdmissionMethodNotFoundException::new);
 
-        if (userUniversityMethodList.size() != universityAdmissionMethodIdList.size()) {
-            throw new UniversityAdmissionMethodNotFoundException();
-        }
-
-        userUniversityMethodRepository.deleteAll(userUniversityMethodList);
+        userUniversityMethodRepository.delete(userUniversityMethod);
     }
 
 }

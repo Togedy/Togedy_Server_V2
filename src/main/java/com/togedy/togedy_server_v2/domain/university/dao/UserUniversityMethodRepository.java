@@ -7,10 +7,9 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface UserUniversityMethodRepository extends JpaRepository<UserUniversityMethod, Long> {
-
-    List<UserUniversityMethod> findByUserIdAndUniversityAdmissionMethodIdIn(Long userId, List<Long> id);
 
     @Query("""
         SELECT uum
@@ -40,4 +39,6 @@ public interface UserUniversityMethodRepository extends JpaRepository<UserUniver
             AND :date BETWEEN us.startDate AND COALESCE(us.endDate, us.startDate)
     """)
     List<UserUniversityMethod> findByUserIdAndDate(@Param("userId") Long userId, @Param("date") LocalDate date);
+
+    Optional<UserUniversityMethod> findByUniversityAdmissionMethodIdAndUserId(Long universityAdmissionMethodId, Long userId);
 }
