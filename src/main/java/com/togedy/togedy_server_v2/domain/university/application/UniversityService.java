@@ -12,8 +12,10 @@ import com.togedy.togedy_server_v2.domain.university.entity.AdmissionType;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
+import com.togedy.togedy_server_v2.domain.university.exception.DuplicateUniversityAdmissionMethodException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityAdmissionMethodNotFoundException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoundException;
+import com.togedy.togedy_server_v2.domain.university.exception.UserUniversityMethodNotOwnedException;
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
@@ -134,49 +136,43 @@ public class UniversityService {
     /***
      * 유저가 대학 전형들을 추가한다.
      *
-     * @param request   대학 전형ID 리스트
+     * @param request   대학 전형ID
      * @param userId    유저ID
      */
     @Transactional
     public void generateUserUniversityAdmissionMethod(PostUniversityAdmissionMethodRequest request, Long userId) {
         User user = userService.loadUserById(userId);
 
-        List<Long> universityAdmissionMethodIdList = request.getUniversityAdmissionMethodIdList();
+        Long universityAdmissionMethodId = request.getUniversityAdmissionMethodId();
 
-        List<UniversityAdmissionMethod> universityAdmissionMethodList
-                = universityAdmissionMethodRepository.findAllById(universityAdmissionMethodIdList);
+        UniversityAdmissionMethod universityAdmissionMethod = universityAdmissionMethodRepository.findById(universityAdmissionMethodId)
+                .orElseThrow(UniversityAdmissionMethodNotFoundException::new);
 
-        if (universityAdmissionMethodList.size() != universityAdmissionMethodIdList.size()) {
-            throw new UniversityAdmissionMethodNotFoundException();
+        if (userUniversityMethodRepository.existsByUniversityAdmissionMethodIdAndUserId(universityAdmissionMethodId, userId)) {
+            throw new DuplicateUniversityAdmissionMethodException();
         }
 
-        List<UserUniversityMethod> userUniversityMethodList = universityAdmissionMethodList.stream()
-                .map(us -> UserUniversityMethod.builder()
-                        .user(user)
-                        .universityAdmissionMethod(us)
-                        .build())
-                .toList();
+        UserUniversityMethod userUniversityMethod = UserUniversityMethod.builder()
+                .user(user)
+                .universityAdmissionMethod(universityAdmissionMethod)
+                .build();
 
-        userUniversityMethodRepository.saveAll(userUniversityMethodList);
+        userUniversityMethodRepository.save(userUniversityMethod);
     }
 
     /***
      * 유저가 보유한 대학 전형을 제거한다.
      *
-     * @param universityAdmissionMethodIdList  대학 전형ID 리스트
+     * @param universityAdmissionMethodId  대학 전형ID
      * @param userId                           유저ID
      */
     @Transactional
-    public void removeUserUniversityMethod(List<Long> universityAdmissionMethodIdList, Long userId) {
-        List<UserUniversityMethod> userUniversityMethodList =
-                userUniversityMethodRepository
-                        .findByUserIdAndUniversityAdmissionMethodIdIn(userId, universityAdmissionMethodIdList);
+    public void removeUserUniversityMethod(Long universityAdmissionMethodId, Long userId) {
+        UserUniversityMethod userUniversityMethod =
+                userUniversityMethodRepository.findByUniversityAdmissionMethodIdAndUserId(universityAdmissionMethodId, userId)
+                        .orElseThrow(UserUniversityMethodNotOwnedException::new);
 
-        if (userUniversityMethodList.size() != universityAdmissionMethodIdList.size()) {
-            throw new UniversityAdmissionMethodNotFoundException();
-        }
-
-        userUniversityMethodRepository.deleteAll(userUniversityMethodList);
+        userUniversityMethodRepository.delete(userUniversityMethod);
     }
 
 }
