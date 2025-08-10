@@ -65,9 +65,9 @@ public class UniversityController {
     }
 
     @Operation(summary = "대학 전형 제거", description = "유저가 추가한 대학 전형을 제거한다.")
-    @DeleteMapping("")
+    @DeleteMapping("/{universityAdmissionMethodId}")
     public ApiResponse<Void> deleteUserUniversityMethod(
-            @RequestParam Long universityAdmissionMethodId,
+            @PathVariable Long universityAdmissionMethodId,
             @AuthenticationPrincipal AuthUser user)
     {
         universityService.removeUserUniversityMethod(universityAdmissionMethodId, user.getId());
