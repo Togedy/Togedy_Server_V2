@@ -5,41 +5,49 @@ import com.togedy.togedy_server_v2.domain.university.dao.UniversityRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
-import com.togedy.togedy_server_v2.domain.university.dao.UniversityScheduleRepository;
 import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodDto;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
+import com.togedy.togedy_server_v2.domain.university.entity.AdmissionType;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
+import com.togedy.togedy_server_v2.domain.university.exception.DuplicateUniversityAdmissionMethodException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityAdmissionMethodNotFoundException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoundException;
+import com.togedy.togedy_server_v2.domain.university.exception.UserUniversityMethodNotOwnedException;
+import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
 public class UniversityService {
 
-    private final UniversityScheduleRepository universityScheduleRepository;
     private final UniversityAdmissionMethodRepository universityAdmissionMethodRepository;
     private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
     private final UserUniversityMethodRepository userUniversityMethodRepository;
+    private final UserService userService;
 
-    private static final int ACADEMIC_YEAR = 2025;
+    private static final List<String> STAGE_ORDER = List.of(
+            "원서접수", "서류제출", "합격발표"
+    );
+
+    private static final int ACADEMIC_YEAR = 2026;
 
     /***
      * 대학명, 입시 전형에 해당하는 대학 정보를 조회한다.
@@ -51,36 +59,41 @@ public class UniversityService {
      * @param size              크기
      * @return                  대학별 정보
      */
-    @Transactional(readOnly = true)
-    public Page<GetUniversityResponse> findUniversityList(
+    public List<GetUniversityResponse> findUniversityList(
             String name,
             String admissionType,
             Long userId,
             int page,
             int size
     ) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
-        if ("전체".equals(admissionType)) {
-            admissionType = null;
-        }
+        String filterType = AdmissionType.ofValue(admissionType);
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
-        Page<University> universities = universityRepository.findByNameAndType(name, admissionType, pageRequest);
+        List<University> universityList = universityRepository.findByNameAndType(name, filterType, pageRequest);
+        List<Long> universityIdList = universityList.stream()
+                .map(University::getId)
+                .toList();
 
-        return universities.map(university -> {
-            int count = universityAdmissionMethodRepository.countByUniversity(university);
+        Map<Long, Long> universityAdmissionCountMap = universityAdmissionMethodRepository
+                .findCountByUniversityIdsAnAndAcademicYear(universityIdList, ACADEMIC_YEAR)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
 
-            List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList
-                    = universityAdmissionMethodRepository.findAllByUniversityAndUser(university, user);
+        Map<Long, List<UniversityAdmissionMethod>> addedAdmissionMethodMap =
+                universityAdmissionMethodRepository
+                        .findAllByUniversityIdsAndUserIdAndAcademicYear(universityIdList, userId, ACADEMIC_YEAR)
+                        .stream()
+                        .collect(Collectors.groupingBy(m -> m.getUniversity().getId()));
 
-            return GetUniversityResponse.of(
-                    university,
-                    count,
-                    addedUniversityAdmissionMethodList
-            );
-        });
+        return universityList.stream()
+                .map(university -> GetUniversityResponse.of(
+                       university,
+                       universityAdmissionCountMap.getOrDefault(university.getId(), 0L).intValue(),
+                       addedAdmissionMethodMap.getOrDefault(university.getId(), Collections.emptyList())
+               )).toList();
     }
 
     /***
@@ -90,31 +103,32 @@ public class UniversityService {
      * @param userId        유저ID
      * @return              해당 대학의 전형별 일정
      */
-    @Transactional(readOnly = true)
     public GetUniversityScheduleResponse findUniversitySchedule(Long universityId, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
         University university = universityRepository.findById(universityId)
                 .orElseThrow(UniversityNotFoundException::new);
 
         List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList =
-                universityAdmissionMethodRepository.findAllByUniversityAndUser(university, user);
+                universityAdmissionMethodRepository.findAllByUniversityAndUserIdAndAcademicYear(
+                        university,
+                        userId,
+                        ACADEMIC_YEAR
+                );
 
-        List<UniversityAdmissionMethod> universityAdmissionMethodList
-                = universityAdmissionMethodRepository.findAllByUniversity(university);
-
-        List<UniversityAdmissionMethodDto> universityAdmissionMethodDtoList = new ArrayList<>();
-
-        for (UniversityAdmissionMethod universityAdmissionMethod : universityAdmissionMethodList) {
-            List<UniversityScheduleDto> universityScheduleDtoList =
-                    universityAdmissionMethod.getUniversityAdmissionScheduleList().stream()
-                            .map(universityAdmissionSchedule ->
-                                    UniversityScheduleDto.from(universityAdmissionSchedule.getUniversitySchedule()))
-                            .toList();
-
-            universityAdmissionMethodDtoList.add(UniversityAdmissionMethodDto.of(universityAdmissionMethod, universityScheduleDtoList));
-        }
+        List<UniversityAdmissionMethodDto> universityAdmissionMethodDtoList = universityAdmissionMethodRepository
+                .findAllByUniversityAndAcademicYear(university, ACADEMIC_YEAR)
+                .stream()
+                .map(method -> {
+                    List<UniversityScheduleDto> scheduleDtos = method
+                            .getUniversityAdmissionScheduleList()
+                            .stream()
+                            .map(uas -> UniversityScheduleDto.from(uas.getUniversitySchedule()))
+                            .sorted(Comparator.comparingInt(
+                                    dto -> STAGE_ORDER.indexOf(dto.getUniversityAdmissionStage())
+                            ))
+                            .collect(Collectors.toList());
+                    return UniversityAdmissionMethodDto.of(method, scheduleDtos);
+                })
+                .toList();
 
         return GetUniversityScheduleResponse.of(university, addedUniversityAdmissionMethodList, universityAdmissionMethodDtoList);
     }
@@ -122,52 +136,43 @@ public class UniversityService {
     /***
      * 유저가 대학 전형들을 추가한다.
      *
-     * @param request   대학 전형ID 리스트
+     * @param request   대학 전형ID
      * @param userId    유저ID
      */
     @Transactional
     public void generateUserUniversityAdmissionMethod(PostUniversityAdmissionMethodRequest request, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+        User user = userService.loadUserById(userId);
 
-        List<Long> universityAdmissionMethodIdList = request.getUniversityAdmissionMethodIdList();
+        Long universityAdmissionMethodId = request.getUniversityAdmissionMethodId();
 
-        List<UniversityAdmissionMethod> universityAdmissionMethodList
-                = universityAdmissionMethodRepository.findAllById(universityAdmissionMethodIdList);
+        UniversityAdmissionMethod universityAdmissionMethod = universityAdmissionMethodRepository.findById(universityAdmissionMethodId)
+                .orElseThrow(UniversityAdmissionMethodNotFoundException::new);
 
-        if (universityAdmissionMethodList.size() != universityAdmissionMethodIdList.size()) {
-            throw new UniversityAdmissionMethodNotFoundException();
+        if (userUniversityMethodRepository.existsByUniversityAdmissionMethodIdAndUserId(universityAdmissionMethodId, userId)) {
+            throw new DuplicateUniversityAdmissionMethodException();
         }
 
-        List<UserUniversityMethod> userUniversityMethodList = universityAdmissionMethodList.stream()
-                .map(us -> UserUniversityMethod.builder()
-                        .user(user)
-                        .universityAdmissionMethod(us)
-                        .build())
-                .toList();
+        UserUniversityMethod userUniversityMethod = UserUniversityMethod.builder()
+                .user(user)
+                .universityAdmissionMethod(universityAdmissionMethod)
+                .build();
 
-        userUniversityMethodRepository.saveAll(userUniversityMethodList);
+        userUniversityMethodRepository.save(userUniversityMethod);
     }
 
     /***
      * 유저가 보유한 대학 전형을 제거한다.
-     * @param universityAdmissionMethodIdList  대학 전형ID 리스트
-     * @param userId                    유저ID
+     *
+     * @param universityAdmissionMethodId  대학 전형ID
+     * @param userId                           유저ID
      */
     @Transactional
-    public void removeUserUniversityMethod(List<Long> universityAdmissionMethodIdList, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+    public void removeUserUniversityMethod(Long universityAdmissionMethodId, Long userId) {
+        UserUniversityMethod userUniversityMethod =
+                userUniversityMethodRepository.findByUniversityAdmissionMethodIdAndUserId(universityAdmissionMethodId, userId)
+                        .orElseThrow(UserUniversityMethodNotOwnedException::new);
 
-        List<UserUniversityMethod> userUniversityMethodList =
-                userUniversityMethodRepository
-                        .findByUserAndUniversityAdmissionMethodIdIn(user, universityAdmissionMethodIdList);
-
-        if (userUniversityMethodList.size() != universityAdmissionMethodIdList.size()) {
-            throw new UniversityAdmissionMethodNotFoundException();
-        }
-
-        userUniversityMethodRepository.deleteAll(userUniversityMethodList);
+        userUniversityMethodRepository.delete(userUniversityMethod);
     }
 
 }

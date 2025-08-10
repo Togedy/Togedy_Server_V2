@@ -45,9 +45,6 @@ public class UniversitySchedule {
     @Column(name = "end_time")
     private LocalTime endTime;
 
-    @Column(name = "academic_year", columnDefinition = "YEAR", nullable = false, updatable = false)
-    private int academicYear;
-
     @OneToMany(mappedBy = "universitySchedule", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<UniversityAdmissionSchedule> universityAdmissionScheduleList = new ArrayList<>();
 

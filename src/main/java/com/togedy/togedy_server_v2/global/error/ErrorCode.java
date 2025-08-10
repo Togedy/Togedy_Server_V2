@@ -19,8 +19,9 @@ public enum ErrorCode {
     JWT_MALFORMED(HttpStatus.BAD_REQUEST, "J1002", "손상된 토큰입니다."),
     JWT_INVALID_SIGNATURE(HttpStatus.UNAUTHORIZED, "J1003", "토큰 서명이 유효하지 않습니다."),
     JWT_INVALID(HttpStatus.UNAUTHORIZED, "J1004", "유효하지 않은 토큰입니다."),
-    JWT_MISSING(HttpStatus.UNAUTHORIZED, "J1005", "토큰이 존재하지 않습니다."),
+    JWT_NOT_FOUND(HttpStatus.UNAUTHORIZED, "J1005", "토큰을 찾을 수 없습니다."),
     JWT_INVALID_FORMAT(HttpStatus.BAD_REQUEST, "J1006", "잘못된 토큰 형식입니다."),
+    JWT_REFRESH_MISMATCH(HttpStatus.UNAUTHORIZED, "J1007", "리프레시 토큰이 서버와 일치하지 않습니다."),
 
     // USER (2000)
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U2000", "사용자를 찾을 수 없습니다."),
@@ -41,7 +42,11 @@ public enum ErrorCode {
     INVALID_ADMISSION_TYPE(HttpStatus.BAD_REQUEST, "UN5001", "유효하지 않은 입시 유형입니다."),
 
     // UNIVERSITY_ADMISSION_METHOD (6000)
-    UNIVERSITY_ADMISSION_METHOD_NOT_FOUND(HttpStatus.NOT_FOUND, "UAM6000", "해당 대학 입시 전형을 찾을 수 없습니다.");
+    UNIVERSITY_ADMISSION_METHOD_NOT_FOUND(HttpStatus.NOT_FOUND, "UAM6000", "해당 대학 입시 전형을 찾을 수 없습니다."),
+    DUPLICATE_UNIVERSITY_ADMISSION_METHOD(HttpStatus.BAD_REQUEST, "UAM6001", "이미 추가한 대학 입시 전형입니다."),
+
+    // USER_UNIVERSITY_METHOD (7000)
+    USER_UNIVERSITY_METHOD_NOT_OWNED(HttpStatus.FORBIDDEN, "UUM7000", "해당 유저가 보유하지 않은 대학 입시 전형입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

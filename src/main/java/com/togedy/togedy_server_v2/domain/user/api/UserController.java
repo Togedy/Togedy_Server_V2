@@ -22,14 +22,14 @@ import java.util.Map;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v2/users")
-@Tag(name = "User", description = "유저 관련 API")
+@Tag(name = "User", description = "유저 관리 API")
 public class UserController {
 
     private final UserService userService;
 
     @Operation(summary = "간편 회원가입", description = """
             
-            이메일/닉네임으로 회원가입을 한다.
+            이메일과 닉네임을 기반으로 회원가입을 한다.
             
             """)
     @PostMapping("/sign-up")
@@ -40,16 +40,5 @@ public class UserController {
         response.put("userId", userId);
 
         return ApiUtil.success(response);
-    }
-
-    @Operation(summary = "간편 로그인", description = """
-            
-            이메일 기반 간편 로그인 후 JWT 토큰 발급한다.
-            
-            """)
-    @PostMapping("/login")
-    public ApiResponse<LoginUserResponse> loginUser(@Validated @RequestBody LoginUserRequest request) {
-        JwtTokenInfo tokenInfo = userService.signInUser(request.getEmail());
-        return ApiUtil.success(new LoginUserResponse(tokenInfo));
     }
 }

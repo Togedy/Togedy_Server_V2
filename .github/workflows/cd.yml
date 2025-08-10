@@ -30,6 +30,10 @@ jobs:
             MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
             JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
             SWAGGER_URL=${{ secrets.SWAGGER_URL }}
+            
+            REDIS_HOST=${{ secrets.REDIS_HOST }}
+            REDIS_PORT=${{ secrets.REDIS_PORT }}
+            REDIS_PASSWORD=
             EOF
             
             cd ../script
