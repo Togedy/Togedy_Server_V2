@@ -54,7 +54,7 @@ public class UniversityController {
         return ApiUtil.success(response);
     }
 
-    @Operation(summary = "대학 일정 추가", description = "대학 전형을 추가한다.")
+    @Operation(summary = "대학 전형 추가", description = "대학 전형을 추가한다.")
     @PostMapping("")
     public ApiResponse<Void> createUserUniversitySchedule(
             @RequestBody PostUniversityAdmissionMethodRequest request,
