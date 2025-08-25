@@ -12,7 +12,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findAllByUserId(Long userId);
 
     @Query("""
-            SELECT (count(c) > 0 )
+            SELECT CASE WHEN COUNT(c) > 0 THEN true ELSE false END
                 FROM Category c
             WHERE c.name = :name 
                 AND c.color = :color 
