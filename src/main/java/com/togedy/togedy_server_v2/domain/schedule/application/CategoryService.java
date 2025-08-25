@@ -11,6 +11,7 @@ import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.global.enums.BaseStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +42,7 @@ public class CategoryService {
         Category category = Category.builder()
                 .name(request.getCategoryName())
                 .color(request.getCategoryColor())
+                .status(BaseStatus.ACTIVE.name())
                 .user(user)
                 .build();
 
@@ -97,7 +99,7 @@ public class CategoryService {
             throw new CategoryNotOwnedException();
         }
 
-        categoryRepository.delete(category);
+        category.delete();
     }
 
     /**

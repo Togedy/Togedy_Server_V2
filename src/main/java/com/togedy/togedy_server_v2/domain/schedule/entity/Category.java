@@ -58,4 +58,8 @@ public class Category {
         }
     }
 
+    public void delete() {
+        this.status = BaseStatus.INACTIVE.name();
+    }
+
 }
