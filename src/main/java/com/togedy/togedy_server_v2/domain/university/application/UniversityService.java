@@ -3,8 +3,9 @@ package com.togedy.togedy_server_v2.domain.university.application;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityAdmissionMethodRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
-import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
+import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
+import com.togedy.togedy_server_v2.domain.university.dto.UniversityDto;
 import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodDto;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
@@ -22,6 +23,7 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -59,7 +61,7 @@ public class UniversityService {
      * @param size              크기
      * @return                  대학별 정보
      */
-    public List<GetUniversityResponse> findUniversityList(
+    public GetUniversityResponse findUniversityList(
             String name,
             String admissionType,
             Long userId,
@@ -69,7 +71,7 @@ public class UniversityService {
         String filterType = AdmissionType.ofValue(admissionType);
 
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
-        List<University> universityList = universityRepository.findByNameAndType(name, filterType, pageRequest);
+        Slice<University> universityList = universityRepository.findByNameAndType(name, filterType, pageRequest);
         List<Long> universityIdList = universityList.stream()
                 .map(University::getId)
                 .toList();
@@ -88,12 +90,14 @@ public class UniversityService {
                         .stream()
                         .collect(Collectors.groupingBy(m -> m.getUniversity().getId()));
 
-        return universityList.stream()
-                .map(university -> GetUniversityResponse.of(
+        List<UniversityDto> universityDto =  universityList.stream()
+                .map(university -> UniversityDto.of(
                        university,
                        universityAdmissionCountMap.getOrDefault(university.getId(), 0L).intValue(),
                        addedAdmissionMethodMap.getOrDefault(university.getId(), Collections.emptyList())
                )).toList();
+
+        return GetUniversityResponse.of(universityList.hasNext(), universityDto);
     }
 
     /***
