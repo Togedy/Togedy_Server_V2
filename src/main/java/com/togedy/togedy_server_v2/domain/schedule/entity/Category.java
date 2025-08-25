@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.schedule.entity;
 
 import com.togedy.togedy_server_v2.domain.schedule.dto.PatchCategoryRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.global.enums.BaseStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -33,15 +34,19 @@ public class Category {
     @Column(name = "color")
     private String color;
 
+    @Column(name = "status")
+    private String status;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
     @Builder
-    public Category(User user, String name, String color) {
+    public Category(User user, String name, String color, String status) {
         this.user = user;
         this.name = name;
         this.color = color;
+        this.status = status;
     }
 
     public void update(PatchCategoryRequest request) {
