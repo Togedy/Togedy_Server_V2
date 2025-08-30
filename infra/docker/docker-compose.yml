@@ -7,8 +7,6 @@ services:
       dockerfile: infra/docker/Dockerfile
     ports:
       - "8080:8080"
-    env_file:
-      - .env
     environment:
       MYSQL_HOST: ${MYSQL_HOST}
       MYSQL_USER: ${MYSQL_USER}

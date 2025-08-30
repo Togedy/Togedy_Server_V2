@@ -22,20 +22,15 @@ jobs:
           username: ubuntu
           key: ${{ secrets.KEY }}
           script: |
-            cd ${{ secrets.PROJECT_PATH }}infra/docker
-            
-            cat > .env <<EOF
-            MYSQL_HOST=${{ secrets.MYSQL_HOST }}
-            MYSQL_USER=${{ secrets.MYSQL_USER }}
-            MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}
-            JWT_SECRET_KEY=${{ secrets.JWT_SECRET_KEY }}
-            SWAGGER_URL=${{ secrets.SWAGGER_URL }}
-            
-            REDIS_HOST=${{ secrets.REDIS_HOST }}
-            REDIS_PORT=${{ secrets.REDIS_PORT }}
-            REDIS_PASSWORD=
-            EOF
-            
-            cd ../script
+            export MYSQL_HOST='${{ secrets.MYSQL_HOST }}'
+            export MYSQL_USER='${{ secrets.MYSQL_USER }}'
+            export MYSQL_PASSWORD='${{ secrets.MYSQL_PASSWORD }}'
+            export JWT_SECRET_KEY='${{ secrets.JWT_SECRET_KEY }}'
+            export SWAGGER_URL='${{ secrets.SWAGGER_URL }}'
+            export REDIS_HOST='${{ secrets.REDIS_HOST }}'
+            export REDIS_PORT='${{ secrets.REDIS_PORT }}'
+            export REDIS_PASSWORD=''
+
+            cd ${{ secrets.PROJECT_PATH }}infra/script
             chmod +x deploy.sh
             ./deploy.sh
