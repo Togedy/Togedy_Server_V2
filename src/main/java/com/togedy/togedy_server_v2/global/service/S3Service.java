@@ -22,6 +22,12 @@ public class S3Service {
 
     private final S3Template s3Template;
 
+    /**
+     * S3에 파일을 업로드한다.
+     *
+     * @param multipartFile 이미지 파일
+     * @return              파일 URL
+     */
     public String uploadFile(MultipartFile multipartFile) {
         String key = createFileName(multipartFile.getOriginalFilename());
 
@@ -38,10 +44,21 @@ public class S3Service {
         }
     }
 
+    /**
+     * S3에서 해당 파일을 제거한다.
+     *
+     * @param fileName  파일명
+     */
     public void deleteFile(String fileName) {
         s3Template.deleteObject(bucket, fileName);
     }
 
+    /**
+     * UUID + 확장자 형식으로 파일명을 생성한다.
+     *
+     * @param fileName  기존 파일명
+     * @return          생성된 파일명
+     */
     private String createFileName(String fileName){
         String extension = "";
         if (fileName != null) {
