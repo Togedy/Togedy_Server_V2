@@ -22,15 +22,15 @@ public class S3Service {
 
     private final S3Template s3Template;
 
-    public String uploadFile(MultipartFile file) {
-        String key = createFileName(file.getOriginalFilename());
+    public String uploadFile(MultipartFile multipartFile) {
+        String key = createFileName(multipartFile.getOriginalFilename());
 
         ObjectMetadata meta = ObjectMetadata.builder()
-                .contentType(file.getContentType())
-                .contentLength(file.getSize())
+                .contentType(multipartFile.getContentType())
+                .contentLength(multipartFile.getSize())
                 .build();
 
-        try (InputStream is = file.getInputStream()) {
+        try (InputStream is = multipartFile.getInputStream()) {
             S3Resource res = s3Template.upload(bucket, key, is, meta);
             return res.getURL().toExternalForm();
         } catch (IOException e) {
@@ -42,8 +42,15 @@ public class S3Service {
         s3Template.deleteObject(bucket, fileName);
     }
 
-    private String createFileName(String original) {
-        return UUID.randomUUID() + original;
+    private String createFileName(String fileName){
+        String extension = "";
+        if (fileName != null) {
+            int lastDot = fileName.lastIndexOf('.');
+            if (lastDot >= 0) {
+                extension = fileName.substring(lastDot);
+            }
+        }
+        return UUID.randomUUID() + extension;
     }
 
 }
