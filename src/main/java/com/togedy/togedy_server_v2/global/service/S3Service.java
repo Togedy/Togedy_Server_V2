@@ -1,11 +1,9 @@
 package com.togedy.togedy_server_v2.global.service;
 
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.model.CannedAccessControlList;
-import com.amazonaws.services.s3.model.DeleteObjectRequest;
-import com.amazonaws.services.s3.model.ObjectMetadata;
-import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.togedy.togedy_server_v2.global.exception.StorageUploadFailedException;
+import io.awspring.cloud.s3.ObjectMetadata;
+import io.awspring.cloud.s3.S3Resource;
+import io.awspring.cloud.s3.S3Template;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,33 +17,33 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class S3Service {
 
-    @Value("${cloud.aws.s3.bucket}")
+    @Value("${spring.cloud.aws.s3.bucket}")
     private String bucket;
 
-    private final AmazonS3Client amazonS3Client;
+    private final S3Template s3Template;
 
-    public String uploadFile(MultipartFile multipartFile) {
-        String key = createFileName(multipartFile.getOriginalFilename());
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setContentLength(multipartFile.getSize());
-        objectMetadata.setContentType(multipartFile.getContentType());
+    public String uploadFile(MultipartFile file) {
+        String key = createFileName(file.getOriginalFilename());
 
-        try (InputStream inputStream = multipartFile.getInputStream()) {
-            amazonS3Client.putObject(new PutObjectRequest(bucket, key, inputStream, objectMetadata)
-                    .withCannedAcl(CannedAccessControlList.PublicRead));
-        } catch (IOException e){
+        ObjectMetadata meta = ObjectMetadata.builder()
+                .contentType(file.getContentType())
+                .contentLength(file.getSize())
+                .build();
+
+        try (InputStream is = file.getInputStream()) {
+            S3Resource res = s3Template.upload(bucket, key, is, meta);
+            return res.getURL().toExternalForm();
+        } catch (IOException e) {
             throw new StorageUploadFailedException();
         }
-
-        return amazonS3Client.getUrl(bucket, key).toExternalForm();
     }
 
-    public void deleteFile(String fileName){
-        amazonS3Client.deleteObject(new DeleteObjectRequest(bucket, fileName));
+    public void deleteFile(String fileName) {
+        s3Template.deleteObject(bucket, fileName);
     }
 
-    private String createFileName(String fileName){
-        return UUID.randomUUID().toString().concat(fileName);
+    private String createFileName(String original) {
+        return UUID.randomUUID() + original;
     }
 
 }
