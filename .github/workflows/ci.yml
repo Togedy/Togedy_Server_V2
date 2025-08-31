@@ -84,6 +84,10 @@ jobs:
           SPRING_DATA_REDIS_HOST: 127.0.0.1
           SPRING_DATA_REDIS_PORT: 6379
           SPRING_DATA_REDIS_PASSWORD: ""
+
+          SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
+          SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
+          SPRING_CLOUD_AWS_S3_BUCKET: test
         run: ./gradlew build --build-cache --info
 
       - name: Post result

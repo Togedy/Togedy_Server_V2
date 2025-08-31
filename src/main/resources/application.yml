@@ -66,23 +66,16 @@ logging:
 
 ---
 
-
 # AWS S3
-cloud:
-  aws:
-    credentials:
-      access-key: ${ACCESS_KEY}
-      secret-key: ${SECRET_KEY}
-    region:
-      static: ap-northeast-2
-    s3:
-      bucket: togedy-image
-    stack:
-      auto: false
-
 spring:
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
-
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key: ${ACCESS_KEY}
+        secret-key: ${SECRET_KEY:}
+      s3:
+        bucket: ${BUCKET_NAME}
+#        endpoint: http://127.0.0.1:4566
+#        path-style-access-enabled: true

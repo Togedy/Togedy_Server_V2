@@ -32,6 +32,7 @@ jobs:
             export REDIS_PASSWORD=''
             export ACCESS_KEY='${{ secrets.ACCESS_KEY }}'
             export SECRET_KEY='${{ secrets.SECRET_KEY }}'
+            export BUCKET_NAME='${{ secrets.BUCKET_NAME }}'
 
             cd ${{ secrets.PROJECT_PATH }}infra/script
             chmod +x deploy.sh
