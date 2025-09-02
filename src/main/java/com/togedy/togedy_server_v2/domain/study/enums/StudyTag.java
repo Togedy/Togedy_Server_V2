@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.study.entity;
+package com.togedy.togedy_server_v2.domain.study.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

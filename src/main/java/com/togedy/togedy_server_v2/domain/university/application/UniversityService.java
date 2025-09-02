@@ -9,7 +9,7 @@ import com.togedy.togedy_server_v2.domain.university.dto.UniversityDto;
 import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodDto;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
-import com.togedy.togedy_server_v2.domain.university.entity.AdmissionType;
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
