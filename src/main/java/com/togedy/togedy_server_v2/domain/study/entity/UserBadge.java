@@ -28,9 +28,13 @@ public class UserBadge {
     @Column(name = "badge_id", nullable = false)
     private Long badgeId;
 
+    @Column(name = "is_representative", nullable = false)
+    private boolean isRepresentative;
+
     @Builder
-    public UserBadge(Long userId, Long badgeId) {
+    public UserBadge(Long userId, Long badgeId, boolean isRepresentative) {
         this.userId = userId;
         this.badgeId = badgeId;
+        this.isRepresentative = isRepresentative;
     }
 }
