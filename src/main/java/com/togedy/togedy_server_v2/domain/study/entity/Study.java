@@ -22,40 +22,40 @@ public class Study extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "study_id")
+    @Column(name = "study_id", nullable = false)
     private Long id;
 
-    @Column(name = "type")
+    @Column(name = "type", nullable = false)
     private String type;
 
-    @Column(name = "goal_time")
+    @Column(name = "goal_time", nullable = true)
     private LocalTime goalTime;
 
-    @Column(name = "name")
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "description")
+    @Column(name = "description", nullable = true)
     private String description;
 
-    @Column(name = "personnel")
+    @Column(name = "personnel", nullable = false)
     private int personnel;
 
-    @Column(name = "tag")
+    @Column(name = "tag", nullable = false)
     private String tag;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", nullable = true)
     private String imageUrl;
 
-    @Column(name = "password")
+    @Column(name = "password", nullable = true)
     private int password;
 
-    @Column(name = "invitation_code")
+    @Column(name = "invitation_code", nullable = false)
     private String invitationCode;
 
-    @Column(name = "tier")
+    @Column(name = "tier", nullable = false)
     private String tier;
 
-    @Column(name = "status")
+    @Column(name = "status", nullable = false)
     private String status;
 
     @Builder

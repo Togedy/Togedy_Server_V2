@@ -19,13 +19,13 @@ public class UserBadge {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_badge_id")
+    @Column(name = "user_badge_id", nullable = false)
     private Long userBadgeId;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "badge_id")
+    @Column(name = "badge_id", nullable = false)
     private Long badgeId;
 
     @Builder

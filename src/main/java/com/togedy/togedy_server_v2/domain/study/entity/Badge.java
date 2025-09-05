@@ -18,18 +18,18 @@ public class Badge {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "badge_id")
+    @Column(name = "badge_id", nullable = false)
     private Long badgeId;
 
-    @Column(name = "description")
+    @Column(name = "description", nullable = false)
     private String description;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", nullable = false)
     private String imageUrl;
 
-    @Column(name = "type")
+    @Column(name = "type", nullable = false)
     private String type;
 
-    @Column(name = "condition", columnDefinition = "json")
+    @Column(name = "condition", columnDefinition = "json", nullable = false)
     private String condition;
 }

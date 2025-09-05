@@ -20,16 +20,16 @@ public class UserStudy extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_study_id")
+    @Column(name = "user_study_id", nullable = false)
     private Long userStudyId;
 
-    @Column(name = "user_id")
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "study_id")
+    @Column(name = "study_id", nullable = false)
     private Long studyId;
 
-    @Column(name = "role")
+    @Column(name = "role", nullable = false)
     private String role;
 
     @Builder
