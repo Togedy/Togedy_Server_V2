@@ -1,13 +1,14 @@
 package com.togedy.togedy_server_v2.domain.study.dto;
 
-import lombok.Builder;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalTime;
 
 @Getter
-@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PatchStudyInfoRequest {
 
     private LocalTime goalTime;
