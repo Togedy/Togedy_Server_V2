@@ -9,6 +9,7 @@ import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,5 +35,12 @@ public class StudyController {
     public ApiResponse<GetStudyResponse> readStudy(@PathVariable Long studyId) {
         GetStudyResponse response = studyService.findStudy(studyId);
         return ApiUtil.success(response);
+    }
+
+    @DeleteMapping("studies/{studyId}")
+    public ApiResponse<Void> deleteStudy(@PathVariable Long studyId,
+                                         @AuthenticationPrincipal AuthUser user) {
+        studyService.removeStudy(studyId, user.getId());
+        return ApiUtil.successOnly();
     }
 }

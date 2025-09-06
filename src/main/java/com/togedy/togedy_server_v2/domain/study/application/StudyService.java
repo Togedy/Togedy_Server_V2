@@ -8,13 +8,17 @@ import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.exception.DuplicateStudyNameException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
+import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -65,5 +69,23 @@ public class StudyService {
         User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER.name());
 
         return GetStudyResponse.of(study, leader);
+    }
+
+    public void removeStudy(Long studyId, Long userId) {
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
+                .orElseThrow(UserStudyNotFoundException::new);
+
+        if (!userStudy.getRole().equals(StudyRole.LEADER.name())) {
+            throw new StudyLeaderRequiredException();
+        }
+
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(StudyNotFoundException::new);
+
+        studyRepository.delete(study);
+
+        List<UserStudy> userStudyList = userStudyRepository.findAllByStudyId(studyId);
+
+        userStudyRepository.deleteAll(userStudyList);
     }
 }
