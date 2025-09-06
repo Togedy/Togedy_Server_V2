@@ -37,8 +37,11 @@ public class Study extends BaseEntity {
     @Column(name = "description", nullable = true)
     private String description;
 
-    @Column(name = "participant", nullable = false)
-    private int participant;
+    @Column(name = "member_count", nullable = false)
+    private int memberCount;
+
+    @Column(name = "member_limit", nullable = false)
+    private int memberLimit;
 
     @Column(name = "tag", nullable = false)
     private String tag;
@@ -64,7 +67,7 @@ public class Study extends BaseEntity {
             LocalTime goalTime,
             String name,
             String description,
-            int participant,
+            int memberLimit,
             String tag,
             String imageUrl,
             String password,
@@ -75,7 +78,8 @@ public class Study extends BaseEntity {
         this.goalTime = goalTime;
         this.name = name;
         this.description = description;
-        this.participant = participant;
+        this.memberCount = 1;
+        this.memberLimit = memberLimit;
         this.tag = tag;
         this.imageUrl = imageUrl;
         this.password = password;
