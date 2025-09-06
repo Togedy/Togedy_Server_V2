@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.university.entity;
+package com.togedy.togedy_server_v2.domain.university.enums;
 
 import com.togedy.togedy_server_v2.domain.university.exception.InvalidAdmissionTypeException;
 import lombok.AccessLevel;
