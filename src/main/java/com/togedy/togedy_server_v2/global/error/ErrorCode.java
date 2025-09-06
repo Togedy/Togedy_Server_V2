@@ -12,6 +12,7 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G0000", "서버 내부에 문제가 발생했습니다."),
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "G0001", "올바르지 않은 값 또는 형식입니다."),
     APP_CONFIG_NOT_FOUND(HttpStatus.NOT_FOUND, "G0002", "앱 설정이 존재하지 않습니다."),
+    STORAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "G0003", "파일 업로드가 실패하였습니다."),
 
     // JWT (1000)
     JWT_EXPIRED(HttpStatus.UNAUTHORIZED, "J1000", "만료된 토큰입니다."),
