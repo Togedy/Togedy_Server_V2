@@ -47,7 +47,7 @@ public class Study extends BaseEntity {
     private String imageUrl;
 
     @Column(name = "password", nullable = true)
-    private int password;
+    private String password;
 
     @Column(name = "invitation_code", nullable = false)
     private String invitationCode;
@@ -67,7 +67,7 @@ public class Study extends BaseEntity {
             int participant,
             String tag,
             String imageUrl,
-            int password,
+            String password,
             String invitationCode,
             String tier
     ) {
