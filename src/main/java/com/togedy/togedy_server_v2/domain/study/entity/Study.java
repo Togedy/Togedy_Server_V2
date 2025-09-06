@@ -64,7 +64,7 @@ public class Study extends BaseEntity {
             LocalTime goalTime,
             String name,
             String description,
-            int personnel,
+            int participant,
             String tag,
             String imageUrl,
             int password,
@@ -75,7 +75,7 @@ public class Study extends BaseEntity {
         this.goalTime = goalTime;
         this.name = name;
         this.description = description;
-        this.personnel = personnel;
+        this.participant = participant;
         this.tag = tag;
         this.imageUrl = imageUrl;
         this.password = password;
