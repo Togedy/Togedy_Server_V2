@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
+import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -86,5 +87,23 @@ public class Study extends BaseEntity {
         this.invitationCode = invitationCode;
         this.tier = tier;
         this.status = "ACTIVE";
+    }
+
+    public void updateInfo(PatchStudyInfoRequest request, String studyImageUrl) {
+        if (request.getStudyName() != null) {
+            this.name = request.getStudyName();
+        }
+        if (request.getStudyDescription() != null) {
+            this.description = request.getStudyDescription();
+        }
+        if (request.getStudyTag() != null) {
+            this.tag = request.getStudyTag();
+        }
+        if (request.getPassword() != null) {
+            this.password = request.getPassword();
+        }
+        if (studyImageUrl != null) {
+            this.imageUrl = studyImageUrl;
+        }
     }
 }

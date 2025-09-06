@@ -3,6 +3,7 @@ package com.togedy.togedy_server_v2.domain.study.application;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
@@ -87,5 +88,31 @@ public class StudyService {
         List<UserStudy> userStudyList = userStudyRepository.findAllByStudyId(studyId);
 
         userStudyRepository.deleteAll(userStudyList);
+    }
+
+    public void modifyStudyInfo(PatchStudyInfoRequest request, Long studyId, Long userId) {
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
+                .orElseThrow(UserStudyNotFoundException::new);
+
+        if (!userStudy.getRole().equals(StudyRole.LEADER.name())) {
+            throw new StudyLeaderRequiredException();
+        }
+
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(StudyNotFoundException::new);
+
+        String studyImageUrl = null;
+
+        if (!request.getStudyImage().isEmpty()) {
+            studyImageUrl = s3Service.uploadFile(request.getStudyImage());
+            s3Service.deleteFile(study.getImageUrl());
+        }
+
+        if (!request.getStudyName().isEmpty() && request.getIsDuplicate()) {
+            throw new DuplicateStudyNameException();
+        }
+
+        study.updateInfo(request, studyImageUrl);
+        studyRepository.save(study);
     }
 }
