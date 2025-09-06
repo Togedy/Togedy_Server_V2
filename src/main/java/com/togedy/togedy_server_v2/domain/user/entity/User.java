@@ -24,8 +24,20 @@ public class User extends BaseEntity {
     @Column(name = "email", nullable = false, unique = true)
     private String email;
 
-    @Column(name = "profile_image_url")
+    @Column(name = "profile_image_url", nullable = true)
     private String profileImageUrl;
+
+    @Column(name = "tag", nullable = false)
+    private String tag;
+
+    @Column(name = "profile_message", nullable = true)
+    private String profileMessage;
+
+    @Column(name = "is_public", nullable = false)
+    private boolean isPublic;
+
+    @Column(name = "study_streak", nullable = false)
+    private int studyStreak;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
