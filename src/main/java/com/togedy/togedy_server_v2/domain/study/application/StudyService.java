@@ -4,6 +4,7 @@ import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
@@ -113,6 +114,22 @@ public class StudyService {
         }
 
         study.updateInfo(request, studyImageUrl);
+        studyRepository.save(study);
+    }
+
+    @Transactional
+    public void modifyStudyMemberLimit(PatchStudyMemberLimitRequest request, Long studyId, Long userId) {
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
+                .orElseThrow(UserStudyNotFoundException::new);
+
+        if (!userStudy.getRole().equals(StudyRole.LEADER.name())) {
+            throw new StudyLeaderRequiredException();
+        }
+
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(StudyNotFoundException::new);
+
+        study.updateMemberLimit(request);
         studyRepository.save(study);
     }
 }

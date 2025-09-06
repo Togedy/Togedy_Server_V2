@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -105,5 +106,9 @@ public class Study extends BaseEntity {
         if (studyImageUrl != null) {
             this.imageUrl = studyImageUrl;
         }
+    }
+
+    public void updateMemberLimit(PatchStudyMemberLimitRequest request) {
+        this.memberLimit = request.getStudyMemberLimit();
     }
 }

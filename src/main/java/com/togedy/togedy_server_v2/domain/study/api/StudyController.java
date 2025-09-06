@@ -3,6 +3,7 @@ package com.togedy.togedy_server_v2.domain.study.api;
 import com.togedy.togedy_server_v2.domain.study.application.StudyService;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
@@ -47,6 +48,17 @@ public class StudyController {
             @AuthenticationPrincipal AuthUser user)
     {
         studyService.modifyStudyInfo(request, studyId, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @PatchMapping("/studies/{studyId}/members/limit")
+    public ApiResponse<Void> updateStudyMemberLimit(
+            @PathVariable Long studyId,
+            @RequestBody PatchStudyMemberLimitRequest request,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        studyService.modifyStudyMemberLimit(request, studyId, user.getId());
         return ApiUtil.successOnly();
     }
 
