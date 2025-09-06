@@ -25,7 +25,7 @@ public class Study extends BaseEntity {
     @Column(name = "study_id", nullable = false)
     private Long id;
 
-    @Column(name = "type", nullable = false)
+    @Column(name = "type", nullable = false, updatable = false)
     private String type;
 
     @Column(name = "goal_time", nullable = true)
