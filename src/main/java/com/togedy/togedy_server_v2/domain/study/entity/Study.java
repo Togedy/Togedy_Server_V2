@@ -37,8 +37,8 @@ public class Study extends BaseEntity {
     @Column(name = "description", nullable = true)
     private String description;
 
-    @Column(name = "personnel", nullable = false)
-    private int personnel;
+    @Column(name = "participant", nullable = false)
+    private int participant;
 
     @Column(name = "tag", nullable = false)
     private String tag;
