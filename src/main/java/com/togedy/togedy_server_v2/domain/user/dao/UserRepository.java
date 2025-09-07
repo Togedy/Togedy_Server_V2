@@ -19,10 +19,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("""
         SELECT u
-        FROM User u
-        JOIN UserStudy us
+        FROM User u, UserStudy us
         WHERE us.studyId = :studyId
             AND us.role = :role
+            AND us.userId = u.id
     """)
     User findByStudyIdAndRole(Long studyId, String role);
 }
