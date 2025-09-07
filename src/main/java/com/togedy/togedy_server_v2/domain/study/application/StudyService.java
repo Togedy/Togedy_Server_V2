@@ -10,6 +10,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
+import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.DuplicateStudyNameException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
@@ -35,20 +36,25 @@ public class StudyService {
 
     @Transactional
     public void generateStudy(PostStudyRequest request, Long userId) {
-        if (request.getIsDuplicate()) {
+        if (Boolean.TRUE.equals(request.getDuplicate())) {
             throw new DuplicateStudyNameException();
         }
 
         String imageUrl = null;
         String invitationCode;
+        String type = StudyType.NORMAL.name();
 
-        if (!request.getStudyImage().isEmpty()) {
+        if (request.getStudyImage() != null) {
             imageUrl = s3Service.uploadFile(request.getStudyImage());
+        }
+
+        if (request.getGoalTime() != null) {
+            type = StudyType.CHALLENGE.name();
         }
 
         do {
             invitationCode = InvitationCodeUtil.generateInvitationCode();
-        } while (!studyRepository.existsByInvitationCode(invitationCode));
+        } while (studyRepository.existsByInvitationCode(invitationCode));
 
         Study study = Study.builder()
                 .name(request.getStudyName())
@@ -56,6 +62,8 @@ public class StudyService {
                 .memberLimit(request.getMemberLimit())
                 .tag(request.getStudyTag())
                 .imageUrl(imageUrl)
+                .type(type)
+                .goalTime(request.getGoalTime())
                 .invitationCode(invitationCode)
                 .password(request.getPassword())
                 .tier("tier")
@@ -112,12 +120,12 @@ public class StudyService {
 
         String studyImageUrl = null;
 
-        if (!request.getStudyImage().isEmpty()) {
+        if (request.getStudyImage() != null) {
             studyImageUrl = s3Service.uploadFile(request.getStudyImage());
             s3Service.deleteFile(study.getImageUrl());
         }
 
-        if (!request.getStudyName().isEmpty() && request.getIsDuplicate()) {
+        if (!request.getStudyName().isEmpty() && Boolean.TRUE.equals(request.getDuplicate())) {
             throw new DuplicateStudyNameException();
         }
 
