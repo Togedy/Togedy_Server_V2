@@ -6,6 +6,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateRespons
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
@@ -14,6 +15,8 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.DuplicateStudyNameException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.util.InvitationCodeUtil;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
@@ -153,5 +156,31 @@ public class StudyService {
         boolean isDuplicate = studyRepository.existsByName(studyName);
 
         return GetStudyNameDuplicateResponse.from(isDuplicate);
+    }
+
+    @Transactional
+    public void registerStudyMember(PostStudyMemberRequest request, Long studyId, Long userId) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(StudyNotFoundException::new);
+
+        if (study.getPassword() != null) {
+            if (request.getStudyPassword() == null) {
+                throw new StudyPasswordRequiredException();
+            }
+            if (!study.getPassword().equals(request.getStudyPassword())) {
+                throw new StudyPasswordMismatchException();
+            }
+        }
+
+        UserStudy userStudy = UserStudy.builder()
+                .userId(userId)
+                .studyId(studyId)
+                .role(StudyRole.MEMBER.name())
+                .build();
+
+        userStudyRepository.save(userStudy);
+
+        study.addMemberCount();
+        studyRepository.save(study);
     }
 }

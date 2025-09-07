@@ -5,6 +5,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateRespons
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
@@ -34,6 +35,17 @@ public class StudyController {
     public ApiResponse<Void> createStudy(@ModelAttribute PostStudyRequest request,
                                          @AuthenticationPrincipal AuthUser user) {
         studyService.generateStudy(request, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @PostMapping("/studies/{studyId}/members")
+    public ApiResponse<Void> createStudyMember(
+            @RequestBody(required = false) PostStudyMemberRequest request,
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        studyService.registerStudyMember(request, studyId, user.getId());
         return ApiUtil.successOnly();
     }
 

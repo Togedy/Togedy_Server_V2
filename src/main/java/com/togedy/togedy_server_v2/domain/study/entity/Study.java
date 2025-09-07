@@ -111,4 +111,8 @@ public class Study extends BaseEntity {
     public void updateMemberLimit(PatchStudyMemberLimitRequest request) {
         this.memberLimit = request.getStudyMemberLimit();
     }
+
+    public void addMemberCount() {
+        this.memberCount++;
+    }
 }
