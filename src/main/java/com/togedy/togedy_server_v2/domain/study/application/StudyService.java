@@ -13,6 +13,7 @@ import com.togedy.togedy_server_v2.domain.study.exception.DuplicateStudyNameExce
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
+import com.togedy.togedy_server_v2.domain.study.util.InvitationCodeUtil;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.service.S3Service;
@@ -37,18 +38,24 @@ public class StudyService {
             throw new DuplicateStudyNameException();
         }
 
-        String studyImageUrl = null;
+        String imageUrl = null;
+        String invitationCode;
 
         if (!request.getStudyImage().isEmpty()) {
-            studyImageUrl = s3Service.uploadFile(request.getStudyImage());
+            imageUrl = s3Service.uploadFile(request.getStudyImage());
         }
+
+        do {
+            invitationCode = InvitationCodeUtil.generateInvitationCode();
+        } while (!studyRepository.existsByInvitationCode(invitationCode));
 
         Study study = Study.builder()
                 .name(request.getStudyName())
                 .description(request.getStudyDescription())
                 .memberLimit(request.getMemberLimit())
                 .tag(request.getStudyTag())
-                .imageUrl(studyImageUrl)
+                .imageUrl(imageUrl)
+                .invitationCode(invitationCode)
                 .password(request.getPassword())
                 .tier("tier")
                 .build();
