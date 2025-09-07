@@ -22,13 +22,13 @@ public class PostStudyRequest {
 
     private String studyDescription;
 
-    private Integer memberLimit;
+    private Integer studyMemberLimit;
 
     private String studyTag;
 
     private MultipartFile studyImage;
 
-    private String password;
+    private String studyPassword;
 
     @JsonAlias({"duplicate", "isDuplicate"})
     private Boolean duplicate;

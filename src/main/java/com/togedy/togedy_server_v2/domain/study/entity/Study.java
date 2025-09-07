@@ -100,8 +100,8 @@ public class Study extends BaseEntity {
         if (request.getStudyTag() != null) {
             this.tag = request.getStudyTag();
         }
-        if (request.getPassword() != null) {
-            this.password = request.getPassword();
+        if (request.getStudyPassword() != null) {
+            this.password = request.getStudyPassword();
         }
         if (studyImageUrl != null) {
             this.imageUrl = studyImageUrl;

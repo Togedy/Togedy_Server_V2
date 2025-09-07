@@ -22,13 +22,11 @@ public class PatchStudyInfoRequest {
 
     private String studyDescription;
 
-    private Integer memberLimit;
-
     private String studyTag;
 
     private MultipartFile studyImage;
 
-    private String password;
+    private String studyPassword;
 
     @JsonAlias({"duplicate", "isDuplicate"})
     private Boolean duplicate;

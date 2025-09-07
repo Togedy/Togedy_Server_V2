@@ -59,13 +59,13 @@ public class StudyService {
         Study study = Study.builder()
                 .name(request.getStudyName())
                 .description(request.getStudyDescription())
-                .memberLimit(request.getMemberLimit())
+                .memberLimit(request.getStudyMemberLimit())
                 .tag(request.getStudyTag())
                 .imageUrl(imageUrl)
                 .type(type)
                 .goalTime(request.getGoalTime())
                 .invitationCode(invitationCode)
-                .password(request.getPassword())
+                .password(request.getStudyPassword())
                 .tier("tier")
                 .build();
 
