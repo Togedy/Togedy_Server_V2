@@ -85,7 +85,7 @@ public class StudyController {
         return ApiUtil.successOnly();
     }
 
-    @DeleteMapping("studies/{studyId}")
+    @DeleteMapping("/studies/{studyId}")
     public ApiResponse<Void> deleteStudy(@PathVariable Long studyId,
                                          @AuthenticationPrincipal AuthUser user) {
         studyService.removeStudy(studyId, user.getId());
