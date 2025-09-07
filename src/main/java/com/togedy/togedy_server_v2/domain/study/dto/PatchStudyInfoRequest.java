@@ -1,23 +1,36 @@
 package com.togedy.togedy_server_v2.domain.study.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalTime;
 
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class PatchStudyInfoRequest {
 
+    @Schema(type = "string", format = "time", example = "00:00:00")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime goalTime;
+
     private String studyName;
+
     private String studyDescription;
+
     private Integer memberLimit;
+
     private String studyTag;
+
     private MultipartFile studyImage;
+
     private String password;
-    private Boolean isDuplicate;
+
+    @JsonAlias({"duplicate", "isDuplicate"})
+    private Boolean duplicate;
 
 }
