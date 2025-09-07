@@ -112,7 +112,7 @@ public class Study extends BaseEntity {
         this.memberLimit = request.getStudyMemberLimit();
     }
 
-    public void addMemberCount() {
+    public void increaseMemberCount() {
         this.memberCount++;
     }
 }
