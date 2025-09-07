@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.api;
 
 import com.togedy.togedy_server_v2.domain.study.application.StudyService;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -38,6 +40,15 @@ public class StudyController {
     @GetMapping("/studies/{studyId}")
     public ApiResponse<GetStudyResponse> readStudy(@PathVariable Long studyId) {
         GetStudyResponse response = studyService.findStudy(studyId);
+        return ApiUtil.success(response);
+    }
+
+    @GetMapping("/studies/duplicate")
+    public ApiResponse<GetStudyNameDuplicateResponse> readStudyNameDuplicate(
+            @RequestParam("name") String name
+    )
+    {
+        GetStudyNameDuplicateResponse response = studyService.findStudyNameDuplicate(name);
         return ApiUtil.success(response);
     }
 

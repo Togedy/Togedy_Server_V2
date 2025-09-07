@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
@@ -138,5 +139,11 @@ public class StudyService {
 
         study.updateMemberLimit(request);
         studyRepository.save(study);
+    }
+
+    public GetStudyNameDuplicateResponse findStudyNameDuplicate(String studyName) {
+        boolean isDuplicate = studyRepository.existsByName(studyName);
+
+        return GetStudyNameDuplicateResponse.from(isDuplicate);
     }
 }
