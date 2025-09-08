@@ -85,6 +85,17 @@ public class StudyController {
         return ApiUtil.successOnly();
     }
 
+    @PatchMapping("/studies/{studyId}/members/{userId}/leader")
+    public ApiResponse<Void> updateStudyRole(
+            @PathVariable Long studyId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        studyService.modifyStudyLeader(studyId, userId, user.getId());
+        return ApiUtil.successOnly();
+    }
+
     @DeleteMapping("/studies/{studyId}")
     public ApiResponse<Void> deleteStudy(@PathVariable Long studyId,
                                          @AuthenticationPrincipal AuthUser user) {

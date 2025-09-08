@@ -219,4 +219,17 @@ public class StudyService {
         studyRepository.save(study);
         userStudyRepository.deleteByStudyIdAndUserId(studyId, memberId);
     }
+
+    @Transactional
+    public void modifyStudyLeader(Long studyId, Long memberId, Long userId) {
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
+                .orElseThrow(UserStudyNotFoundException::new);
+
+        if (!userStudy.getRole().equals(StudyRole.LEADER.name())) {
+            throw new StudyLeaderRequiredException();
+        }
+
+        userStudyRepository.updateRole(studyId, userId, StudyRole.MEMBER.name());
+        userStudyRepository.updateRole(studyId, memberId, StudyRole.LEADER.name());
+    }
 }
