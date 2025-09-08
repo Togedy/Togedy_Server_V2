@@ -10,4 +10,6 @@ public interface UserStudyRepository extends JpaRepository<UserStudy, Long> {
     Optional<UserStudy> findByStudyIdAndUserId(Long studyId, Long userId);
 
     List<UserStudy> findAllByStudyId(Long studyId);
+
+    void deleteByStudyIdAndUserId(Long studyId, Long memberId);
 }
