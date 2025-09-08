@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyInvitationCodeResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
@@ -231,5 +232,12 @@ public class StudyService {
 
         userStudyRepository.updateRole(studyId, userId, StudyRole.MEMBER.name());
         userStudyRepository.updateRole(studyId, memberId, StudyRole.LEADER.name());
+    }
+
+    public GetStudyInvitationCodeResponse findStudyInvitationCde(Long studyId) {
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(StudyNotFoundException::new);
+
+        return GetStudyInvitationCodeResponse.from(study.getInvitationCode());
     }
 }

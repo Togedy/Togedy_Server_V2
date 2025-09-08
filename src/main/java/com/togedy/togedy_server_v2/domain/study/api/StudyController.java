@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.api;
 
 import com.togedy.togedy_server_v2.domain.study.application.StudyService;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyInvitationCodeResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
@@ -61,6 +62,12 @@ public class StudyController {
     )
     {
         GetStudyNameDuplicateResponse response = studyService.findStudyNameDuplicate(name);
+        return ApiUtil.success(response);
+    }
+
+    @GetMapping("/studies/{studyId}/invitation-code")
+    public ApiResponse<GetStudyInvitationCodeResponse> readStudyInvitationCode(@PathVariable Long studyId) {
+        GetStudyInvitationCodeResponse response = studyService.findStudyInvitationCde(studyId);
         return ApiUtil.success(response);
     }
 
