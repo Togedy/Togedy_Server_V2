@@ -115,4 +115,8 @@ public class Study extends BaseEntity {
     public void increaseMemberCount() {
         this.memberCount++;
     }
+
+    public void decreaseMemberCount() {
+        this.memberCount--;
+    }
 }

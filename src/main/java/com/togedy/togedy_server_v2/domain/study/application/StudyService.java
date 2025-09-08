@@ -14,6 +14,7 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.DuplicateStudyNameException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
@@ -180,7 +181,24 @@ public class StudyService {
 
         userStudyRepository.save(userStudy);
 
-        study.addMemberCount();
+        study.increaseMemberCount();
         studyRepository.save(study);
+    }
+
+    @Transactional
+    public void removeMyStudyMembership(Long studyId, Long userId) {
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
+                .orElseThrow(UserStudyNotFoundException::new);
+
+        Study study = studyRepository.findById(studyId)
+                .orElseThrow(StudyNotFoundException::new);
+
+        if (userStudy.getRole().equals(StudyRole.MEMBER.name())) {
+            throw new StudyMemberRequiredException();
+        }
+
+        study.decreaseMemberCount();
+        studyRepository.save(study);
+        userStudyRepository.delete(userStudy);
     }
 }

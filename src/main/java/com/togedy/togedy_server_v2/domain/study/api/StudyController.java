@@ -91,4 +91,11 @@ public class StudyController {
         studyService.removeStudy(studyId, user.getId());
         return ApiUtil.successOnly();
     }
+
+    @DeleteMapping("/studies/{studyId}/members/me")
+    public ApiResponse<Void> deleteMyStudyMembership(@PathVariable Long studyId,
+                                                     @AuthenticationPrincipal AuthUser user) {
+        studyService.removeMyStudyMembership(studyId, user.getId());
+        return ApiUtil.successOnly();
+    }
 }
