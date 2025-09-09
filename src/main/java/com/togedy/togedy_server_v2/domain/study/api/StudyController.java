@@ -6,6 +6,8 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateRespons
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PostStudyInvitationRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PostStudyInvitationResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
@@ -48,6 +50,16 @@ public class StudyController {
     {
         studyService.registerStudyMember(request, studyId, user.getId());
         return ApiUtil.successOnly();
+    }
+
+    @PostMapping("/studies/invitations")
+    public ApiResponse<PostStudyInvitationResponse> createStudyInvitation(
+            @RequestBody PostStudyInvitationRequest request,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        PostStudyInvitationResponse response = studyService.registerStudyInvitationMember(request, user.getId());
+        return ApiUtil.success(response);
     }
 
     @GetMapping("/studies/{studyId}")

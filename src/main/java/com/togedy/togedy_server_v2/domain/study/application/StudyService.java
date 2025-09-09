@@ -7,6 +7,8 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateRespons
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PostStudyInvitationRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PostStudyInvitationResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -239,5 +242,31 @@ public class StudyService {
                 .orElseThrow(StudyNotFoundException::new);
 
         return GetStudyInvitationCodeResponse.from(study.getInvitationCode());
+    }
+
+    @Transactional
+    public PostStudyInvitationResponse registerStudyInvitationMember(PostStudyInvitationRequest request, Long userId) {
+        String invitationCode = request.getInvitationCode();
+
+        Study study = studyRepository.findByInvitationCode(invitationCode)
+                .orElseThrow(StudyNotFoundException::new);
+
+
+        if (!study.getPassword().isEmpty()) {
+            return PostStudyInvitationResponse.from(true, study.getId());
+        }
+
+        UserStudy userStudy = UserStudy.builder()
+                .userId(userId)
+                .studyId(study.getId())
+                .role(StudyRole.MEMBER.name())
+                .build();
+
+        study.increaseMemberCount();
+
+        studyRepository.save(study);
+        userStudyRepository.save(userStudy);
+
+        return PostStudyInvitationResponse.from(false, study.getId());
     }
 }
