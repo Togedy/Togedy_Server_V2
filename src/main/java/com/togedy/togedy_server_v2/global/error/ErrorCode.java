@@ -56,6 +56,7 @@ public enum ErrorCode {
     STUDY_PASSWORD_REQUIRED(HttpStatus.UNPROCESSABLE_ENTITY, "S8003", "스터디 비밀번호를 입력해야 합니다."),
     STUDY_PASSWORD_MISMATCH(HttpStatus.FORBIDDEN, "S8004", "스터디 비밀번호가 일치하지 않습니다."),
     STUDY_MEMBER_REQUIRED(HttpStatus.FORBIDDEN, "S8005", "스터디 멤버만 수행할 수 있습니다."),
+    STUDY_MEMBER_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "S8006", "스터디 멤버 수가 최대에 도달했습니다."),
 
     // USER_STUDY(9000)
     USER_STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "US9000", "해당 유저가 가입한 스터디를 찾을 수 없습니다.");

@@ -17,6 +17,7 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.DuplicateStudyNameException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitExceededException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
@@ -167,6 +168,10 @@ public class StudyService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
+        if (study.getMemberCount() == study.getMemberLimit()) {
+            throw new StudyMemberLimitExceededException();
+        }
+
         if (study.getPassword() != null) {
             if (request.getStudyPassword() == null) {
                 throw new StudyPasswordRequiredException();
@@ -253,6 +258,10 @@ public class StudyService {
 
         if (!study.getPassword().isEmpty()) {
             return PostStudyInvitationResponse.from(true, study.getId());
+        }
+
+        if (study.getMemberCount() == study.getMemberLimit()) {
+            throw new StudyMemberLimitExceededException();
         }
 
         UserStudy userStudy = UserStudy.builder()
