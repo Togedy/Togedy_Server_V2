@@ -197,7 +197,7 @@ public class StudyService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        if (userStudy.getRole().equals(StudyRole.MEMBER.name())) {
+        if (!userStudy.getRole().equals(StudyRole.MEMBER.name())) {
             throw new StudyMemberRequiredException();
         }
 
@@ -214,7 +214,7 @@ public class StudyService {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        if (userStudy.getRole().equals(StudyRole.LEADER.name())) {
+        if (!userStudy.getRole().equals(StudyRole.LEADER.name())) {
             throw new StudyLeaderRequiredException();
         }
 
