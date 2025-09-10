@@ -31,7 +31,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -88,7 +87,7 @@ public class StudyService {
         userStudyRepository.save(userStudy);
     }
 
-    public GetStudyResponse findStudy(Long studyId) {
+    public GetStudyResponse findStudyInfo(Long studyId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
@@ -237,7 +236,7 @@ public class StudyService {
         userStudyRepository.updateRole(studyId, memberId, StudyRole.LEADER.name());
     }
 
-    public GetStudyInvitationCodeResponse findStudyInvitationCde(Long studyId) {
+    public GetStudyInvitationCodeResponse findStudyInvitationCode(Long studyId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
