@@ -70,8 +70,9 @@ public class StudyController {
 
     @Operation(summary = "스터디 정보 조회", description = "스터디 정보를 단일 조회한다.")
     @GetMapping("/studies/{studyId}")
-    public ApiResponse<GetStudyResponse> readStudyInfo(@PathVariable Long studyId) {
-        GetStudyResponse response = studyService.findStudyInfo(studyId);
+    public ApiResponse<GetStudyResponse> readStudyInfo(@PathVariable Long studyId,
+                                                       @AuthenticationPrincipal AuthUser user) {
+        GetStudyResponse response = studyService.findStudyInfo(studyId, user.getId());
         return ApiUtil.success(response);
     }
 
