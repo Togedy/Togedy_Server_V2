@@ -87,7 +87,7 @@ public class StudyController {
     }
 
     @Operation(summary = "스터디 초대 코드 조회", description = "해당 스터디의 초대 코드를 조회한다.")
-    @GetMapping("/studies/{studyId}/invitation-code")
+    @GetMapping("/studies/{studyId}/invitations")
     public ApiResponse<GetStudyInvitationCodeResponse> readStudyInvitationCode(@PathVariable Long studyId) {
         GetStudyInvitationCodeResponse response = studyService.findStudyInvitationCode(studyId);
         return ApiUtil.success(response);
@@ -116,7 +116,7 @@ public class StudyController {
         return ApiUtil.successOnly();
     }
 
-    @Operation(summary = "스터디 리더 변경.", description = "스터디 리더를 변경한다.")
+    @Operation(summary = "스터디 리더 변경", description = "스터디 리더를 변경한다.")
     @PatchMapping("/studies/{studyId}/members/{userId}/leader")
     public ApiResponse<Void> updateStudyLeader(
             @PathVariable Long studyId,
