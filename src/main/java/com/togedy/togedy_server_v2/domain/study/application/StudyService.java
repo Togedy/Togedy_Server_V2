@@ -129,6 +129,10 @@ public class StudyService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
+        if (study.getImageUrl() != null) {
+            s3Service.deleteFile(study.getImageUrl());
+        }
+
         studyRepository.delete(study);
 
         List<UserStudy> userStudyList = userStudyRepository.findAllByStudyId(studyId);
