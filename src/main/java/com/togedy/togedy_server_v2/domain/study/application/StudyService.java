@@ -15,6 +15,7 @@ import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitExceededException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitIncreaseRequiredException;
@@ -134,11 +135,8 @@ public class StudyService {
             s3Service.deleteFile(study.getImageUrl());
         }
 
+        userStudyRepository.deleteAllByStudyId(studyId);
         studyRepository.delete(study);
-
-        List<UserStudy> userStudyList = userStudyRepository.findAllByStudyId(studyId);
-
-        userStudyRepository.deleteAll(userStudyList);
     }
 
     /**
