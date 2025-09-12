@@ -17,6 +17,7 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitExceededException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitIncreaseRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
@@ -182,6 +183,10 @@ public class StudyService {
 
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
+
+        if (request.getStudyMemberLimit() < study.getMemberLimit()) {
+            throw new StudyMemberLimitIncreaseRequiredException();
+        }
 
         study.updateMemberLimit(request);
         studyRepository.save(study);
