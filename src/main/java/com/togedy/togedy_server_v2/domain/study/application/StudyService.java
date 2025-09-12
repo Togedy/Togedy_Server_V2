@@ -344,7 +344,7 @@ public class StudyService {
         Study study = studyRepository.findByInvitationCode(invitationCode)
                 .orElseThrow(StudyNotFoundException::new);
 
-        if (!study.getPassword().isEmpty()) {
+        if (study.getPassword() != null) {
             return PostStudyInvitationResponse.from(true, study.getId());
         }
 
