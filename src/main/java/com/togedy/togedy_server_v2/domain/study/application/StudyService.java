@@ -41,6 +41,12 @@ public class StudyService {
     private final UserRepository userRepository;
     private final S3Service s3Service;
 
+    /**
+     * 스터디를 생성한다.
+     *
+     * @param request   스터디 생성 DTO
+     * @param userId    유저 ID
+     */
     @Transactional
     public void generateStudy(PostStudyRequest request, Long userId) {
 
@@ -84,6 +90,14 @@ public class StudyService {
         userStudyRepository.save(userStudy);
     }
 
+    /**
+     * 해당 스터디 정보를 조회한다.
+     * 조회를 요청한 유저가 해당 스터디의 리더인 경우 비밀번호를 함께 반환한다.
+     *
+     * @param studyId   스터디 ID
+     * @param userId    유저 ID
+     * @return          해당 스터디 정보 DTO
+     */
     public GetStudyResponse findStudyInfo(Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
@@ -97,6 +111,13 @@ public class StudyService {
         return GetStudyResponse.of(study, leader);
     }
 
+    /**
+     * 스터디를 제거한다.
+     * 해당 스터디의 리더만 수행할 수 있다.
+     *
+     * @param studyId   스터디 ID
+     * @param userId    유저 ID
+     */
     public void removeStudy(Long studyId, Long userId) {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
                 .orElseThrow(UserStudyNotFoundException::new);
@@ -113,6 +134,14 @@ public class StudyService {
         userStudyRepository.deleteAll(userStudyList);
     }
 
+    /**
+     * 스터디 정보를 변경한다.
+     * 해당 스터디의 리더만 수행할 수 있다.
+     *
+     * @param request   스터디 정보 변경 DTO
+     * @param studyId   스터디 ID
+     * @param userId    유저 ID
+     */
     public void modifyStudyInfo(PatchStudyInfoRequest request, Long studyId, Long userId) {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
                 .orElseThrow(UserStudyNotFoundException::new);
@@ -133,6 +162,15 @@ public class StudyService {
         studyRepository.save(study);
     }
 
+    /**
+     * 스터디 최대 인원을 변경한다.
+     * 기존에 설정한 최대 인원보다 더 많은 인원으로만 설정할 수 있다.
+     * 해당 스터디의 리더만 수행할 수 있다.
+     *
+     * @param request   스터디 멤버 변경 DTO
+     * @param studyId   스터디 ID
+     * @param userId    유저 ID
+     */
     @Transactional
     public void modifyStudyMemberLimit(PatchStudyMemberLimitRequest request, Long studyId, Long userId) {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
@@ -147,12 +185,26 @@ public class StudyService {
         studyRepository.save(study);
     }
 
+    /**
+     * 스터디 이름의 중복 여부를 검사한다.
+     *
+     * @param studyName     스터디 이름
+     * @return
+     */
     public GetStudyNameDuplicateResponse findStudyNameDuplicate(String studyName) {
         boolean isDuplicate = studyRepository.existsByName(studyName);
 
         return GetStudyNameDuplicateResponse.from(isDuplicate);
     }
 
+    /**
+     * 스터디에 멤버를 추가한다.
+     * 스터디 인원이 최대인 경우 추가할 수 없다.
+     *
+     * @param request   스터디 입장 DTO
+     * @param studyId   스터디 ID
+     * @param userId    유저 ID
+     */
     @Transactional
     public void registerStudyMember(PostStudyMemberRequest request, Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
@@ -181,6 +233,13 @@ public class StudyService {
         studyRepository.save(study);
     }
 
+    /**
+     * 스터디에서 퇴장한다.
+     * 해당 스터디의 리더는 수행할 수 없다.
+     *
+     * @param studyId   스터디 ID
+     * @param userId    유저 ID
+     */
     @Transactional
     public void removeMyStudyMembership(Long studyId, Long userId) {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
@@ -198,6 +257,14 @@ public class StudyService {
         userStudyRepository.delete(userStudy);
     }
 
+    /**
+     * 스터디 멤버를 추방한다.
+     * 해당 스터디의 리더만 수행할 수 있다.
+     *
+     * @param studyId   스터디 ID
+     * @param memberId  추방 멤버 ID
+     * @param userId    유저 ID
+     */
     @Transactional
     public void removeStudyMember(Long studyId, Long memberId, Long userId) {
         Study study = studyRepository.findById(studyId)
@@ -214,6 +281,14 @@ public class StudyService {
         userStudyRepository.deleteByStudyIdAndUserId(studyId, memberId);
     }
 
+    /**
+     * 스터디 리더를 위임한다.
+     * 해당 스터디의 리더만 수행할 수 있다.
+     *
+     * @param studyId   스터디 ID
+     * @param memberId  멤버 ID
+     * @param userId    유저 ID
+     */
     @Transactional
     public void modifyStudyLeader(Long studyId, Long memberId, Long userId) {
         UserStudy leaderStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
@@ -238,6 +313,13 @@ public class StudyService {
         return GetStudyInvitationCodeResponse.from(study.getInvitationCode());
     }
 
+    /**
+     * 스터디 초대코드를 통해 입장한다.
+     *
+     * @param request   스터디 초대코드 입장 DTO
+     * @param userId    유저 ID
+     * @return          스터디 비밀번호 존재 여부 및 스터디 ID
+     */
     @Transactional
     public PostStudyInvitationResponse registerStudyInvitationMember(PostStudyInvitationRequest request, Long userId) {
         String invitationCode = request.getInvitationCode();
@@ -267,6 +349,11 @@ public class StudyService {
         return PostStudyInvitationResponse.from(false, study.getId());
     }
 
+    /**
+     * 스터디 리더를 검증한다.
+     *
+     * @param userStudy 유저 스터디 테이블
+     */
     private static void validateStudyLeader(UserStudy userStudy) {
         if (!userStudy.getRole().equals(StudyRole.LEADER.name())) {
             throw new StudyLeaderRequiredException();
