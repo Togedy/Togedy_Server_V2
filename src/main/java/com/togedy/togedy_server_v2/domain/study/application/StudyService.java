@@ -15,7 +15,6 @@ import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
-import com.togedy.togedy_server_v2.domain.study.exception.DuplicateStudyNameException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitExceededException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
@@ -44,9 +43,6 @@ public class StudyService {
 
     @Transactional
     public void generateStudy(PostStudyRequest request, Long userId) {
-        if (Boolean.TRUE.equals(request.getDuplicate())) {
-            throw new DuplicateStudyNameException();
-        }
 
         String imageUrl = null;
         String invitationCode;
@@ -131,10 +127,6 @@ public class StudyService {
         if (request.getStudyImage() != null) {
             studyImageUrl = s3Service.uploadFile(request.getStudyImage());
             s3Service.deleteFile(study.getImageUrl());
-        }
-
-        if (!request.getStudyName().isEmpty() && Boolean.TRUE.equals(request.getDuplicate())) {
-            throw new DuplicateStudyNameException();
         }
 
         study.updateInfo(request, studyImageUrl);

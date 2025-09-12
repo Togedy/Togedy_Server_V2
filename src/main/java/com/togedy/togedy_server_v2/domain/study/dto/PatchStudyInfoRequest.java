@@ -20,7 +20,4 @@ public class PatchStudyInfoRequest {
 
     private String studyPassword;
 
-    @JsonAlias({"duplicate", "isDuplicate"})
-    private Boolean duplicate;
-
 }

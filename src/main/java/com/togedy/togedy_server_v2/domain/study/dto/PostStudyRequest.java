@@ -30,7 +30,4 @@ public class PostStudyRequest {
 
     private String studyPassword;
 
-    @JsonAlias({"duplicate", "isDuplicate"})
-    private Boolean duplicate;
-
 }
