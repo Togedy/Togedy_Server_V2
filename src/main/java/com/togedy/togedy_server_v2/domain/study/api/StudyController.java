@@ -88,8 +88,12 @@ public class StudyController {
 
     @Operation(summary = "스터디 초대 코드 조회", description = "해당 스터디의 초대 코드를 조회한다.")
     @GetMapping("/studies/{studyId}/invitations")
-    public ApiResponse<GetStudyInvitationCodeResponse> readStudyInvitationCode(@PathVariable Long studyId) {
-        GetStudyInvitationCodeResponse response = studyService.findStudyInvitationCode(studyId);
+    public ApiResponse<GetStudyInvitationCodeResponse> readStudyInvitationCode(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        GetStudyInvitationCodeResponse response = studyService.findStudyInvitationCode(studyId, user.getId());
         return ApiUtil.success(response);
     }
 

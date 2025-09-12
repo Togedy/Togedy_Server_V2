@@ -18,4 +18,6 @@ public interface UserStudyRepository extends JpaRepository<UserStudy, Long> {
         WHERE us.studyId = :studyId
     """)
     void deleteAllByStudyId(Long studyId);
+
+    boolean existsByStudyIdAndUserId(Long studyId, Long userId);
 }

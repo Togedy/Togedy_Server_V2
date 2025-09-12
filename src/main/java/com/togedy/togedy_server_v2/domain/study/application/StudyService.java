@@ -15,6 +15,7 @@ import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitExceededException;
@@ -31,8 +32,6 @@ import com.togedy.togedy_server_v2.global.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -93,7 +92,8 @@ public class StudyService {
     }
 
     /**
-     * 해당 스터디 정보를 조회한다.
+     * 스터디 정보를 조회한다.
+     * 해당 스터디에 존재하는 유저만 수행할 수 있다.
      * 조회를 요청한 유저가 해당 스터디의 리더인 경우 비밀번호를 함께 반환한다.
      *
      * @param studyId   스터디 ID
@@ -101,6 +101,8 @@ public class StudyService {
      * @return          해당 스터디 정보 DTO
      */
     public GetStudyResponse findStudyInfo(Long studyId, Long userId) {
+        validateStudyMember(studyId, userId);
+
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
@@ -317,12 +319,15 @@ public class StudyService {
     }
 
     /**
-     * 해당 스터디의 초대코드를 조회한다.
+     * 스터디의 초대코드를 조회한다.
+     * 해당 스터디에 존재하는 유저만 수행할 수 있다.
      *
      * @param studyId   스터디 ID
      * @return          스터디 초대코드 DTO
      */
-    public GetStudyInvitationCodeResponse findStudyInvitationCode(Long studyId) {
+    public GetStudyInvitationCodeResponse findStudyInvitationCode(Long studyId, Long userId) {
+        validateStudyMember(studyId, userId);
+
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
@@ -370,9 +375,21 @@ public class StudyService {
      *
      * @param userStudy 유저 스터디 테이블
      */
-    private static void validateStudyLeader(UserStudy userStudy) {
+    private void validateStudyLeader(UserStudy userStudy) {
         if (!userStudy.getRole().equals(StudyRole.LEADER.name())) {
             throw new StudyLeaderRequiredException();
+        }
+    }
+
+    /**
+     * 스터디에 해당 유저의 존재 여부를 검증한다.
+     *
+     * @param studyId   스터디 ID
+     * @param userId    유저 ID
+     */
+    private void validateStudyMember(Long studyId, Long userId) {
+        if (!userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
+            throw new StudyAccessDeniedException();
         }
     }
 }
