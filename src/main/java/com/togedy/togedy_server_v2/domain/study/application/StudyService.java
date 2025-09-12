@@ -216,13 +216,19 @@ public class StudyService {
 
     @Transactional
     public void modifyStudyLeader(Long studyId, Long memberId, Long userId) {
-        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
+        UserStudy leaderStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        validateStudyLeader(userStudy);
+        validateStudyLeader(leaderStudy);
 
-        userStudyRepository.updateRole(studyId, userId, StudyRole.MEMBER.name());
-        userStudyRepository.updateRole(studyId, memberId, StudyRole.LEADER.name());
+        UserStudy memberStudy = userStudyRepository.findByStudyIdAndUserId(studyId, memberId)
+                .orElseThrow(UserStudyNotFoundException::new);
+
+        leaderStudy.modifyRole(StudyRole.MEMBER.name());
+        memberStudy.modifyRole(StudyRole.LEADER.name());
+
+        userStudyRepository.save(leaderStudy);
+        userStudyRepository.save(memberStudy);
     }
 
     public GetStudyInvitationCodeResponse findStudyInvitationCode(Long studyId) {

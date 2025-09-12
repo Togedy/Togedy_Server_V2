@@ -15,12 +15,4 @@ public interface UserStudyRepository extends JpaRepository<UserStudy, Long> {
 
     void deleteByStudyIdAndUserId(Long studyId, Long memberId);
 
-    @Modifying(clearAutomatically = true)
-    @Query("""
-        UPDATE UserStudy us
-        SET us.role = :role
-        WHERE us.userId = :userId
-            AND us.studyId = :studyId
-    """)
-    void updateRole(Long studyId, Long userId, String role);
 }
