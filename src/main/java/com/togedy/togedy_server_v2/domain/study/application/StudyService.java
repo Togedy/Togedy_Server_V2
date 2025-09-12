@@ -170,13 +170,11 @@ public class StudyService {
             throw new StudyMemberLimitExceededException();
         }
 
-        if (study.getPassword() != null) {
-            if (request.getStudyPassword() == null) {
-                throw new StudyPasswordRequiredException();
-            }
-            if (!study.getPassword().equals(request.getStudyPassword())) {
-                throw new StudyPasswordMismatchException();
-            }
+        if (study.getPassword() != null && request.getStudyPassword() == null) {
+            throw new StudyPasswordRequiredException();
+        }
+        if (study.getPassword() != null && !study.getPassword().equals(request.getStudyPassword())) {
+            throw new StudyPasswordMismatchException();
         }
 
         UserStudy userStudy = UserStudy.builder()
