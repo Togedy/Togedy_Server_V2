@@ -118,6 +118,7 @@ public class StudyService {
      * @param studyId   스터디 ID
      * @param leaderId  리더 ID
      */
+    @Transactional
     public void removeStudy(Long studyId, Long leaderId) {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
@@ -142,6 +143,7 @@ public class StudyService {
      * @param studyId   스터디 ID
      * @param leaderId  리더 ID
      */
+    @Transactional
     public void modifyStudyInfo(PatchStudyInfoRequest request, Long studyId, Long leaderId) {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
