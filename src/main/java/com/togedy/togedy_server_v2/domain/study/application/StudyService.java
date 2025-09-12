@@ -210,10 +210,10 @@ public class StudyService {
      *
      * @param request   스터디 입장 DTO
      * @param studyId   스터디 ID
-     * @param leaderId  리더 ID
+     * @param userId    유저 ID
      */
     @Transactional
-    public void registerStudyMember(PostStudyMemberRequest request, Long studyId, Long leaderId) {
+    public void registerStudyMember(PostStudyMemberRequest request, Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
@@ -229,7 +229,7 @@ public class StudyService {
         }
 
         UserStudy userStudy = UserStudy.builder()
-                .userId(leaderId)
+                .userId(userId)
                 .studyId(studyId)
                 .role(StudyRole.MEMBER.name())
                 .build();
