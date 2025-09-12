@@ -306,6 +306,12 @@ public class StudyService {
         userStudyRepository.save(memberStudy);
     }
 
+    /**
+     * 해당 스터디의 초대코드를 조회한다.
+     *
+     * @param studyId   스터디 ID
+     * @return          스터디 초대코드 DTO
+     */
     public GetStudyInvitationCodeResponse findStudyInvitationCode(Long studyId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
