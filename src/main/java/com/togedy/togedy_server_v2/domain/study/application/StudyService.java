@@ -103,7 +103,8 @@ public class StudyService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER.name());
+        User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER.name())
+                .orElseThrow(StudyLeaderNotFoundException::new);
 
         if (leader.getId().equals(userId)) {
             return GetStudyResponse.of(study, leader, study.getPassword());

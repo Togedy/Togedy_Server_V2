@@ -24,5 +24,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
         WHERE us.studyId = :studyId
             AND us.role = :role
     """)
-    User findByStudyIdAndRole(Long studyId, String role);
+    Optional<User> findByStudyIdAndRole(Long studyId, String role);
 }
