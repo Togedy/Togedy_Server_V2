@@ -116,10 +116,10 @@ public class StudyService {
      * 해당 스터디의 리더만 수행할 수 있다.
      *
      * @param studyId   스터디 ID
-     * @param userId    유저 ID
+     * @param leaderId  리더 ID
      */
-    public void removeStudy(Long studyId, Long userId) {
-        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
+    public void removeStudy(Long studyId, Long leaderId) {
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
         validateStudyLeader(userStudy);
@@ -140,10 +140,10 @@ public class StudyService {
      *
      * @param request   스터디 정보 변경 DTO
      * @param studyId   스터디 ID
-     * @param userId    유저 ID
+     * @param leaderId  리더 ID
      */
-    public void modifyStudyInfo(PatchStudyInfoRequest request, Long studyId, Long userId) {
-        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
+    public void modifyStudyInfo(PatchStudyInfoRequest request, Long studyId, Long leaderId) {
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
         validateStudyLeader(userStudy);
@@ -169,11 +169,11 @@ public class StudyService {
      *
      * @param request   스터디 멤버 변경 DTO
      * @param studyId   스터디 ID
-     * @param userId    유저 ID
+     * @param leaderId  리더 ID
      */
     @Transactional
-    public void modifyStudyMemberLimit(PatchStudyMemberLimitRequest request, Long studyId, Long userId) {
-        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
+    public void modifyStudyMemberLimit(PatchStudyMemberLimitRequest request, Long studyId, Long leaderId) {
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
         validateStudyLeader(userStudy);
@@ -203,10 +203,10 @@ public class StudyService {
      *
      * @param request   스터디 입장 DTO
      * @param studyId   스터디 ID
-     * @param userId    유저 ID
+     * @param leaderId  리더 ID
      */
     @Transactional
-    public void registerStudyMember(PostStudyMemberRequest request, Long studyId, Long userId) {
+    public void registerStudyMember(PostStudyMemberRequest request, Long studyId, Long leaderId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
@@ -222,7 +222,7 @@ public class StudyService {
         }
 
         UserStudy userStudy = UserStudy.builder()
-                .userId(userId)
+                .userId(leaderId)
                 .studyId(studyId)
                 .role(StudyRole.MEMBER.name())
                 .build();
@@ -238,11 +238,11 @@ public class StudyService {
      * 해당 스터디의 리더는 수행할 수 없다.
      *
      * @param studyId   스터디 ID
-     * @param userId    유저 ID
+     * @param memberId  멤버 ID
      */
     @Transactional
-    public void removeMyStudyMembership(Long studyId, Long userId) {
-        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
+    public void removeMyStudyMembership(Long studyId, Long memberId) {
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, memberId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
         Study study = studyRepository.findById(studyId)
@@ -263,14 +263,14 @@ public class StudyService {
      *
      * @param studyId   스터디 ID
      * @param memberId  추방 멤버 ID
-     * @param userId    유저 ID
+     * @param leaderId  리더 ID
      */
     @Transactional
-    public void removeStudyMember(Long studyId, Long memberId, Long userId) {
+    public void removeStudyMember(Long studyId, Long memberId, Long leaderId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
         validateStudyLeader(userStudy);
@@ -287,11 +287,11 @@ public class StudyService {
      *
      * @param studyId   스터디 ID
      * @param memberId  멤버 ID
-     * @param userId    유저 ID
+     * @param leaderId  리더 ID
      */
     @Transactional
-    public void modifyStudyLeader(Long studyId, Long memberId, Long userId) {
-        UserStudy leaderStudy = userStudyRepository.findByStudyIdAndUserId(studyId, userId)
+    public void modifyStudyLeader(Long studyId, Long memberId, Long leaderId) {
+        UserStudy leaderStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
         validateStudyLeader(leaderStudy);
@@ -318,7 +318,7 @@ public class StudyService {
      *
      * @param request   스터디 초대코드 입장 DTO
      * @param userId    유저 ID
-     * @return          스터디 비밀번호 존재 여부 및 스터디 ID
+     * @return          스터디 비밀번호 존재 여부 및 스터디 ID DTO
      */
     @Transactional
     public PostStudyInvitationResponse registerStudyInvitationMember(PostStudyInvitationRequest request, Long userId) {
