@@ -1,5 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
+import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,7 +27,7 @@ public class Study extends BaseEntity {
     @Column(name = "study_id", nullable = false)
     private Long id;
 
-    @Column(name = "type", nullable = false)
+    @Column(name = "type", nullable = false, updatable = false)
     private String type;
 
     @Column(name = "goal_time", nullable = true)
@@ -37,8 +39,11 @@ public class Study extends BaseEntity {
     @Column(name = "description", nullable = true)
     private String description;
 
-    @Column(name = "participant", nullable = false)
-    private int participant;
+    @Column(name = "member_count", nullable = false)
+    private int memberCount;
+
+    @Column(name = "member_limit", nullable = false)
+    private int memberLimit;
 
     @Column(name = "tag", nullable = false)
     private String tag;
@@ -47,7 +52,7 @@ public class Study extends BaseEntity {
     private String imageUrl;
 
     @Column(name = "password", nullable = true)
-    private int password;
+    private String password;
 
     @Column(name = "invitation_code", nullable = false)
     private String invitationCode;
@@ -64,10 +69,10 @@ public class Study extends BaseEntity {
             LocalTime goalTime,
             String name,
             String description,
-            int participant,
+            int memberLimit,
             String tag,
             String imageUrl,
-            int password,
+            String password,
             String invitationCode,
             String tier
     ) {
@@ -75,12 +80,43 @@ public class Study extends BaseEntity {
         this.goalTime = goalTime;
         this.name = name;
         this.description = description;
-        this.participant = participant;
+        this.memberCount = 1;
+        this.memberLimit = memberLimit;
         this.tag = tag;
         this.imageUrl = imageUrl;
         this.password = password;
         this.invitationCode = invitationCode;
         this.tier = tier;
         this.status = "ACTIVE";
+    }
+
+    public void updateInfo(PatchStudyInfoRequest request, String studyImageUrl) {
+        if (request.getStudyName() != null) {
+            this.name = request.getStudyName();
+        }
+        if (request.getStudyDescription() != null) {
+            this.description = request.getStudyDescription();
+        }
+        if (request.getStudyTag() != null) {
+            this.tag = request.getStudyTag();
+        }
+        if (request.getStudyPassword() != null) {
+            this.password = request.getStudyPassword();
+        }
+        if (studyImageUrl != null) {
+            this.imageUrl = studyImageUrl;
+        }
+    }
+
+    public void updateMemberLimit(PatchStudyMemberLimitRequest request) {
+        this.memberLimit = request.getStudyMemberLimit();
+    }
+
+    public void increaseMemberCount() {
+        this.memberCount++;
+    }
+
+    public void decreaseMemberCount() {
+        this.memberCount--;
     }
 }

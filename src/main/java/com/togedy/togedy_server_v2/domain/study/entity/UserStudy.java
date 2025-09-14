@@ -38,4 +38,8 @@ public class UserStudy extends BaseEntity {
         this.studyId = studyId;
         this.role = role;
     }
+
+    public void modifyRole(String studyRole) {
+        this.role = studyRole;
+    }
 }
