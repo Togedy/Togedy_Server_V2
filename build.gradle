@@ -31,9 +31,6 @@ dependencies {
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	runtimeOnly 'com.mysql:mysql-connector-j'
 	annotationProcessor 'org.projectlombok:lombok'
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testImplementation 'org.springframework.security:spring-security-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 	// redis
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
@@ -53,8 +50,16 @@ dependencies {
 	implementation(platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.3.0"))
 	implementation 'io.awspring.cloud:spring-cloud-aws-starter-s3'
 
+	//test
+	testImplementation 'org.testcontainers:junit-jupiter:1.20.1'
+	testImplementation 'org.testcontainers:mysql:1.20.1'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+	testImplementation 'org.assertj:assertj-core:3.26.0'
+	testImplementation 'org.mockito:mockito-junit-jupiter:5.11.0'
+
 }
 
-tasks.named('test') {
+test {
 	useJUnitPlatform()
 }
