@@ -27,9 +27,6 @@ public class User extends BaseEntity {
     @Column(name = "profile_image_url", nullable = true)
     private String profileImageUrl;
 
-    @Column(name = "tag", nullable = false)
-    private String tag;
-
     @Column(name = "profile_message", nullable = true)
     private String profileMessage;
 
