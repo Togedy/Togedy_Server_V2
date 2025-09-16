@@ -44,7 +44,7 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.5'
 
 	//h2
-	runtimeOnly 'com.h2database:h2'
+	implementation 'com.h2database:h2'
 
 	//AWS S3
 	implementation(platform("io.awspring.cloud:spring-cloud-aws-dependencies:3.3.0"))
