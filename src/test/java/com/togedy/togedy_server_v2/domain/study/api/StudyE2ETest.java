@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.LocalTime;
 import java.util.Optional;
@@ -35,7 +36,7 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
 
     @Test
     @DisplayName("챌린지 스터디를 생성한다.")
-    public void createNormalTypeStudy() throws Exception{
+    public void createChallengeStudy() throws Exception{
         MockMultipartFile image = new MockMultipartFile(
                 "studyImage",
                 "img.png",
@@ -43,12 +44,12 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
                 new byte[]{1, 2, 3}
         );
 
-        var requestBuilder = multipart("/api/v2/studies")
+        MockHttpServletRequestBuilder requestBuilder = multipart("/api/v2/studies")
                 .file(image)
-                .param("studyName", "알고리즘 스터디")
-                .param("studyDescription", "백준 2문제 스터디")
-                .param("studyMemberLimit", "10")
-                .param("studyTag", "자유스터디")
+                .param("studyName", "챌린지 스터디")
+                .param("studyDescription", "챌린지 스터디를 생성한다.")
+                .param("studyMemberLimit", "30")
+                .param("studyTag", "내신/학교 생활")
                 .param("goalTime", "05:00:00")
                 .with(bearer("token"))
                 .contentType(MediaType.MULTIPART_FORM_DATA);
@@ -63,8 +64,10 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
 
         Study study = saved.get();
 
-        assertThat(study.getName()).isEqualTo("알고리즘 스터디");
+        assertThat(study.getName()).isEqualTo("챌린지 스터디");
         assertThat(study.getType()).isEqualTo("CHALLENGE");
+        assertThat(study.getDescription()).isEqualTo("챌린지 스터디를 생성한다.");
+        assertThat(study.getMemberLimit()).isEqualTo(30);
         assertThat(study.getImageUrl()).isEqualTo("https://mock-s3/test.png");
         assertThat(study.getGoalTime()).isEqualTo(LocalTime.of(5, 0, 0));
 
@@ -73,4 +76,46 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
 
         assertThat(userStudy.getRole()).isEqualTo(StudyRole.LEADER.name());
     }
+
+    @Test
+    @DisplayName("일반 스터디를 생성한다.")
+    public void createNormalStudy() throws Exception{
+        MockMultipartFile image = new MockMultipartFile(
+                "studyImage",
+                "img.png",
+                "image/png",
+                new byte[]{1, 2, 3}
+        );
+
+        MockHttpServletRequestBuilder requestBuilder = multipart("/api/v2/studies")
+                .file(image)
+                .param("studyName", "일반 스터디")
+                .param("studyDescription", "일반 스터디를 생성한다.")
+                .param("studyMemberLimit", "10")
+                .param("studyTag", "내신/학교생활")
+                .with(bearer("token"))
+                .contentType(MediaType.MULTIPART_FORM_DATA);
+
+        //when
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is2xxSuccessful());
+
+        //then
+        Optional<Study> saved = studyRepository.findAll().stream().findFirst();
+        assertThat(saved).isPresent();
+
+        Study study = saved.get();
+
+        assertThat(study.getName()).isEqualTo("일반 스터디");
+        assertThat(study.getType()).isEqualTo("NORMAL");
+        assertThat(study.getDescription()).isEqualTo("일반 스터디를 생성한다.");
+        assertThat(study.getMemberLimit()).isEqualTo(10);
+        assertThat(study.getImageUrl()).isEqualTo("https://mock-s3/test.png");
+
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(study.getId(), 1L)
+                .orElseThrow();
+
+        assertThat(userStudy.getRole()).isEqualTo(StudyRole.LEADER.name());
+    }
+
 }
