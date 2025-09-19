@@ -1,16 +1,19 @@
 package com.togedy.togedy_server_v2.domain.study.api;
 
+import com.togedy.togedy_server_v2.domain.global.fixtures.AuthUserFixture;
 import com.togedy.togedy_server_v2.domain.global.fixtures.StudyFixture;
 import com.togedy.togedy_server_v2.domain.global.fixtures.UserFixture;
 import com.togedy.togedy_server_v2.domain.global.support.AuthenticatedE2ETest;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.global.security.AuthUser;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -18,16 +21,21 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.LocalTime;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -261,5 +269,46 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
 
         Optional<UserStudy> optionalUserStudy = userStudyRepository.findById(userStudy.getId());
         assertThat(optionalUserStudy).isNotPresent();
+    }
+
+    @DisplayName("스터디에 입장한다.")
+    @Test
+    public void enterStudy() throws Exception {
+        //given
+        Study study = StudyFixture.createNormalStudy();
+        User leader = UserFixture.createLeader();
+        User user = UserFixture.createUser();
+
+        fixtureSupport.persistUser(user);
+        fixtureSupport.persistUser(leader);
+        fixtureSupport.persistStudy(study);
+        fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
+
+        AuthUser principal = AuthUserFixture.createAuthUser(user.getId());
+        Authentication userAuthentication =
+                new UsernamePasswordAuthenticationToken(principal, null, Collections.emptyList());
+
+        PostStudyMemberRequest body = new PostStudyMemberRequest(null);
+
+        //when
+        MockHttpServletRequestBuilder requestBuilder =
+                post("/api/v2/studies/{studyId}/members", study.getId())
+                        .header("Authorization", "Bearer token")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body))
+                        .with(authentication(userAuthentication));
+
+        //then
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is2xxSuccessful());
+
+        Study savedStudy = studyRepository.findById(study.getId()).orElseThrow();
+        assertThat(savedStudy.getMemberCount()).isEqualTo(2);
+
+        Optional<UserStudy> userStudy =
+                userStudyRepository.findByStudyIdAndUserId(study.getId(), user.getId());
+        assertThat(userStudy).isPresent();
+
     }
 }
