@@ -327,15 +327,13 @@ public class StudyE2ETest extends AbstractE2ETest {
         Study study = StudyFixture.createNormalStudy();
         User leader = UserFixture.createLeader();
         User member = UserFixture.createMember();
+        study.increaseMemberCount();
 
         fixtureSupport.persistUser(leader);
         fixtureSupport.persistUser(member);
         fixtureSupport.persistStudy(study);
         fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
         UserStudy userStudy = fixtureSupport.persistUserStudy(study, member, StudyRole.MEMBER);
-
-        study.increaseMemberCount();
-        fixtureSupport.mergeStudy(study);
 
         String accessToken = testJwtFactory.createAccessToken(member.getId());
 
@@ -367,8 +365,8 @@ public class StudyE2ETest extends AbstractE2ETest {
         fixtureSupport.persistUser(member);
         fixtureSupport.persistUser(leader);
         fixtureSupport.persistStudy(study);
-        UserStudy userStudy = fixtureSupport.persistUserStudy(study, member, StudyRole.MEMBER);
         fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
+        UserStudy userStudy = fixtureSupport.persistUserStudy(study, member, StudyRole.MEMBER);
 
         String accessToken = testJwtFactory.createAccessToken(leader.getId());
 

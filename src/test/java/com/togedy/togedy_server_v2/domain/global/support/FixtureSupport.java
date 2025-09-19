@@ -37,7 +37,4 @@ public class FixtureSupport {
         return userStudy;
     }
 
-    public Study mergeStudy(Study study) {
-        return entityManager.merge(study);
-    }
 }
