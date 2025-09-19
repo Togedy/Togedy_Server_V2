@@ -385,4 +385,37 @@ public class StudyE2ETest extends AbstractE2ETest {
         Optional<UserStudy> deletedUserStudy = userStudyRepository.findById(userStudy.getId());
         assertThat(deletedUserStudy).isNotPresent();
     }
+    
+    @DisplayName("스터디 리더를 변경한다.")
+    @Test
+    public void changeStudyLeader() throws Exception {
+        //given
+        User member = UserFixture.createMember();
+        User leader = UserFixture.createLeader();
+        Study study = StudyFixture.createNormalStudy();
+        study.increaseMemberCount();
+
+        fixtureSupport.persistUser(member);
+        fixtureSupport.persistUser(leader);
+        fixtureSupport.persistStudy(study);
+        UserStudy leaderStudy = fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
+        UserStudy memberStudy = fixtureSupport.persistUserStudy(study, member, StudyRole.MEMBER);
+
+        String accessToken = testJwtFactory.createAccessToken(leader.getId());
+
+        //when
+        MockHttpServletRequestBuilder requestBuilder =
+                patch("/api/v2/studies/{studyId}/members/{userId}/leader", study.getId(), member.getId())
+                        .header("Authorization", accessToken);
+        
+        //then
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is2xxSuccessful());
+
+        UserStudy modifiedLeaderStudy = userStudyRepository.findById(leaderStudy.getId()).orElseThrow();
+        UserStudy modifiedMemberStudy = userStudyRepository.findById(memberStudy.getId()).orElseThrow();
+
+        assertThat(modifiedLeaderStudy.getRole()).isEqualTo(StudyRole.MEMBER.name());
+        assertThat(modifiedMemberStudy.getRole()).isEqualTo(StudyRole.LEADER.name());
+    }
 }
