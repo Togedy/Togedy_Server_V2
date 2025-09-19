@@ -1,11 +1,15 @@
 package com.togedy.togedy_server_v2.domain.study.api;
 
+import com.togedy.togedy_server_v2.domain.global.fixtures.StudyFixture;
+import com.togedy.togedy_server_v2.domain.global.fixtures.UserFixture;
 import com.togedy.togedy_server_v2.domain.global.support.AuthenticatedE2ETest;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
+import com.togedy.togedy_server_v2.domain.user.entity.User;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -18,7 +22,9 @@ import java.time.LocalTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("E2E 테스트")
@@ -113,5 +119,37 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
 
         assertThat(userStudy.getRole()).isEqualTo(StudyRole.LEADER.name());
     }
+
+    @DisplayName("리더가 스터디를 조회한다.")
+    @Test
+    public void findStudyByLeader() throws Exception{
+        //given
+        User user = UserFixture.createUser();
+        Study study = StudyFixture.createChallengeStudy();
+
+        fixtureSupport.persistUser(user);
+        fixtureSupport.persistStudy(study);
+        fixtureSupport.persistUserStudy(study, user, StudyRole.LEADER);
+
+        //when
+        MockHttpServletRequestBuilder requestBuilder =
+                get("/api/v2/studies/{studyId}", study.getId())
+                        .header("Authorization", "Bearer token");
+
+        //then
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.response.isStudyLeader").value(true))
+                .andExpect(jsonPath("$.response.studyName").value(study.getName()))
+                .andExpect(jsonPath("$.response.studyDescription").value(study.getDescription()))
+                .andExpect(jsonPath("$.response.studyImageUrl").value(study.getImageUrl()))
+                .andExpect(jsonPath("$.response.studyTag").value(study.getTag()))
+                .andExpect(jsonPath("$.response.studyTier").value(study.getTier()))
+                .andExpect(jsonPath("$.response.studyMemberCount").value(1))
+//                .andExpect(jsonPath("$.response.completedMemberCount").value(null))
+                .andExpect(jsonPath("$.response.studyMemberLimit").value(study.getMemberLimit()))
+                .andExpect(jsonPath("$.response.studyPassword").value(Matchers.nullValue()));
+    }
+
 
 }
