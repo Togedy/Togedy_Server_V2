@@ -1,13 +1,14 @@
 package com.togedy.togedy_server_v2.domain.study.dto;
 
-import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
 @Getter
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PatchStudyInfoRequest {
 
     private String studyName;
