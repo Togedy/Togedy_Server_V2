@@ -284,6 +284,9 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
         fixtureSupport.persistStudy(study);
         fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
+        study.increaseMemberCount();
+        fixtureSupport.mergeStudy(study);
+
         AuthUser principal = AuthUserFixture.createAuthUser(user.getId());
         Authentication userAuthentication =
                 new UsernamePasswordAuthenticationToken(principal, null, Collections.emptyList());

@@ -36,4 +36,8 @@ public class FixtureSupport {
         entityManager.persist(userStudy);
         return userStudy;
     }
+
+    public Study mergeStudy(Study study) {
+        return entityManager.merge(study);
+    }
 }
