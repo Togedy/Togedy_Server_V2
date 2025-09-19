@@ -24,6 +24,7 @@ import java.time.LocalTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -233,5 +234,32 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
         Study savedStudy = saved.get();
 
         assertThat(savedStudy.getMemberLimit()).isEqualTo(20);
+    }
+
+    @DisplayName("리더가 스터디를 삭제한다.")
+    @Test
+    public void removeStudy() throws Exception {
+        //given
+        Study study = StudyFixture.createNormalStudy();
+        User user = UserFixture.createUser();
+
+        fixtureSupport.persistStudy(study);
+        fixtureSupport.persistUser(user);
+        UserStudy userStudy = fixtureSupport.persistUserStudy(study, user, StudyRole.LEADER);
+
+        //when
+        MockHttpServletRequestBuilder requestBuilder =
+                delete("/api/v2/studies/{studyId}", study.getId())
+                        .header("Authorization", "Bearer token");
+
+        //then
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is2xxSuccessful());
+
+        Optional<Study> saved = studyRepository.findById(study.getId());
+        assertThat(saved).isNotPresent();
+
+        Optional<UserStudy> optionalUserStudy = userStudyRepository.findById(userStudy.getId());
+        assertThat(optionalUserStudy).isNotPresent();
     }
 }
