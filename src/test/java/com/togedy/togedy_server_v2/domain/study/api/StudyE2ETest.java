@@ -5,6 +5,7 @@ import com.togedy.togedy_server_v2.domain.global.fixtures.UserFixture;
 import com.togedy.togedy_server_v2.domain.global.support.AuthenticatedE2ETest;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
@@ -25,6 +26,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -39,7 +41,7 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
 
     @Test
     @DisplayName("챌린지 스터디를 생성한다.")
-    public void createChallengeStudy() throws Exception{
+    public void createChallengeStudy() throws Exception {
         MockMultipartFile image = new MockMultipartFile(
                 "studyImage",
                 "img.png",
@@ -82,7 +84,7 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
 
     @Test
     @DisplayName("일반 스터디를 생성한다.")
-    public void createNormalStudy() throws Exception{
+    public void createNormalStudy() throws Exception {
         MockMultipartFile image = new MockMultipartFile(
                 "studyImage",
                 "img.png",
@@ -123,7 +125,7 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
 
     @DisplayName("리더가 스터디를 조회한다.")
     @Test
-    public void findStudyByLeader() throws Exception{
+    public void findStudyByLeader() throws Exception {
         //given
         User user = UserFixture.createUser();
         Study study = StudyFixture.createChallengeStudy();
@@ -154,7 +156,7 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
 
     @DisplayName("리더가 스터디 정보를 수정한다.")
     @Test
-    public void modifyStudyInfo() throws Exception{
+    public void modifyStudyInfo() throws Exception {
         //given
         MockMultipartFile image = new MockMultipartFile(
                 "studyImage",
@@ -198,5 +200,38 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
         assertThat(savedStudy.getTag()).isEqualTo(StudyTag.FREE.getDescription());
         assertThat(savedStudy.getImageUrl()).isEqualTo("https://mock-s3/test.png");
         assertThat(savedStudy.getPassword()).isEqualTo("1234");
+    }
+
+    @DisplayName("리더가 스터디 최대 인원을 수정한다.")
+    @Test
+    public void modifyStudyMemberLimit() throws Exception {
+        //given
+        Study study = StudyFixture.createNormalStudy();
+        User user = UserFixture.createUser();
+
+        fixtureSupport.persistStudy(study);
+        fixtureSupport.persistUser(user);
+        fixtureSupport.persistUserStudy(study, user, StudyRole.LEADER);
+
+        PatchStudyMemberLimitRequest body = new PatchStudyMemberLimitRequest(20);
+
+        //when
+        MockHttpServletRequestBuilder requestBuilder =
+                patch("/api/v2/studies/{studyId}/members/limit", study.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body))
+                        .header("Authorization", "Bearer token");
+
+        //then
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is2xxSuccessful());
+
+        Optional<Study> saved = studyRepository.findById(study.getId());
+        assertThat(saved).isPresent();
+
+        Study savedStudy = saved.get();
+
+        assertThat(savedStudy.getMemberLimit()).isEqualTo(20);
     }
 }
