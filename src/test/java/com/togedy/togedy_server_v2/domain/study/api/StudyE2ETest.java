@@ -354,4 +354,37 @@ public class StudyE2ETest extends AbstractE2ETest {
         Optional<UserStudy> deletedUserStudy = userStudyRepository.findById(userStudy.getId());
         assertThat(deletedUserStudy).isNotPresent();
     }
+
+    @DisplayName("리더가 스터디 멤버를 추방한다.")
+    @Test
+    public void removeStudyMember() throws Exception {
+        //given
+        User member = UserFixture.createMember();
+        User leader = UserFixture.createLeader();
+        Study study = StudyFixture.createNormalStudy();
+        study.increaseMemberCount();
+
+        fixtureSupport.persistUser(member);
+        fixtureSupport.persistUser(leader);
+        fixtureSupport.persistStudy(study);
+        UserStudy userStudy = fixtureSupport.persistUserStudy(study, member, StudyRole.MEMBER);
+        fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
+
+        String accessToken = testJwtFactory.createAccessToken(leader.getId());
+
+        //when
+        MockHttpServletRequestBuilder requestBuilder =
+                delete("/api/v2/studies/{studyId}/members/{userId}", study.getId(), member.getId())
+                        .header("Authorization", accessToken);
+
+        //then
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is2xxSuccessful());
+
+        Study savedStudy = studyRepository.findById(study.getId()).orElseThrow();
+        assertThat(savedStudy.getMemberCount()).isEqualTo(1);
+
+        Optional<UserStudy> deletedUserStudy = userStudyRepository.findById(userStudy.getId());
+        assertThat(deletedUserStudy).isNotPresent();
+    }
 }
