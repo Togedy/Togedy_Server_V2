@@ -8,6 +8,7 @@ import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
+import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
@@ -151,5 +152,51 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
                 .andExpect(jsonPath("$.response.studyPassword").value(Matchers.nullValue()));
     }
 
+    @DisplayName("리더가 스터디 정보를 수정한다.")
+    @Test
+    public void modifyStudyInfo() throws Exception{
+        //given
+        MockMultipartFile image = new MockMultipartFile(
+                "studyImage",
+                "img.png",
+                "image/png",
+                new byte[]{1, 2, 3}
+        );
 
+        Study study = StudyFixture.createNormalStudy();
+        User user = UserFixture.createUser();
+
+        fixtureSupport.persistStudy(study);
+        fixtureSupport.persistUser(user);
+        fixtureSupport.persistUserStudy(study, user, StudyRole.LEADER);
+
+        //when
+        MockHttpServletRequestBuilder requestBuilder =
+                multipart("/api/v2/studies/{studyId}/information", study.getId())
+                        .file(image)
+                        .param("studyName", "스터디 이름 변경")
+                        .param("studyDescription", "스터디 이름을 변경한다.")
+                        .param("studyTag", StudyTag.FREE.getDescription())
+                        .param("studyPassword", "1234")
+                        .header("Authorization", "Bearer token")
+                        .with(request -> {
+                            request.setMethod("PATCH");
+                            return request;
+                        });
+
+        //then
+        mockMvc.perform(requestBuilder)
+                .andExpect(status().is2xxSuccessful());
+
+        Optional<Study> saved = studyRepository.findById(study.getId());
+        assertThat(saved).isPresent();
+
+        Study savedStudy = saved.get();
+
+        assertThat(savedStudy.getName()).isEqualTo("스터디 이름 변경");
+        assertThat(savedStudy.getDescription()).isEqualTo("스터디 이름을 변경한다.");
+        assertThat(savedStudy.getTag()).isEqualTo(StudyTag.FREE.getDescription());
+        assertThat(savedStudy.getImageUrl()).isEqualTo("https://mock-s3/test.png");
+        assertThat(savedStudy.getPassword()).isEqualTo("1234");
+    }
 }
