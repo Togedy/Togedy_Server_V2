@@ -1,9 +1,8 @@
 package com.togedy.togedy_server_v2.domain.study.api;
 
-import com.togedy.togedy_server_v2.domain.global.fixtures.AuthUserFixture;
 import com.togedy.togedy_server_v2.domain.global.fixtures.StudyFixture;
 import com.togedy.togedy_server_v2.domain.global.fixtures.UserFixture;
-import com.togedy.togedy_server_v2.domain.global.support.AuthenticatedE2ETest;
+import com.togedy.togedy_server_v2.domain.global.support.AbstractE2ETest;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
@@ -13,7 +12,6 @@ import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.global.security.AuthUser;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -21,16 +19,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.time.LocalTime;
-import java.util.Collections;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
@@ -40,7 +34,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("E2E 테스트")
-public class StudyE2ETest extends AuthenticatedE2ETest {
+public class StudyE2ETest extends AbstractE2ETest {
 
     @Autowired
     StudyRepository studyRepository;
@@ -58,6 +52,11 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
                 new byte[]{1, 2, 3}
         );
 
+        User user = UserFixture.createUser();
+        fixtureSupport.persistUser(user);
+
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+
         MockHttpServletRequestBuilder requestBuilder = multipart("/api/v2/studies")
                 .file(image)
                 .param("studyName", "챌린지 스터디")
@@ -65,7 +64,7 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
                 .param("studyMemberLimit", "30")
                 .param("studyTag", "내신/학교 생활")
                 .param("goalTime", "05:00:00")
-                .with(bearer("token"))
+                .header("Authorization", accessToken)
                 .contentType(MediaType.MULTIPART_FORM_DATA);
 
         //when
@@ -101,13 +100,17 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
                 new byte[]{1, 2, 3}
         );
 
+        User user = UserFixture.createUser();
+        fixtureSupport.persistUser(user);
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+
         MockHttpServletRequestBuilder requestBuilder = multipart("/api/v2/studies")
                 .file(image)
                 .param("studyName", "일반 스터디")
                 .param("studyDescription", "일반 스터디를 생성한다.")
                 .param("studyMemberLimit", "10")
                 .param("studyTag", "내신/학교생활")
-                .with(bearer("token"))
+                .header("Authorization", accessToken)
                 .contentType(MediaType.MULTIPART_FORM_DATA);
 
         //when
@@ -143,10 +146,12 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
         fixtureSupport.persistStudy(study);
         fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
+        String accessToken = testJwtFactory.createAccessToken(leader.getId());
+
         //when
         MockHttpServletRequestBuilder requestBuilder =
                 get("/api/v2/studies/{studyId}", study.getId())
-                        .header("Authorization", "Bearer token");
+                        .header("Authorization", accessToken);
 
         //then
         mockMvc.perform(requestBuilder)
@@ -181,6 +186,8 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
         fixtureSupport.persistUser(leader);
         fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
+        String accessToken = testJwtFactory.createAccessToken(leader.getId());
+
         //when
         MockHttpServletRequestBuilder requestBuilder =
                 multipart("/api/v2/studies/{studyId}/information", study.getId())
@@ -189,7 +196,7 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
                         .param("studyDescription", "스터디 이름을 변경한다.")
                         .param("studyTag", StudyTag.FREE.getDescription())
                         .param("studyPassword", "1234")
-                        .header("Authorization", "Bearer token")
+                        .header("Authorization", accessToken)
                         .with(request -> {
                             request.setMethod("PATCH");
                             return request;
@@ -222,6 +229,8 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
         fixtureSupport.persistUser(leader);
         fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
+        String accessToken = testJwtFactory.createAccessToken(leader.getId());
+
         PatchStudyMemberLimitRequest body = new PatchStudyMemberLimitRequest(20);
 
         //when
@@ -230,7 +239,7 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body))
-                        .header("Authorization", "Bearer token");
+                        .header("Authorization", accessToken);
 
         //then
         mockMvc.perform(requestBuilder)
@@ -255,10 +264,12 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
         fixtureSupport.persistUser(leader);
         UserStudy userStudy = fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
+        String accessToken = testJwtFactory.createAccessToken(leader.getId());
+
         //when
         MockHttpServletRequestBuilder requestBuilder =
                 delete("/api/v2/studies/{studyId}", study.getId())
-                        .header("Authorization", "Bearer token");
+                        .header("Authorization", accessToken);
 
         //then
         mockMvc.perform(requestBuilder)
@@ -284,23 +295,17 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
         fixtureSupport.persistStudy(study);
         fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
-        study.increaseMemberCount();
-        fixtureSupport.mergeStudy(study);
-
-        AuthUser principal = AuthUserFixture.createAuthUser(user.getId());
-        Authentication userAuthentication =
-                new UsernamePasswordAuthenticationToken(principal, null, Collections.emptyList());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
 
         PostStudyMemberRequest body = new PostStudyMemberRequest(null);
 
         //when
         MockHttpServletRequestBuilder requestBuilder =
                 post("/api/v2/studies/{studyId}/members", study.getId())
-                        .header("Authorization", "Bearer token")
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(body))
-                        .with(authentication(userAuthentication));
+                        .header("Authorization", accessToken);
 
         //then
         mockMvc.perform(requestBuilder)
