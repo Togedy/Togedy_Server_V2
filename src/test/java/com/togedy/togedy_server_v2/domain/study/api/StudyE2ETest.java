@@ -128,12 +128,12 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
     @Test
     public void findStudyByLeader() throws Exception {
         //given
-        User user = UserFixture.createUser();
+        User leader = UserFixture.createLeader();
         Study study = StudyFixture.createChallengeStudy();
 
-        fixtureSupport.persistUser(user);
+        fixtureSupport.persistUser(leader);
         fixtureSupport.persistStudy(study);
-        fixtureSupport.persistUserStudy(study, user, StudyRole.LEADER);
+        fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
         //when
         MockHttpServletRequestBuilder requestBuilder =
@@ -167,11 +167,11 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
         );
 
         Study study = StudyFixture.createNormalStudy();
-        User user = UserFixture.createUser();
+        User leader = UserFixture.createLeader();
 
         fixtureSupport.persistStudy(study);
-        fixtureSupport.persistUser(user);
-        fixtureSupport.persistUserStudy(study, user, StudyRole.LEADER);
+        fixtureSupport.persistUser(leader);
+        fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
         //when
         MockHttpServletRequestBuilder requestBuilder =
@@ -208,11 +208,11 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
     public void modifyStudyMemberLimit() throws Exception {
         //given
         Study study = StudyFixture.createNormalStudy();
-        User user = UserFixture.createUser();
+        User leader = UserFixture.createLeader();
 
         fixtureSupport.persistStudy(study);
-        fixtureSupport.persistUser(user);
-        fixtureSupport.persistUserStudy(study, user, StudyRole.LEADER);
+        fixtureSupport.persistUser(leader);
+        fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
         PatchStudyMemberLimitRequest body = new PatchStudyMemberLimitRequest(20);
 
@@ -241,11 +241,11 @@ public class StudyE2ETest extends AuthenticatedE2ETest {
     public void removeStudy() throws Exception {
         //given
         Study study = StudyFixture.createNormalStudy();
-        User user = UserFixture.createUser();
+        User leader = UserFixture.createLeader();
 
         fixtureSupport.persistStudy(study);
-        fixtureSupport.persistUser(user);
-        UserStudy userStudy = fixtureSupport.persistUserStudy(study, user, StudyRole.LEADER);
+        fixtureSupport.persistUser(leader);
+        UserStudy userStudy = fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
         //when
         MockHttpServletRequestBuilder requestBuilder =
