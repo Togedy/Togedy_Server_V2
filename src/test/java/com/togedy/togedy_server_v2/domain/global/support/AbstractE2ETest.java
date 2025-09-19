@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.global.support;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.togedy.togedy_server_v2.domain.global.config.DatabaseCleanerExtension;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class AbstractE2ETest {
 
     @Autowired
     protected FixtureSupport fixtureSupport;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
 
     @Container
     @SuppressWarnings("resource")
