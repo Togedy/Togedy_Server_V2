@@ -7,8 +7,10 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
+@Transactional
 public class FixtureSupport {
 
     @PersistenceContext
