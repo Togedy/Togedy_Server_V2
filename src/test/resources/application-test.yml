@@ -31,3 +31,5 @@ swagger:
 
 jwt:
   secret-key: abcdefghijklmn123456789abcdefghijklmn123456789
+  access-expired-in: 3600000
+  refresh-expired-in: 1209600000
