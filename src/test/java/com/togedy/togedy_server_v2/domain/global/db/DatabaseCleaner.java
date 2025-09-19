@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.global.config;
+package com.togedy.togedy_server_v2.domain.global.db;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;

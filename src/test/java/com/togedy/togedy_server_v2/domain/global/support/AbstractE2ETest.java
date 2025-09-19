@@ -1,7 +1,7 @@
 package com.togedy.togedy_server_v2.domain.global.support;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.togedy.togedy_server_v2.domain.global.config.DatabaseCleanerExtension;
+import com.togedy.togedy_server_v2.domain.global.db.DatabaseCleanerExtension;
 import com.togedy.togedy_server_v2.domain.global.factory.TestJwtFactory;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import org.junit.jupiter.api.BeforeEach;

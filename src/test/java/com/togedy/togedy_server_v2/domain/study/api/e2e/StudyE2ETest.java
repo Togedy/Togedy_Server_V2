@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.study.api;
+package com.togedy.togedy_server_v2.domain.study.api.e2e;
 
 import com.togedy.togedy_server_v2.domain.global.fixtures.StudyFixture;
 import com.togedy.togedy_server_v2.domain.global.fixtures.UserFixture;
