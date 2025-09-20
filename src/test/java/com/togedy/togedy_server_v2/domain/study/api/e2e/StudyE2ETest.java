@@ -52,9 +52,7 @@ public class StudyE2ETest extends AbstractE2ETest {
                 new byte[]{1, 2, 3}
         );
 
-        User user = UserFixture.createUser();
-        fixtureSupport.persistUser(user);
-
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
         String accessToken = testJwtFactory.createAccessToken(user.getId());
 
         MockHttpServletRequestBuilder requestBuilder = multipart("/api/v2/studies")
@@ -84,7 +82,7 @@ public class StudyE2ETest extends AbstractE2ETest {
         assertThat(study.getImageUrl()).isEqualTo("https://mock-s3/test.png");
         assertThat(study.getGoalTime()).isEqualTo(LocalTime.of(5, 0, 0));
 
-        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(study.getId(), 1L)
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(study.getId(), user.getId())
                 .orElseThrow();
 
         assertThat(userStudy.getRole()).isEqualTo(StudyRole.LEADER.name());
@@ -100,8 +98,7 @@ public class StudyE2ETest extends AbstractE2ETest {
                 new byte[]{1, 2, 3}
         );
 
-        User user = UserFixture.createUser();
-        fixtureSupport.persistUser(user);
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
         String accessToken = testJwtFactory.createAccessToken(user.getId());
 
         MockHttpServletRequestBuilder requestBuilder = multipart("/api/v2/studies")
@@ -129,7 +126,7 @@ public class StudyE2ETest extends AbstractE2ETest {
         assertThat(study.getMemberLimit()).isEqualTo(10);
         assertThat(study.getImageUrl()).isEqualTo("https://mock-s3/test.png");
 
-        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(study.getId(), 1L)
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(study.getId(), user.getId())
                 .orElseThrow();
 
         assertThat(userStudy.getRole()).isEqualTo(StudyRole.LEADER.name());
@@ -139,14 +136,11 @@ public class StudyE2ETest extends AbstractE2ETest {
     @Test
     public void findStudyByLeader() throws Exception {
         //given
-        User leader = UserFixture.createLeader();
-        Study study = StudyFixture.createChallengeStudy();
 
-        fixtureSupport.persistUser(leader);
-        fixtureSupport.persistStudy(study);
-        fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
-
+        User leader = fixtureSupport.persistUser(UserFixture.createLeader());
         String accessToken = testJwtFactory.createAccessToken(leader.getId());
+        Study study = fixtureSupport.persistStudy(StudyFixture.createChallengeStudy());
+        fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
         //when
         MockHttpServletRequestBuilder requestBuilder =
@@ -179,14 +173,10 @@ public class StudyE2ETest extends AbstractE2ETest {
                 new byte[]{1, 2, 3}
         );
 
-        Study study = StudyFixture.createNormalStudy();
-        User leader = UserFixture.createLeader();
-
-        fixtureSupport.persistStudy(study);
-        fixtureSupport.persistUser(leader);
-        fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
-
+        Study study = fixtureSupport.persistStudy(StudyFixture.createNormalStudy());
+        User leader = fixtureSupport.persistUser(UserFixture.createLeader());
         String accessToken = testJwtFactory.createAccessToken(leader.getId());
+        fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
         //when
         MockHttpServletRequestBuilder requestBuilder =
@@ -222,11 +212,8 @@ public class StudyE2ETest extends AbstractE2ETest {
     @Test
     public void modifyStudyMemberLimit() throws Exception {
         //given
-        Study study = StudyFixture.createNormalStudy();
-        User leader = UserFixture.createLeader();
-
-        fixtureSupport.persistStudy(study);
-        fixtureSupport.persistUser(leader);
+        Study study = fixtureSupport.persistStudy(StudyFixture.createNormalStudy());
+        User leader = fixtureSupport.persistUser(UserFixture.createLeader());
         fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
         String accessToken = testJwtFactory.createAccessToken(leader.getId());
@@ -257,11 +244,8 @@ public class StudyE2ETest extends AbstractE2ETest {
     @Test
     public void removeStudy() throws Exception {
         //given
-        Study study = StudyFixture.createNormalStudy();
-        User leader = UserFixture.createLeader();
-
-        fixtureSupport.persistStudy(study);
-        fixtureSupport.persistUser(leader);
+        Study study = fixtureSupport.persistStudy(StudyFixture.createNormalStudy());
+        User leader = fixtureSupport.persistUser(UserFixture.createLeader());
         UserStudy userStudy = fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
         String accessToken = testJwtFactory.createAccessToken(leader.getId());
@@ -286,13 +270,9 @@ public class StudyE2ETest extends AbstractE2ETest {
     @Test
     public void enterStudy() throws Exception {
         //given
-        Study study = StudyFixture.createNormalStudy();
-        User leader = UserFixture.createLeader();
-        User user = UserFixture.createUser();
-
-        fixtureSupport.persistUser(user);
-        fixtureSupport.persistUser(leader);
-        fixtureSupport.persistStudy(study);
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        User leader = fixtureSupport.persistUser(UserFixture.createLeader());
+        Study study = fixtureSupport.persistStudy(StudyFixture.createNormalStudy());
         fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
 
         String accessToken = testJwtFactory.createAccessToken(user.getId());
@@ -325,12 +305,10 @@ public class StudyE2ETest extends AbstractE2ETest {
     public void exitStudy() throws Exception {
         //given
         Study study = StudyFixture.createNormalStudy();
-        User leader = UserFixture.createLeader();
-        User member = UserFixture.createMember();
         study.increaseMemberCount();
 
-        fixtureSupport.persistUser(leader);
-        fixtureSupport.persistUser(member);
+        User leader = fixtureSupport.persistUser(UserFixture.createLeader());
+        User member = fixtureSupport.persistUser(UserFixture.createMember());
         fixtureSupport.persistStudy(study);
         fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
         UserStudy userStudy = fixtureSupport.persistUserStudy(study, member, StudyRole.MEMBER);
@@ -357,13 +335,11 @@ public class StudyE2ETest extends AbstractE2ETest {
     @Test
     public void removeStudyMember() throws Exception {
         //given
-        User member = UserFixture.createMember();
-        User leader = UserFixture.createLeader();
         Study study = StudyFixture.createNormalStudy();
         study.increaseMemberCount();
 
-        fixtureSupport.persistUser(member);
-        fixtureSupport.persistUser(leader);
+        User leader = fixtureSupport.persistUser(UserFixture.createLeader());
+        User member = fixtureSupport.persistUser(UserFixture.createMember());
         fixtureSupport.persistStudy(study);
         fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
         UserStudy userStudy = fixtureSupport.persistUserStudy(study, member, StudyRole.MEMBER);
@@ -390,13 +366,11 @@ public class StudyE2ETest extends AbstractE2ETest {
     @Test
     public void changeStudyLeader() throws Exception {
         //given
-        User member = UserFixture.createMember();
-        User leader = UserFixture.createLeader();
         Study study = StudyFixture.createNormalStudy();
         study.increaseMemberCount();
 
-        fixtureSupport.persistUser(member);
-        fixtureSupport.persistUser(leader);
+        User leader = fixtureSupport.persistUser(UserFixture.createLeader());
+        User member = fixtureSupport.persistUser(UserFixture.createMember());
         fixtureSupport.persistStudy(study);
         UserStudy leaderStudy = fixtureSupport.persistUserStudy(study, leader, StudyRole.LEADER);
         UserStudy memberStudy = fixtureSupport.persistUserStudy(study, member, StudyRole.MEMBER);
