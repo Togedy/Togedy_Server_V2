@@ -31,7 +31,7 @@ public class Study extends BaseEntity {
     private String type;
 
     @Column(name = "goal_time", nullable = true)
-    private LocalTime goalTime;
+    private Long goalTime;
 
     @Column(name = "name", nullable = false)
     private String name;
@@ -63,7 +63,7 @@ public class Study extends BaseEntity {
     @Builder
     public Study(
             String type,
-            LocalTime goalTime,
+            Long goalTime,
             String name,
             String description,
             int memberLimit,
