@@ -57,9 +57,6 @@ public class Study extends BaseEntity {
     @Column(name = "tier", nullable = false)
     private String tier;
 
-    @Column(name = "status", nullable = false)
-    private String status;
-
     @Builder
     public Study(
             String type,
@@ -82,7 +79,6 @@ public class Study extends BaseEntity {
         this.imageUrl = imageUrl;
         this.password = password;
         this.tier = tier;
-        this.status = "ACTIVE";
     }
 
     public void updateInfo(PatchStudyInfoRequest request, String studyImageUrl) {
