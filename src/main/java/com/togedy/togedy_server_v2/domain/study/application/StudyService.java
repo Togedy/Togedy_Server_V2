@@ -4,6 +4,7 @@ import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepositor
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
@@ -54,7 +55,7 @@ public class StudyService {
     public void generateStudy(PostStudyRequest request, Long userId) {
 
         String imageUrl = null;
-        String type = StudyType.NORMAL.name();
+        StudyType type = StudyType.NORMAL;
         Long goalTime = null;
 
         if (request.getStudyImage() != null) {
@@ -62,7 +63,7 @@ public class StudyService {
         }
 
         if (request.getGoalTime() != null) {
-            type = StudyType.CHALLENGE.name();
+            type = StudyType.CHALLENGE;
             goalTime = request.getGoalTime() * 3600L;
         }
 
@@ -83,7 +84,7 @@ public class StudyService {
         UserStudy userStudy = UserStudy.builder()
                 .userId(userId)
                 .studyId(savedStudy.getId())
-                .role(StudyRole.LEADER.name())
+                .role(StudyRole.LEADER)
                 .build();
 
         userStudyRepository.save(userStudy);
@@ -104,10 +105,10 @@ public class StudyService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER.name())
+        User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER)
                 .orElseThrow(StudyLeaderNotFoundException::new);
 
-        if (study.getType().equals(StudyType.CHALLENGE.name())) {
+        if (study.getType().equals(StudyType.CHALLENGE)) {
             count = countCompletedMember(study);
         }
 
@@ -238,7 +239,7 @@ public class StudyService {
         UserStudy userStudy = UserStudy.builder()
                 .userId(userId)
                 .studyId(studyId)
-                .role(StudyRole.MEMBER.name())
+                .role(StudyRole.MEMBER)
                 .build();
 
         userStudyRepository.save(userStudy);
@@ -262,7 +263,7 @@ public class StudyService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        if (!userStudy.getRole().equals(StudyRole.MEMBER.name())) {
+        if (!userStudy.getRole().equals(StudyRole.MEMBER)) {
             throw new StudyMemberRequiredException();
         }
 
@@ -313,8 +314,8 @@ public class StudyService {
         UserStudy memberStudy = userStudyRepository.findByStudyIdAndUserId(studyId, memberId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        leaderStudy.modifyRole(StudyRole.MEMBER.name());
-        memberStudy.modifyRole(StudyRole.LEADER.name());
+        leaderStudy.modifyRole(StudyRole.MEMBER);
+        memberStudy.modifyRole(StudyRole.LEADER);
 
         userStudyRepository.save(leaderStudy);
         userStudyRepository.save(memberStudy);
@@ -326,7 +327,7 @@ public class StudyService {
      * @param userStudy 유저 스터디 테이블
      */
     private void validateStudyLeader(UserStudy userStudy) {
-        if (!userStudy.getRole().equals(StudyRole.LEADER.name())) {
+        if (!userStudy.getRole().equals(StudyRole.LEADER)) {
             throw new StudyLeaderRequiredException();
         }
     }

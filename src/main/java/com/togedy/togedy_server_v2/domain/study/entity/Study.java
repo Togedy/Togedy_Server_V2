@@ -2,9 +2,12 @@ package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
+import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -13,8 +16,6 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalTime;
 
 @Entity
 @Table(name = "study")
@@ -27,8 +28,9 @@ public class Study extends BaseEntity {
     @Column(name = "study_id", nullable = false)
     private Long id;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, updatable = false)
-    private String type;
+    private StudyType type;
 
     @Column(name = "goal_time", nullable = true)
     private Long goalTime;
@@ -59,7 +61,7 @@ public class Study extends BaseEntity {
 
     @Builder
     public Study(
-            String type,
+            StudyType type,
             Long goalTime,
             String name,
             String description,

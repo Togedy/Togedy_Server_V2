@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.user.dao;
 
+import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -25,7 +26,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
                 WHERE us.studyId = :studyId
                     AND us.role = :role
             """)
-    Optional<User> findByStudyIdAndRole(Long studyId, String role);
+    Optional<User> findByStudyIdAndRole(Long studyId, StudyRole role);
 
     @Query("""
                 SELECT u
