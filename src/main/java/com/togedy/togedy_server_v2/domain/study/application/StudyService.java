@@ -1,5 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.application;
 
+import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
+import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
@@ -29,6 +31,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class StudyService {
@@ -36,6 +41,7 @@ public class StudyService {
     private final StudyRepository studyRepository;
     private final UserStudyRepository userStudyRepository;
     private final UserRepository userRepository;
+    private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final S3Service s3Service;
 
     /**
@@ -49,6 +55,7 @@ public class StudyService {
 
         String imageUrl = null;
         String type = StudyType.NORMAL.name();
+        Long goalTime = null;
 
         if (request.getStudyImage() != null) {
             imageUrl = s3Service.uploadFile(request.getStudyImage());
@@ -56,6 +63,7 @@ public class StudyService {
 
         if (request.getGoalTime() != null) {
             type = StudyType.CHALLENGE.name();
+            goalTime = request.getGoalTime() * 3600L;
         }
 
         Study study = Study.builder()
@@ -65,7 +73,7 @@ public class StudyService {
                 .tag(request.getStudyTag())
                 .imageUrl(imageUrl)
                 .type(type)
-                .goalTime(request.getGoalTime())
+                .goalTime(goalTime)
                 .password(request.getStudyPassword())
                 .tier("tier")
                 .build();
@@ -91,19 +99,23 @@ public class StudyService {
      * @return          해당 스터디 정보 DTO
      */
     public GetStudyResponse findStudyInfo(Long studyId, Long userId) {
-        validateStudyMember(studyId, userId);
-
+        Integer count = null;
+        String studyPassword = null;
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
         User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER.name())
                 .orElseThrow(StudyLeaderNotFoundException::new);
 
-        if (leader.getId().equals(userId)) {
-            return GetStudyResponse.of(study, leader, study.getPassword());
+        if (study.getType().equals(StudyType.CHALLENGE.name())) {
+            count = countCompletedMember(study);
         }
 
-        return GetStudyResponse.of(study, leader);
+        boolean isStudyLeader = leader.getId().equals(userId);
+        if (isStudyLeader) {
+            studyPassword = study.getPassword();
+        }
+        return GetStudyResponse.of(isStudyLeader, study, leader, count, studyPassword);
     }
 
     /**
@@ -329,5 +341,30 @@ public class StudyService {
         if (!userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
             throw new StudyAccessDeniedException();
         }
+    }
+
+    private int countCompletedMember(Study study) {
+        int count = 0;
+        LocalDate today = LocalDate.now();
+
+        List<User> memberList = userRepository.findAllByStudyId(study.getId());
+        List<Long> memberIdList = memberList.stream()
+                .map(User::getId)
+                .toList();
+
+        List<DailyStudySummary> dailyStudySummaryList =
+                dailyStudySummaryRepository.findAllByUserIdsAndCreatedAt(
+                        memberIdList,
+                        today.atStartOfDay(),
+                        today.plusDays(1).atStartOfDay()
+                );
+
+        for (DailyStudySummary dailyStudySummary : dailyStudySummaryList) {
+            if (study.getGoalTime() <= dailyStudySummary.getStudyTime()) {
+                count++;
+            }
+        }
+
+        return count;
     }
 }
