@@ -1,7 +1,7 @@
 package com.togedy.togedy_server_v2.domain.user.entity;
 
+import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
-import com.togedy.togedy_server_v2.global.enums.BaseStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -43,19 +43,19 @@ public class User extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private BaseStatus status;
+    private UserStatus status;
 
     private User(String nickname, String email) {
         this.nickname = nickname;
         this.email = email;
-        this.status = BaseStatus.ACTIVE;
+        this.status = UserStatus.ACTIVE;
     }
 
     public static User create(String nickname, String email) {
         return new User(nickname, email);
     }
 
-    public void updateStatus(BaseStatus status) {
+    public void updateStatus(UserStatus status) {
         this.status = status;
     }
 }
