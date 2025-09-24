@@ -42,7 +42,7 @@ public class User extends BaseEntity {
     private LocalDateTime lastActivatedAt;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", nullable = false)
+    @Column(name = "status", nullable = false, columnDefinition = "varchar(20)")
     private UserStatus status;
 
     private User(String nickname, String email) {

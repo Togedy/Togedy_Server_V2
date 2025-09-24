@@ -29,7 +29,7 @@ public class Study extends BaseEntity {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "type", nullable = false, updatable = false)
+    @Column(name = "type", nullable = false, updatable = false, columnDefinition = "varchar(20)")
     private StudyType type;
 
     @Column(name = "goal_time", nullable = true)

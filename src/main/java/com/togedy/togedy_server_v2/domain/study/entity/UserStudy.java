@@ -33,7 +33,7 @@ public class UserStudy extends BaseEntity {
     private Long studyId;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "role", nullable = false)
+    @Column(name = "role", nullable = false, columnDefinition = "varchar(20)")
     private StudyRole role;
 
     @Builder
