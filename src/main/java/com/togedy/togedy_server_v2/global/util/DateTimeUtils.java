@@ -40,4 +40,32 @@ public class DateTimeUtils {
         long remainingDays = ChronoUnit.DAYS.between(LocalDate.now(), startDate);
         return (int) remainingDays;
     }
+
+    public static String formatTimeAgo(LocalDateTime time) {
+        if (time == null) {
+            return null;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        Duration duration = Duration.between(time, now);
+
+        long seconds = duration.getSeconds();
+        long minutes = seconds / 60;
+        long hours = seconds / 3600;
+
+        if (seconds < 600) {
+            return "방금 전";
+        }
+
+        if (seconds < 3600) {
+            long roundedMinutes = (minutes / 10) * 10;
+            return roundedMinutes + "분 전";
+        }
+
+        if (seconds < 86400) {
+            return hours + "시간 전";
+        }
+
+        return null;
+    }
 }

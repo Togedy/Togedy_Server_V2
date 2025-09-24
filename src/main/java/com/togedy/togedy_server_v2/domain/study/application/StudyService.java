@@ -34,6 +34,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -319,6 +321,36 @@ public class StudyService {
 
         userStudyRepository.save(leaderStudy);
         userStudyRepository.save(memberStudy);
+    }
+
+    /**
+     * 스터디 그룹원을 조회한다.
+     * 조회를 요청한 유저가 스터디에 속한 경우, 가장 먼저 반환한다.
+     *
+     * @param studyId   스터디ID
+     * @param userId    유저ID
+     * @return          스터디 그룹원 조회 DTO
+     */
+    public List<GetStudyMemberResponse> findStudyMember(Long studyId, Long userId) {
+        List<Object[]> rows = userRepository.findAllByStudyIdOrderByCreatedAtAsc(studyId);
+
+        List<GetStudyMemberResponse> responses = rows.stream()
+                .map(row -> {
+                    User user = (User) row[0];
+                    StudyRole role = (StudyRole) row[1];
+                    return GetStudyMemberResponse.of(user, role);
+                })
+                .collect(Collectors.toList());
+
+        responses.stream()
+                .filter(r -> Objects.equals(r.getUserId(), userId))
+                .findFirst()
+                .ifPresent(target -> {
+                    responses.remove(target);
+                    responses.add(0, target);
+                });
+
+        return responses;
     }
 
     /**

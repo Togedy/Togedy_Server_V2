@@ -35,4 +35,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
                 WHERE us.userId = u.id
             """)
     List<User> findAllByStudyId(Long studyId);
+
+    @Query("""
+            SELECT u, us.role
+            FROM User u
+            JOIN UserStudy us ON u.id = us.id
+            WHERE us.studyId = :studyId
+            ORDER BY us.createdAt ASC
+            """)
+    List<Object[]> findAllByStudyIdOrderByCreatedAtAsc(Long studyId);
 }

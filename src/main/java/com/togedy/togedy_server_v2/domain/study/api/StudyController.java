@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.api;
 
 import com.togedy.togedy_server_v2.domain.study.application.StudyService;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
@@ -25,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -69,6 +72,16 @@ public class StudyController {
     )
     {
         GetStudyNameDuplicateResponse response = studyService.findStudyNameDuplicate(name);
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "스터디 그룹원 조회", description = "스터디 그룹원을 조회한다.")
+    @GetMapping("/studies/{studyId}/members")
+    public ApiResponse<List<GetStudyMemberResponse>> readStudyMember(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        List<GetStudyMemberResponse> response = studyService.findStudyMember(studyId, user.getId());
         return ApiUtil.success(response);
     }
 
