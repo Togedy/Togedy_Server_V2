@@ -4,6 +4,8 @@ import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepositor
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
+import com.togedy.togedy_server_v2.domain.study.dto.ActiveMemberDto;
+import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
@@ -11,6 +13,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.StudyDto;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
@@ -27,14 +30,18 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredE
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.global.service.S3Service;
+import com.togedy.togedy_server_v2.global.util.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -353,6 +360,58 @@ public class StudyService {
         return responses;
     }
 
+    public GetMyStudyInfoResponse findMyStudyInfo(Long userId) {
+        LocalDate today = LocalDate.now();
+
+        List<Study> studyList = studyRepository.findAllByUserIdOrderByCreatedAtAsc(userId);
+        Optional<DailyStudySummary> todaySummaryOpt = dailyStudySummaryRepository.findByUserIdAndCreatedAt(
+                userId,
+                today.atStartOfDay(),
+                today.plusDays(1).atStartOfDay()
+        );
+
+        long todayStudyTime = todaySummaryOpt
+                .map(DailyStudySummary::getStudyTime)
+                .orElse(0L);
+
+        List<StudyDto> studyDtoList = studyList.stream()
+                .map(study -> {
+                    boolean isChallenge = study.getType() == StudyType.CHALLENGE;
+                    List<User> userList = userRepository.findAllByStudyIdAndStatus(study.getId(), UserStatus.STUDYING);
+                    List<ActiveMemberDto> activeMemberDtoList = userList.stream()
+                            .map(ActiveMemberDto::from)
+                            .toList();
+
+                    if (isChallenge) {
+                        int completedMemberCount = countCompletedMember(study);
+                        int challengeAchievement = calculateCompleteRate(completedMemberCount, study.getMemberCount());
+
+                        return StudyDto.of(study, challengeAchievement, completedMemberCount, activeMemberDtoList);
+                    }
+
+                    return StudyDto.of(study, activeMemberDtoList);
+                })
+                .toList();
+
+        Optional<Study> challengeStudy = studyList.stream()
+                .filter(study -> study.getType() == StudyType.CHALLENGE)
+                .max(Comparator.comparing(Study::getGoalTime));
+
+        if (challengeStudy.isPresent()) {
+            long goalTime = challengeStudy.get().getGoalTime();
+            int achievement = DateTimeUtils.calculateAchievement(todayStudyTime, goalTime);
+            return GetMyStudyInfoResponse.of(
+                    DateTimeUtils.timeConvert(goalTime),
+                    DateTimeUtils.timeConvert(todayStudyTime),
+                    achievement,
+                    studyDtoList
+            );
+        }
+
+        return GetMyStudyInfoResponse.from(studyDtoList);
+
+    }
+
     /**
      * 스터디 리더를 검증한다.
      *
@@ -399,5 +458,9 @@ public class StudyService {
         }
 
         return count;
+    }
+
+    private int calculateCompleteRate(int completedMemberCount, int studyMemberCount) {
+        return (int) ((double) completedMemberCount / studyMemberCount);
     }
 }

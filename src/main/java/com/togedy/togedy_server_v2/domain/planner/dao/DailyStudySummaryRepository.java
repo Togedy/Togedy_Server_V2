@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySummary, Long> {
 
@@ -19,6 +20,19 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
             """)
     List<DailyStudySummary> findAllByUserIdsAndCreatedAt(
             @Param("userIds") List<Long> userIds,
+            @Param("startOfDay") LocalDateTime startOfDay,
+            @Param("endOfDay") LocalDateTime endOfDay
+    );
+
+    @Query("""
+            SELECT dss
+            FROM DailyStudySummary dss
+            WHERE dss.userId = :userId
+                AND dss.createdAt >= :startOfDay
+                AND dss.createdAt < :endOfDay
+            """)
+    Optional<DailyStudySummary> findByUserIdAndCreatedAt(
+            @Param("userId") Long userId,
             @Param("startOfDay") LocalDateTime startOfDay,
             @Param("endOfDay") LocalDateTime endOfDay
     );

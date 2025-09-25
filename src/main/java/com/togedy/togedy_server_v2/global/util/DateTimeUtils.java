@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
@@ -67,5 +68,20 @@ public class DateTimeUtils {
         }
 
         return null;
+    }
+
+    public static int calculateAchievement(Long currentTime, Long goalTime) {
+        int percent = (int) ((double) currentTime / goalTime * 100);
+        return Math.min(percent, 100);
+    }
+
+    public static String timeConvert(Long seconds) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+
+        if (seconds >= 86399) {
+            return LocalTime.MAX.format(formatter);
+        }
+
+        return LocalTime.ofSecondOfDay(seconds).format(formatter);
     }
 }

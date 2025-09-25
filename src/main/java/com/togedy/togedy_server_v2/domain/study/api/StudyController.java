@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.api;
 
 import com.togedy.togedy_server_v2.domain.study.application.StudyService;
+import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
@@ -82,6 +83,13 @@ public class StudyController {
             @AuthenticationPrincipal AuthUser user
     ) {
         List<GetStudyMemberResponse> response = studyService.findStudyMember(studyId, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "본인 스터디 조회", description = "본인의 스터디 관련 정보를 조회한다.")
+    @GetMapping("/users/me/studies")
+    public ApiResponse<GetMyStudyInfoResponse> readMyStudyInfo(@AuthenticationPrincipal AuthUser user) {
+        GetMyStudyInfoResponse response = studyService.findMyStudyInfo(user.getId());
         return ApiUtil.success(response);
     }
 
