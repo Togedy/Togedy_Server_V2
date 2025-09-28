@@ -12,6 +12,8 @@ import java.util.List;
 @Builder
 public class StudyDto {
 
+    private Long studyId;
+
     private StudyType studyType;
 
     private String challengeGoalTime;
@@ -34,6 +36,7 @@ public class StudyDto {
     )
     {
         return StudyDto.builder()
+                .studyId(study.getId())
                 .studyType(study.getType())
                 .challengeGoalTime(DateTimeUtils.timeConvert(study.getGoalTime()))
                 .challengeAchievement(challengeAchievement)
@@ -49,6 +52,7 @@ public class StudyDto {
     )
     {
         return StudyDto.builder()
+                .studyId(study.getId())
                 .studyType(study.getType())
                 .studyMemberCount(study.getMemberCount())
                 .activeMemberList(activeMemberList)
