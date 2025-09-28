@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
+import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -47,8 +48,9 @@ public class Study extends BaseEntity {
     @Column(name = "member_limit", nullable = false)
     private int memberLimit;
 
-    @Column(name = "tag", nullable = false)
-    private String tag;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tag", nullable = false, columnDefinition = "varchar(20)")
+    private StudyTag tag;
 
     @Column(name = "image_url", nullable = true)
     private String imageUrl;
@@ -66,7 +68,7 @@ public class Study extends BaseEntity {
             String name,
             String description,
             int memberLimit,
-            String tag,
+            StudyTag tag,
             String imageUrl,
             String password,
             String tier
@@ -91,7 +93,7 @@ public class Study extends BaseEntity {
             this.description = request.getStudyDescription();
         }
         if (request.getStudyTag() != null) {
-            this.tag = request.getStudyTag();
+            this.tag = StudyTag.fromDescription(request.getStudyTag());
         }
         if (request.getStudyPassword() != null) {
             this.password = request.getStudyPassword();

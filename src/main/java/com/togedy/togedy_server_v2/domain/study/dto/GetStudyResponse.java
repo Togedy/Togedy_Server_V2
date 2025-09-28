@@ -32,7 +32,7 @@ public class GetStudyResponse {
                 .studyLeaderName(leader.getNickname())
                 .studyDescription(study.getDescription())
                 .studyImageUrl(study.getImageUrl())
-                .studyTag(study.getTag())
+                .studyTag(study.getTag().getDescription())
                 .studyTier(study.getTier())
                 .studyMemberCount(study.getMemberCount())
                 .completedMemberCount(completedMemberCount)

@@ -17,6 +17,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.StudyDto;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
+import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
@@ -80,7 +81,7 @@ public class StudyService {
                 .name(request.getStudyName())
                 .description(request.getStudyDescription())
                 .memberLimit(request.getStudyMemberLimit())
-                .tag(request.getStudyTag())
+                .tag(StudyTag.fromDescription(request.getStudyTag()))
                 .imageUrl(imageUrl)
                 .type(type)
                 .goalTime(goalTime)
