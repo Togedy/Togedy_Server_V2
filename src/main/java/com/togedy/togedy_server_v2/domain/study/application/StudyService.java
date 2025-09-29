@@ -9,11 +9,13 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudySearchResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.StudyDto;
+import com.togedy.togedy_server_v2.domain.study.dto.StudySearchDto;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
@@ -35,10 +37,14 @@ import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -413,6 +419,46 @@ public class StudyService {
 
     }
 
+    public GetStudySearchResponse findStudySearch(
+            String tag,
+            String filter,
+            boolean joinable,
+            boolean challenge,
+            int page,
+            int size,
+            Long userId)
+    {
+        StudyTag studyTag = null;
+        if (tag != null) {
+            studyTag = StudyTag.fromDescription(tag);
+        }
+
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
+        Slice<Study> studyList = studyRepository.findStudiesByConditions(studyTag, filter, joinable, challenge, pageRequest);
+
+        List<StudySearchDto> studySearchDtos = studyList.stream()
+                .map(study -> {
+                    List<User> userList = userRepository.findAllByStudyId(study.getId());
+                    Optional<User> user = userList.stream().max(Comparator.comparing(User::getLastActivatedAt));
+                    String lastActivatedAt = null;
+                    if (user.isPresent()) {
+                        lastActivatedAt = DateTimeUtils.formatTimeAgo(user.get().getLastActivatedAt());
+                    }
+
+                    User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER)
+                            .orElseThrow(StudyLeaderNotFoundException::new);
+
+                    String studyLeaderImageUrl = leader.getProfileImageUrl();
+                    String challengeGoalTime = DateTimeUtils.timeConvert(study.getGoalTime());
+                    boolean isNewlyCreated = validateNewlyCreated(study.getCreatedAt());
+                    boolean hasPassword = study.getPassword() != null;
+                    return StudySearchDto.of(study, studyLeaderImageUrl, isNewlyCreated, lastActivatedAt, challengeGoalTime, hasPassword);
+                })
+                .toList();
+
+        return GetStudySearchResponse.of(studyList.hasNext(), studySearchDtos);
+    }
+
     /**
      * 스터디 리더를 검증한다.
      *
@@ -463,5 +509,12 @@ public class StudyService {
 
     private int calculateCompleteRate(int completedMemberCount, int studyMemberCount) {
         return (int) ((double) completedMemberCount / studyMemberCount);
+    }
+
+    private boolean validateNewlyCreated(LocalDateTime createdAt) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime current = now.minusDays(7);
+
+        return createdAt.isAfter(current) && createdAt.isBefore(now);
     }
 }
