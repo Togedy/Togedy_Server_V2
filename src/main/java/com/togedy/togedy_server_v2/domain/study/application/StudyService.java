@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.ActiveMemberDto;
@@ -34,6 +35,7 @@ import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundExcep
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
+import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.DateTimeUtils;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -459,6 +462,22 @@ public class StudyService {
         return GetStudySearchResponse.of(studyList.hasNext(), studySearchDtos);
     }
 
+    public GetStudyMemberProfileResponse findStudyMemberProfile(Long studyId, Long memberId, Long userId) {
+        validateStudyMember(studyId, userId);
+
+        User member = userRepository.findById(memberId).orElseThrow(UserNotFoundException::new);
+        Long totalStudyTime = dailyStudySummaryRepository.findTotalStudyTimeByUserId(memberId).orElse(0L);
+        UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, memberId)
+                .orElseThrow(UserStudyNotFoundException::new);
+        int elapsedDays = calculateElapsedDays(userStudy.getCreatedAt());
+
+        return GetStudyMemberProfileResponse.of(
+                member,
+                DateTimeUtils.secondToTimeConvert(totalStudyTime),
+                elapsedDays
+        );
+    }
+
     /**
      * 스터디 리더를 검증한다.
      *
@@ -516,5 +535,12 @@ public class StudyService {
         LocalDateTime current = now.minusDays(7);
 
         return createdAt.isAfter(current) && createdAt.isBefore(now);
+    }
+
+    private int calculateElapsedDays(LocalDateTime createdAt) {
+        LocalDate now = LocalDate.now();
+        LocalDate createdDate = createdAt.toLocalDate();
+
+        return (int) ChronoUnit.DAYS.between(createdDate, now);
     }
 }

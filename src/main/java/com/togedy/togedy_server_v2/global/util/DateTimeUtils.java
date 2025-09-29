@@ -84,4 +84,12 @@ public class DateTimeUtils {
 
         return LocalTime.ofSecondOfDay(seconds).format(formatter);
     }
+
+    public static String secondToTimeConvert(Long second) {
+        long minutes = second / 60;
+        long hours = second / 3600;
+
+        return String.format("%d:%02d", hours, minutes);
+    }
+
 }

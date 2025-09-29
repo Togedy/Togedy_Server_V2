@@ -36,4 +36,11 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
             @Param("startOfDay") LocalDateTime startOfDay,
             @Param("endOfDay") LocalDateTime endOfDay
     );
+
+    @Query("""
+            SELECT sum(dss.studyTime)
+            FROM DailyStudySummary dss
+            WHERE dss.userId = :userId
+            """)
+    Optional<Long> findTotalStudyTimeByUserId(Long userId);
 }

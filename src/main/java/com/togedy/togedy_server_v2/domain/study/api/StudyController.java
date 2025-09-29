@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.study.api;
 
 import com.togedy.togedy_server_v2.domain.study.application.StudyService;
 import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
@@ -110,6 +111,20 @@ public class StudyController {
                 studyService.findStudySearch(tag, filter, joinable, challenge, page, size, user.getId());
         return ApiUtil.success(response);
     }
+
+    @Operation(summary = "스터디 그룹원 프로필 조회", description = "스터디 그룹원의 프로필을 조회한다.")
+    @GetMapping("/studies/{studyId}/members/{userId}/profiles")
+    public ApiResponse<GetStudyMemberProfileResponse> readStudyMemberProfile(
+            @PathVariable Long studyId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        GetStudyMemberProfileResponse response =
+                studyService.findStudyMemberProfile(studyId, userId, user.getId());
+        return ApiUtil.success(response);
+    }
+
 
     @Operation(summary = "스터디 정보 수정", description = "스터디 정보를 수정한다.")
     @PatchMapping(value = "/studies/{studyId}/information", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
