@@ -4,6 +4,7 @@ import com.togedy.togedy_server_v2.domain.study.application.StudyService;
 import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberStudyTimeResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudySearchResponse;
@@ -122,6 +123,19 @@ public class StudyController {
     {
         GetStudyMemberProfileResponse response =
                 studyService.findStudyMemberProfile(studyId, userId, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "스터디 그룹원 공부시간 조회", description = "스터디 그룹원의 공부시간 통계를 조회한다.")
+    @GetMapping("/studies/{studyId}/members/{userId}/study-times")
+    public ApiResponse<GetStudyMemberStudyTimeResponse> readStudyMemberStudyTime(
+            @PathVariable Long studyId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        GetStudyMemberStudyTimeResponse response =
+                studyService.findStudyMemberStudyTime(studyId, userId, user.getId());
         return ApiUtil.success(response);
     }
 

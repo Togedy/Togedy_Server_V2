@@ -8,9 +8,11 @@ import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.ActiveMemberDto;
 import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberStudyTimeResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudySearchResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.MonthlyStudyTimeDto;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
@@ -47,9 +49,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -478,6 +483,35 @@ public class StudyService {
         );
     }
 
+    public GetStudyMemberStudyTimeResponse findStudyMemberStudyTime(Long studyId, Long memberId, Long userId) {
+        validateStudyMember(studyId, userId);
+
+        LocalDateTime startDate = LocalDate.now().minusMonths(1).withDayOfMonth(1).atStartOfDay();
+        LocalDateTime endDate = LocalDate.now().plusMonths(1).withDayOfMonth(1).atStartOfDay();
+
+        List<DailyStudySummary> grouped =
+                dailyStudySummaryRepository.findAllByUserIdInRecentTwoMonths(memberId, startDate, endDate);
+
+        Map<YearMonth, List<DailyStudySummary>> monthListMap = grouped.stream()
+                .collect(Collectors.groupingBy(dailyStudySummary -> YearMonth.from(dailyStudySummary.getCreatedAt())));
+
+        List<MonthlyStudyTimeDto> monthlyStudyTimeDtoList = new ArrayList<>();
+        int studyTimeCount = 0;
+
+        for (Map.Entry<YearMonth, List<DailyStudySummary>> entry : monthListMap.entrySet()) {
+            YearMonth yearMonth = entry.getKey();
+            List<DailyStudySummary> dailyStudySummaryList = entry.getValue();
+
+            monthlyStudyTimeDtoList.add(toMonthlyStudyTimeDto(yearMonth.getYear(), yearMonth.getMonthValue(), dailyStudySummaryList));
+
+            if (yearMonth.equals(YearMonth.now())) {
+                studyTimeCount = dailyStudySummaryList.size();
+            }
+        }
+
+        return GetStudyMemberStudyTimeResponse.of(studyTimeCount, monthlyStudyTimeDtoList);
+    }
+
     /**
      * 스터디 리더를 검증한다.
      *
@@ -542,5 +576,38 @@ public class StudyService {
         LocalDate createdDate = createdAt.toLocalDate();
 
         return (int) ChronoUnit.DAYS.between(createdDate, now);
+    }
+
+    private int determineLevelByStudyTime(Long seconds) {
+        long hours = seconds / 3600;
+
+        if (hours == 0) return 1;
+        if (hours < 2) return 2;
+        if (hours < 4) return 3;
+        if (hours < 6) return 4;
+        return 5;
+    }
+
+    private MonthlyStudyTimeDto toMonthlyStudyTimeDto(int year, int month, List<DailyStudySummary> summaries) {
+        YearMonth ym = YearMonth.of(year, month);
+        int daysInMonth = ym.lengthOfMonth();
+
+        Map<Integer, DailyStudySummary> byDay = summaries.stream()
+                .collect(Collectors.toMap(
+                        dss -> dss.getCreatedAt().getDayOfMonth(),
+                        dss -> dss
+                ));
+
+        List<Integer> studyTimeLevels = new ArrayList<>();
+        for (int day = 1; day <= daysInMonth; day++) {
+            DailyStudySummary dss = byDay.get(day);
+            if (dss != null) {
+                studyTimeLevels.add(determineLevelByStudyTime(dss.getStudyTime()));
+            } else {
+                studyTimeLevels.add(0);
+            }
+        }
+
+        return MonthlyStudyTimeDto.of(year, month, studyTimeLevels);
     }
 }

@@ -43,4 +43,17 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
             WHERE dss.userId = :userId
             """)
     Optional<Long> findTotalStudyTimeByUserId(Long userId);
+
+    @Query("""
+    SELECT dss
+    FROM DailyStudySummary dss
+    WHERE dss.userId = :userId
+        AND dss.createdAt >= :startDate
+        AND dss.createdAt < :endDate
+    """)
+    List<DailyStudySummary> findAllByUserIdInRecentTwoMonths(
+            @Param("userId") Long userId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate
+    );
 }
