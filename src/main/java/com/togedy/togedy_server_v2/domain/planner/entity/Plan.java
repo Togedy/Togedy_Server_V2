@@ -3,6 +3,8 @@ package com.togedy.togedy_server_v2.domain.planner.entity;
 import com.togedy.togedy_server_v2.domain.planner.enums.PlanStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -33,6 +35,7 @@ public class Plan {
     @Column(name = "date", nullable = false)
     private LocalDate date;
 
-    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, columnDefinition = "varchar(20)")
     private PlanStatus status;
 }
