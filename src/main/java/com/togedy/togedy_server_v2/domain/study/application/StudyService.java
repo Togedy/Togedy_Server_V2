@@ -2,13 +2,10 @@ package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
-import com.togedy.togedy_server_v2.domain.study.dto.GetStudyInvitationCodeResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
-import com.togedy.togedy_server_v2.domain.study.dto.PostStudyInvitationRequest;
-import com.togedy.togedy_server_v2.domain.study.dto.PostStudyInvitationResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
@@ -25,7 +22,6 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
-import com.togedy.togedy_server_v2.domain.study.util.InvitationCodeUtil;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.service.S3Service;
@@ -52,7 +48,6 @@ public class StudyService {
     public void generateStudy(PostStudyRequest request, Long userId) {
 
         String imageUrl = null;
-        String invitationCode;
         String type = StudyType.NORMAL.name();
 
         if (request.getStudyImage() != null) {
@@ -63,10 +58,6 @@ public class StudyService {
             type = StudyType.CHALLENGE.name();
         }
 
-        do {
-            invitationCode = InvitationCodeUtil.generateInvitationCode();
-        } while (studyRepository.existsByInvitationCode(invitationCode));
-
         Study study = Study.builder()
                 .name(request.getStudyName())
                 .description(request.getStudyDescription())
@@ -75,7 +66,6 @@ public class StudyService {
                 .imageUrl(imageUrl)
                 .type(type)
                 .goalTime(request.getGoalTime())
-                .invitationCode(invitationCode)
                 .password(request.getStudyPassword())
                 .tier("tier")
                 .build();
@@ -316,58 +306,6 @@ public class StudyService {
 
         userStudyRepository.save(leaderStudy);
         userStudyRepository.save(memberStudy);
-    }
-
-    /**
-     * 스터디의 초대코드를 조회한다.
-     * 해당 스터디에 존재하는 유저만 수행할 수 있다.
-     *
-     * @param studyId   스터디 ID
-     * @return          스터디 초대코드 DTO
-     */
-    public GetStudyInvitationCodeResponse findStudyInvitationCode(Long studyId, Long userId) {
-        validateStudyMember(studyId, userId);
-
-        Study study = studyRepository.findById(studyId)
-                .orElseThrow(StudyNotFoundException::new);
-
-        return GetStudyInvitationCodeResponse.from(study.getInvitationCode());
-    }
-
-    /**
-     * 스터디 초대코드를 통해 입장한다.
-     *
-     * @param request   스터디 초대코드 입장 DTO
-     * @param userId    유저 ID
-     * @return          스터디 비밀번호 존재 여부 및 스터디 ID DTO
-     */
-    @Transactional
-    public PostStudyInvitationResponse registerStudyInvitationMember(PostStudyInvitationRequest request, Long userId) {
-        String invitationCode = request.getInvitationCode();
-
-        Study study = studyRepository.findByInvitationCode(invitationCode)
-                .orElseThrow(StudyNotFoundException::new);
-
-        if (study.getPassword() != null) {
-            return PostStudyInvitationResponse.from(true, study.getId());
-        }
-
-        if (study.getMemberCount() == study.getMemberLimit()) {
-            throw new StudyMemberLimitExceededException();
-        }
-
-        UserStudy userStudy = UserStudy.builder()
-                .userId(userId)
-                .studyId(study.getId())
-                .role(StudyRole.MEMBER.name())
-                .build();
-
-        study.increaseMemberCount();
-
-        studyRepository.save(study);
-        userStudyRepository.save(userStudy);
-
-        return PostStudyInvitationResponse.from(false, study.getId());
     }
 
     /**

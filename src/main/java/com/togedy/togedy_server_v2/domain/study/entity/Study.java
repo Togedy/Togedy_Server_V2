@@ -54,9 +54,6 @@ public class Study extends BaseEntity {
     @Column(name = "password", nullable = true)
     private String password;
 
-    @Column(name = "invitation_code", nullable = false)
-    private String invitationCode;
-
     @Column(name = "tier", nullable = false)
     private String tier;
 
@@ -73,7 +70,6 @@ public class Study extends BaseEntity {
             String tag,
             String imageUrl,
             String password,
-            String invitationCode,
             String tier
     ) {
         this.type = type;
@@ -85,7 +81,6 @@ public class Study extends BaseEntity {
         this.tag = tag;
         this.imageUrl = imageUrl;
         this.password = password;
-        this.invitationCode = invitationCode;
         this.tier = tier;
         this.status = "ACTIVE";
     }

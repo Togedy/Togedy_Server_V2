@@ -1,13 +1,10 @@
 package com.togedy.togedy_server_v2.domain.study.api;
 
 import com.togedy.togedy_server_v2.domain.study.application.StudyService;
-import com.togedy.togedy_server_v2.domain.study.dto.GetStudyInvitationCodeResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
-import com.togedy.togedy_server_v2.domain.study.dto.PostStudyInvitationRequest;
-import com.togedy.togedy_server_v2.domain.study.dto.PostStudyInvitationResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
@@ -57,17 +54,6 @@ public class StudyController {
         return ApiUtil.successOnly();
     }
 
-    @Operation(summary = "스터디 초대 코드 입장", description = "스터디 초대 코드를 통해 입장한다.")
-    @PostMapping("/studies/invitations")
-    public ApiResponse<PostStudyInvitationResponse> createStudyInvitation(
-            @RequestBody PostStudyInvitationRequest request,
-            @AuthenticationPrincipal AuthUser user
-    )
-    {
-        PostStudyInvitationResponse response = studyService.registerStudyInvitationMember(request, user.getId());
-        return ApiUtil.success(response);
-    }
-
     @Operation(summary = "스터디 정보 조회", description = "스터디 정보를 단일 조회한다.")
     @GetMapping("/studies/{studyId}")
     public ApiResponse<GetStudyResponse> readStudyInfo(@PathVariable Long studyId,
@@ -83,17 +69,6 @@ public class StudyController {
     )
     {
         GetStudyNameDuplicateResponse response = studyService.findStudyNameDuplicate(name);
-        return ApiUtil.success(response);
-    }
-
-    @Operation(summary = "스터디 초대 코드 조회", description = "해당 스터디의 초대 코드를 조회한다.")
-    @GetMapping("/studies/{studyId}/invitations")
-    public ApiResponse<GetStudyInvitationCodeResponse> readStudyInvitationCode(
-            @PathVariable Long studyId,
-            @AuthenticationPrincipal AuthUser user
-    )
-    {
-        GetStudyInvitationCodeResponse response = studyService.findStudyInvitationCode(studyId, user.getId());
         return ApiUtil.success(response);
     }
 
