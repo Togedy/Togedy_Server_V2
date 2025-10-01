@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.planner.entity;
 
+import com.togedy.togedy_server_v2.domain.planner.enums.PlanStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -31,4 +32,7 @@ public class Plan {
 
     @Column(name = "date", nullable = false)
     private LocalDate date;
+
+    @Column(name = "status", nullable = false)
+    private PlanStatus status;
 }
