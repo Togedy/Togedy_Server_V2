@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.planner.entity;
 
 import com.togedy.togedy_server_v2.domain.planner.enums.PlanStatus;
+import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -19,7 +20,7 @@ import java.time.LocalDate;
 @Getter
 @Table(name = "plan")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Plan {
+public class Plan extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
