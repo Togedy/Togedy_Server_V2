@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.study.api;
 
 import com.togedy.togedy_server_v2.domain.study.application.StudyService;
 import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberStudyTimeResponse;
@@ -138,6 +139,20 @@ public class StudyController {
                 studyService.findStudyMemberStudyTime(studyId, userId, user.getId());
         return ApiUtil.success(response);
     }
+
+    @Operation(summary = "스터디 그룹원 플래너 조회", description = "스터디 그룹원의 플래너를 조회한다.")
+    @GetMapping("/studyies/{studyId}/members/{userId}/planners")
+    public ApiResponse<GetStudyMemberPlannerResponse> readStudyMemberPlanner(
+            @PathVariable Long studyId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        GetStudyMemberPlannerResponse response =
+                studyService.findStudyMemberPlanner(studyId, userId, user.getId());
+        return ApiUtil.success(response);
+    }
+
 
 
     @Operation(summary = "스터디 정보 수정", description = "스터디 정보를 수정한다.")

@@ -1,7 +1,14 @@
 package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.PlanRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyCategoryRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.planner.entity.Plan;
+import com.togedy.togedy_server_v2.domain.planner.entity.StudyCategory;
+import com.togedy.togedy_server_v2.domain.planner.enums.PlanStatus;
+import com.togedy.togedy_server_v2.domain.study.dto.DailyPlannerDto;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
@@ -15,6 +22,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudySearchResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.MonthlyStudyTimeDto;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PlanDto;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.StudyDto;
@@ -49,6 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -67,6 +76,8 @@ public class StudyService {
     private final UserStudyRepository userStudyRepository;
     private final UserRepository userRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
+    private final StudyCategoryRepository studyCategoryRepository;
+    private final PlanRepository planRepository;
     private final S3Service s3Service;
 
     /**
@@ -510,6 +521,52 @@ public class StudyService {
         }
 
         return GetStudyMemberStudyTimeResponse.of(studyTimeCount, monthlyStudyTimeDtoList);
+    }
+
+    public GetStudyMemberPlannerResponse findStudyMemberPlanner(Long studyId, Long memberId, Long userId) {
+        validateStudyMember(studyId, userId);
+
+        User member = userRepository.findById(memberId)
+                .orElseThrow(UserNotFoundException::new);
+
+        boolean isMyPlanner = member.getId().equals(userId);
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+        int completedPlanCount = 0;
+        int totalPlanCount = 0;
+
+        List<DailyPlannerDto> dailyPlannerDtoList = new ArrayList<>();
+
+        if (member.isPublic()) {
+            List<StudyCategory> studyCategoryList = studyCategoryRepository.findAllByUserId(memberId);
+
+            for (StudyCategory studyCategory : studyCategoryList) {
+                List<Plan> planList =
+                        planRepository.findByStudyCategoryIdAndCreatedAtBetween(studyCategory.getId(), startOfDay, endOfDay);
+
+                totalPlanCount += planList.size();
+                completedPlanCount += (int) planList.stream()
+                        .filter(plan -> plan.getStatus() == PlanStatus.SUCCESS)
+                        .count();
+
+                List<PlanDto> planDtoList = planList.stream()
+                        .map(PlanDto::from)
+                        .toList();
+
+                dailyPlannerDtoList.add(DailyPlannerDto.of(studyCategory, planDtoList));
+            }
+
+            return GetStudyMemberPlannerResponse.of(
+                    isMyPlanner,
+                    true,
+                    completedPlanCount,
+                    totalPlanCount,
+                    dailyPlannerDtoList
+            );
+        }
+
+        return GetStudyMemberPlannerResponse.of(isMyPlanner, false);
     }
 
     /**
