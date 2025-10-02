@@ -7,6 +7,7 @@ import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.entity.Plan;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyCategory;
 import com.togedy.togedy_server_v2.domain.planner.enums.PlanStatus;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchPlannerVisibilityRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyPlannerDto;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
@@ -46,6 +47,7 @@ import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundExcep
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
+import com.togedy.togedy_server_v2.domain.user.exception.UserAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.DateTimeUtils;
@@ -573,6 +575,15 @@ public class StudyService {
     public List<GetStudyMemberManagementResponse> findStudyMemberManagement(Long studyId, Long userId) {
         validateStudyMember(studyId, userId);
         return userStudyRepository.findStudyMembersByStudyId(studyId);
+    }
+
+    public void modifyPlannerVisibility(PatchPlannerVisibilityRequest request, Long studyId, Long memberId, Long userId) {
+        if (!memberId.equals(userId)) {
+            throw new UserAccessDeniedException();
+        }
+
+        User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        user.updatePlannerVisibility(request.isPlannerVisible());
     }
 
     /**

@@ -58,4 +58,8 @@ public class User extends BaseEntity {
     public void updateStatus(UserStatus status) {
         this.status = status;
     }
+
+    public void updatePlannerVisibility(boolean plannerVisible) {
+        this.plannerVisible = plannerVisible;
+    }
 }

@@ -10,6 +10,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberStudyTimeRespo
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudySearchResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchPlannerVisibilityRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
@@ -198,6 +199,19 @@ public class StudyController {
     )
     {
         studyService.modifyStudyLeader(studyId, userId, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @Operation(summary = "플래너 공개 수정", description = "본인의 플래너 공개 여부를 수정한다.")
+    @PatchMapping("/studies/{studyId}/members/{userId}/planners/visibility")
+    public ApiResponse<Void> updatePlannerVisibility(
+            @PathVariable Long studyId,
+            @PathVariable Long userId,
+            @RequestBody PatchPlannerVisibilityRequest request,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        studyService.modifyPlannerVisibility(request, studyId, userId, user.getId());
         return ApiUtil.successOnly();
     }
 
