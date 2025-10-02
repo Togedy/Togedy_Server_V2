@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.study.api;
 
 import com.togedy.togedy_server_v2.domain.study.application.StudyService;
 import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
@@ -153,7 +154,17 @@ public class StudyController {
         return ApiUtil.success(response);
     }
 
-
+    @Operation(summary = "스터디 멤버 관리 조회", description = "스터디 멤버 관리를 조회한다.")
+    @GetMapping("/studies/{studyId}/members/management")
+    public ApiResponse<List<GetStudyMemberManagementResponse>> readStudyMemberManagement(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        List<GetStudyMemberManagementResponse> response =
+                studyService.findStudyMemberManagement(studyId, user.getId());
+        return ApiUtil.success(response);
+    }
 
     @Operation(summary = "스터디 정보 수정", description = "스터디 정보를 수정한다.")
     @PatchMapping(value = "/studies/{studyId}/information", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

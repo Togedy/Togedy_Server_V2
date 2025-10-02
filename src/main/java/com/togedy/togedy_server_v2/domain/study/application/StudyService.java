@@ -8,6 +8,7 @@ import com.togedy.togedy_server_v2.domain.planner.entity.Plan;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyCategory;
 import com.togedy.togedy_server_v2.domain.planner.enums.PlanStatus;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyPlannerDto;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
@@ -567,6 +568,11 @@ public class StudyService {
         }
 
         return GetStudyMemberPlannerResponse.of(isMyPlanner, false);
+    }
+
+    public List<GetStudyMemberManagementResponse> findStudyMemberManagement(Long studyId, Long userId) {
+        validateStudyMember(studyId, userId);
+        return userStudyRepository.findStudyMembersByStudyId(studyId);
     }
 
     /**
