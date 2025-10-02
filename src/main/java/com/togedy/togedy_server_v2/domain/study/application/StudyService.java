@@ -539,7 +539,7 @@ public class StudyService {
 
         List<DailyPlannerDto> dailyPlannerDtoList = new ArrayList<>();
 
-        if (member.isPublic()) {
+        if (member.isPlannerVisible()) {
             List<StudyCategory> studyCategoryList = studyCategoryRepository.findAllByUserId(memberId);
 
             for (StudyCategory studyCategory : studyCategoryList) {

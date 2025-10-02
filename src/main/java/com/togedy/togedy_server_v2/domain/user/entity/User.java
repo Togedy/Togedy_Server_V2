@@ -32,8 +32,8 @@ public class User extends BaseEntity {
     @Column(name = "profile_message", nullable = true)
     private String profileMessage;
 
-    @Column(name = "is_public", nullable = false)
-    private boolean isPublic;
+    @Column(name = "planner_visible", nullable = false)
+    private boolean plannerVisible;
 
     @Column(name = "study_streak", nullable = false)
     private int studyStreak;
