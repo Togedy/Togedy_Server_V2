@@ -11,7 +11,7 @@ public class GetStudyMemberPlannerResponse {
 
     private Boolean isMyPlanner;
 
-    private Boolean isPublic;
+    private Boolean isPlannerVisible;
 
     private Integer completedCount;
 
@@ -21,7 +21,7 @@ public class GetStudyMemberPlannerResponse {
 
     public static GetStudyMemberPlannerResponse of(
             boolean isMyPlanner,
-            boolean isPublic,
+            boolean isPlannerVisible,
             int completedCount,
             int totalPlanCount,
             List<DailyPlannerDto> dailyPlanner
@@ -29,17 +29,17 @@ public class GetStudyMemberPlannerResponse {
     {
         return GetStudyMemberPlannerResponse.builder()
                 .isMyPlanner(isMyPlanner)
-                .isPublic(isPublic)
+                .isPlannerVisible(isPlannerVisible)
                 .completedCount(completedCount)
                 .totalPlanCount(totalPlanCount)
                 .dailyPlanner(dailyPlanner)
                 .build();
     }
 
-    public static GetStudyMemberPlannerResponse of(boolean isMyPlanner, boolean isPublic) {
+    public static GetStudyMemberPlannerResponse of(boolean isMyPlanner, boolean isPlannerVisible) {
         return GetStudyMemberPlannerResponse.builder()
                 .isMyPlanner(isMyPlanner)
-                .isPublic(isPublic)
+                .isPlannerVisible(isPlannerVisible)
                 .build();
     }
 }
