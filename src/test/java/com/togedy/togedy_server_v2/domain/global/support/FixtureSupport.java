@@ -30,7 +30,7 @@ public class FixtureSupport {
         UserStudy userStudy = UserStudy.builder()
                 .userId(user.getId())
                 .studyId(study.getId())
-                .role(studyRole.name())
+                .role(studyRole)
                 .build();
 
         entityManager.persist(userStudy);

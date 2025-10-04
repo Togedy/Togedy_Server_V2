@@ -1,8 +1,17 @@
 package com.togedy.togedy_server_v2.domain.study.api;
 
 import com.togedy.togedy_server_v2.domain.study.application.StudyService;
+import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberStudyTimeResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudySearchResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchPlannerVisibilityRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
@@ -25,6 +34,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -72,6 +84,103 @@ public class StudyController {
         return ApiUtil.success(response);
     }
 
+    @Operation(summary = "스터디 그룹원 조회", description = "스터디 그룹원을 조회한다.")
+    @GetMapping("/studies/{studyId}/members")
+    public ApiResponse<List<GetStudyMemberResponse>> readStudyMember(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        List<GetStudyMemberResponse> response = studyService.findStudyMember(studyId, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "본인 스터디 조회", description = "본인의 스터디 관련 정보를 조회한다.")
+    @GetMapping("/users/me/studies")
+    public ApiResponse<GetMyStudyInfoResponse> readMyStudyInfo(@AuthenticationPrincipal AuthUser user) {
+        GetMyStudyInfoResponse response = studyService.findMyStudyInfo(user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "스터디 탐색", description = "스터디를 탐색한다.")
+    @GetMapping("/studies")
+    public ApiResponse<GetStudySearchResponse> readStudySearch(
+            @RequestParam(name = "tag", required = false) String tag,
+            @RequestParam(name = "filter", required = false, defaultValue = "latest") String filter,
+            @RequestParam(name = "joinable", required = false, defaultValue = "false") boolean joinable,
+            @RequestParam(name = "challenge", required = false, defaultValue = "false") boolean challenge,
+            @RequestParam(name = "page", defaultValue = "1") int page,
+            @RequestParam(name = "size", defaultValue = "20") int size,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        GetStudySearchResponse response =
+                studyService.findStudySearch(tag, filter, joinable, challenge, page, size, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "스터디 그룹원 프로필 조회", description = "스터디 그룹원의 프로필을 조회한다.")
+    @GetMapping("/studies/{studyId}/members/{userId}/profiles")
+    public ApiResponse<GetStudyMemberProfileResponse> readStudyMemberProfile(
+            @PathVariable Long studyId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        GetStudyMemberProfileResponse response =
+                studyService.findStudyMemberProfile(studyId, userId, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "스터디 그룹원 공부시간 조회", description = "스터디 그룹원의 공부시간 통계를 조회한다.")
+    @GetMapping("/studies/{studyId}/members/{userId}/study-times")
+    public ApiResponse<GetStudyMemberStudyTimeResponse> readStudyMemberStudyTime(
+            @PathVariable Long studyId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        GetStudyMemberStudyTimeResponse response =
+                studyService.findStudyMemberStudyTime(studyId, userId, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "스터디 그룹원 플래너 조회", description = "스터디 그룹원의 플래너를 조회한다.")
+    @GetMapping("/studies/{studyId}/members/{userId}/planners")
+    public ApiResponse<GetStudyMemberPlannerResponse> readStudyMemberPlanner(
+            @PathVariable Long studyId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        GetStudyMemberPlannerResponse response =
+                studyService.findStudyMemberPlanner(studyId, userId, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "스터디 멤버 관리 조회", description = "스터디 멤버 관리를 조회한다.")
+    @GetMapping("/studies/{studyId}/members/management")
+    public ApiResponse<List<GetStudyMemberManagementResponse>> readStudyMemberManagement(
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        List<GetStudyMemberManagementResponse> response =
+                studyService.findStudyMemberManagement(studyId, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "스터디 출석부 조회", description = "스터디 출석부를 조회한다.")
+    @GetMapping("/studies/{studyId}/members/attendance")
+    public ApiResponse<List<GetStudyAttendanceResponse>> readStudyAttendance(
+            @RequestParam(name = "startDate") LocalDate startDate,
+            @RequestParam(name = "endDate") LocalDate endDate,
+            @PathVariable Long studyId
+    )
+    {
+        List<GetStudyAttendanceResponse> response = studyService.findStudyAttendance(startDate, endDate, studyId);
+        return ApiUtil.success(response);
+    }
+
     @Operation(summary = "스터디 정보 수정", description = "스터디 정보를 수정한다.")
     @PatchMapping(value = "/studies/{studyId}/information", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Void> updateStudyInfo(
@@ -104,6 +213,19 @@ public class StudyController {
     )
     {
         studyService.modifyStudyLeader(studyId, userId, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @Operation(summary = "플래너 공개 수정", description = "본인의 플래너 공개 여부를 수정한다.")
+    @PatchMapping("/studies/{studyId}/members/{userId}/planners/visibility")
+    public ApiResponse<Void> updatePlannerVisibility(
+            @PathVariable Long studyId,
+            @PathVariable Long userId,
+            @RequestBody PatchPlannerVisibilityRequest request,
+            @AuthenticationPrincipal AuthUser user
+    )
+    {
+        studyService.modifyPlannerVisibility(request, studyId, userId, user.getId());
         return ApiUtil.successOnly();
     }
 
