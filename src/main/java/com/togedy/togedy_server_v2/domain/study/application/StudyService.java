@@ -7,6 +7,7 @@ import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.entity.Plan;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyCategory;
 import com.togedy.togedy_server_v2.domain.planner.enums.PlanStatus;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchPlannerVisibilityRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyPlannerDto;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
@@ -50,7 +51,7 @@ import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.domain.user.exception.UserAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.service.S3Service;
-import com.togedy.togedy_server_v2.global.util.DateTimeUtils;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
@@ -65,6 +66,7 @@ import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -428,10 +430,10 @@ public class StudyService {
 
         if (challengeStudy.isPresent()) {
             long goalTime = challengeStudy.get().getGoalTime();
-            int achievement = DateTimeUtils.calculateAchievement(todayStudyTime, goalTime);
+            int achievement = TimeUtil.calculateAchievement(todayStudyTime, goalTime);
             return GetMyStudyInfoResponse.of(
-                    DateTimeUtils.timeConvert(goalTime),
-                    DateTimeUtils.timeConvert(todayStudyTime),
+                    TimeUtil.toTimeFormat(goalTime),
+                    TimeUtil.toTimeFormat(todayStudyTime),
                     achievement,
                     studyDtoList
             );
@@ -464,14 +466,14 @@ public class StudyService {
                     Optional<User> user = userList.stream().max(Comparator.comparing(User::getLastActivatedAt));
                     String lastActivatedAt = null;
                     if (user.isPresent()) {
-                        lastActivatedAt = DateTimeUtils.formatTimeAgo(user.get().getLastActivatedAt());
+                        lastActivatedAt = TimeUtil.formatTimeAgo(user.get().getLastActivatedAt());
                     }
 
                     User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER)
                             .orElseThrow(StudyLeaderNotFoundException::new);
 
                     String studyLeaderImageUrl = leader.getProfileImageUrl();
-                    String challengeGoalTime = DateTimeUtils.timeConvert(study.getGoalTime());
+                    String challengeGoalTime = TimeUtil.toTimeFormat(study.getGoalTime());
                     boolean isNewlyCreated = validateNewlyCreated(study.getCreatedAt());
                     boolean hasPassword = study.getPassword() != null;
                     return StudySearchDto.of(study, studyLeaderImageUrl, isNewlyCreated, lastActivatedAt, challengeGoalTime, hasPassword);
@@ -492,7 +494,7 @@ public class StudyService {
 
         return GetStudyMemberProfileResponse.of(
                 member,
-                DateTimeUtils.secondToTimeConvert(totalStudyTime),
+                TimeUtil.toDurationFormat(totalStudyTime),
                 elapsedDays
         );
     }
@@ -500,11 +502,11 @@ public class StudyService {
     public GetStudyMemberStudyTimeResponse findStudyMemberStudyTime(Long studyId, Long memberId, Long userId) {
         validateStudyMember(studyId, userId);
 
-        LocalDateTime startDate = LocalDate.now().minusMonths(1).withDayOfMonth(1).atStartOfDay();
-        LocalDateTime endDate = LocalDate.now().plusMonths(1).withDayOfMonth(1).atStartOfDay();
+        LocalDateTime startDateTime = LocalDate.now().minusMonths(1).withDayOfMonth(1).atStartOfDay();
+        LocalDateTime endDateTime = LocalDate.now().plusMonths(1).withDayOfMonth(1).atStartOfDay();
 
         List<DailyStudySummary> grouped =
-                dailyStudySummaryRepository.findAllByUserIdInRecentTwoMonths(memberId, startDate, endDate);
+                dailyStudySummaryRepository.findAllByUserIdAndPeriod(memberId, startDateTime, endDateTime);
 
         Map<YearMonth, List<DailyStudySummary>> monthListMap = grouped.stream()
                 .collect(Collectors.groupingBy(dailyStudySummary -> YearMonth.from(dailyStudySummary.getCreatedAt())));
@@ -575,6 +577,62 @@ public class StudyService {
     public List<GetStudyMemberManagementResponse> findStudyMemberManagement(Long studyId, Long userId) {
         validateStudyMember(studyId, userId);
         return userStudyRepository.findStudyMembersByStudyId(studyId);
+    }
+
+    public List<GetStudyAttendanceResponse> findStudyAttendance(LocalDate startDate, LocalDate endDate, Long studyId) {
+        List<User> userList = userRepository.findAllByStudyId(studyId);
+        List<Long> userIds = userList.stream().map(User::getId).toList();
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+
+        List<DailyStudySummary> dailyStudySummaryList = dailyStudySummaryRepository
+                .findAllByUserIdsAndPeriod(userIds, startDateTime, endDateTime);
+
+        Map<Long, List<DailyStudySummary>> dailyStudySummaryMap = dailyStudySummaryList.stream()
+                .collect(Collectors.groupingBy(DailyStudySummary::getUserId));
+
+        List<Object[]> dailyStudyTimeList = dailyStudySummaryRepository
+                .findTotalStudyTimeByUserIdsAndPeriod(userIds, startDateTime, endDateTime);
+
+        Map<Long, Long> totalStudyTimeMap = new HashMap<>(
+                dailyStudyTimeList.stream()
+                        .collect(Collectors.toMap(
+                                row -> ((Number) row[0]).longValue(),
+                                row -> row[1] != null ? ((Number) row[1]).longValue() : 0L,
+                                Long::sum
+                        ))
+        );
+
+        List<GetStudyAttendanceResponse> response = userList.stream()
+                .map(user -> {
+                    List<String> studyTimeList = new ArrayList<>();
+                    for (LocalDate d = startDate; !d.isAfter(endDate); d = d.plusDays(1)) {
+                        LocalDateTime dayStart = d.atStartOfDay();
+                        LocalDateTime dayEnd = d.atTime(LocalTime.MAX);
+
+                        long totalStudyTime = dailyStudySummaryMap
+                                .getOrDefault(user.getId(), List.of())
+                                .stream()
+                                .filter(s -> !s.getCreatedAt().isBefore(dayStart) &&
+                                        !s.getCreatedAt().isAfter(dayEnd))
+                                .mapToLong(DailyStudySummary::getStudyTime)
+                                .sum();
+
+                        studyTimeList.add(
+                                Optional.of(totalStudyTime)
+                                        .filter(s -> s > 0L)
+                                        .map(TimeUtil::toTimeFormat)
+                                        .orElse(null)
+                        );
+                    }
+
+                    return GetStudyAttendanceResponse.of(user, studyTimeList);
+                }).sorted(Comparator.comparingLong(
+                        (GetStudyAttendanceResponse dto) -> totalStudyTimeMap.getOrDefault(dto.getUserId(), 0L)
+                ).reversed()).collect(Collectors.toCollection(ArrayList::new));
+
+        return response;
     }
 
     public void modifyPlannerVisibility(PatchPlannerVisibilityRequest request, Long studyId, Long memberId, Long userId) {

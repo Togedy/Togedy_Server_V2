@@ -3,7 +3,7 @@ package com.togedy.togedy_server_v2.domain.study.dto;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
-import com.togedy.togedy_server_v2.global.util.DateTimeUtils;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -30,7 +30,7 @@ public class GetStudyMemberResponse {
                 .studyRole(role)
                 .userStatus(user.getStatus())
                 .userProfileImageUrl(user.getProfileImageUrl())
-                .lastActivatedAt(DateTimeUtils.formatTimeAgo(user.getLastActivatedAt()))
+                .lastActivatedAt(TimeUtil.formatTimeAgo(user.getLastActivatedAt()))
                 .build();
     }
 }

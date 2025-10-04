@@ -45,15 +45,39 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
     Optional<Long> findTotalStudyTimeByUserId(Long userId);
 
     @Query("""
-    SELECT dss
-    FROM DailyStudySummary dss
-    WHERE dss.userId = :userId
-        AND dss.createdAt >= :startDate
-        AND dss.createdAt < :endDate
-    """)
-    List<DailyStudySummary> findAllByUserIdInRecentTwoMonths(
+            SELECT dss
+            FROM DailyStudySummary dss
+            WHERE dss.userId = :userId
+                AND dss.createdAt BETWEEN :startDateTime AND :endDateTime
+            """)
+    List<DailyStudySummary> findAllByUserIdAndPeriod(
             @Param("userId") Long userId,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    @Query("""
+            SELECT dss
+            FROM DailyStudySummary dss
+            WHERE dss.userId IN :userIds
+                AND dss.createdAt BETWEEN :startDateTime AND :endDateTime
+            """)
+    List<DailyStudySummary> findAllByUserIdsAndPeriod(
+            @Param("userIds") List<Long> userIds,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
+    );
+
+    @Query("""
+                SELECT dss.userId, SUM(dss.studyTime)
+                FROM DailyStudySummary dss
+                WHERE dss.userId IN :userIds
+                    AND dss.createdAt BETWEEN :startDateTime AND :endDateTime
+                GROUP BY dss.userId
+            """)
+    List<Object[]> findTotalStudyTimeByUserIdsAndPeriod(
+            @Param("userIds") List<Long> userIds,
+            @Param("startDateTime") LocalDateTime startDateTime,
+            @Param("endDateTime") LocalDateTime endDateTime
     );
 }

@@ -2,7 +2,7 @@ package com.togedy.togedy_server_v2.domain.study.dto;
 
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
-import com.togedy.togedy_server_v2.global.util.DateTimeUtils;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -38,7 +38,7 @@ public class StudyDto {
         return StudyDto.builder()
                 .studyId(study.getId())
                 .studyType(study.getType())
-                .challengeGoalTime(DateTimeUtils.timeConvert(study.getGoalTime()))
+                .challengeGoalTime(TimeUtil.toTimeFormat(study.getGoalTime()))
                 .challengeAchievement(challengeAchievement)
                 .completedMemberCount(completedMemberCount)
                 .studyMemberCount(study.getMemberCount())

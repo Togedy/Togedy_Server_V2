@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.study.api;
 
 import com.togedy.togedy_server_v2.domain.study.application.StudyService;
 import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
@@ -34,6 +35,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -164,6 +166,18 @@ public class StudyController {
     {
         List<GetStudyMemberManagementResponse> response =
                 studyService.findStudyMemberManagement(studyId, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "스터디 출석부 조회", description = "스터디 출석부를 조회한다.")
+    @GetMapping("/studies/{studyId}/members/attendance")
+    public ApiResponse<List<GetStudyAttendanceResponse>> readStudyAttendance(
+            @RequestParam(name = "startDate") LocalDate startDate,
+            @RequestParam(name = "endDate") LocalDate endDate,
+            @PathVariable Long studyId
+    )
+    {
+        List<GetStudyAttendanceResponse> response = studyService.findStudyAttendance(startDate, endDate, studyId);
         return ApiUtil.success(response);
     }
 

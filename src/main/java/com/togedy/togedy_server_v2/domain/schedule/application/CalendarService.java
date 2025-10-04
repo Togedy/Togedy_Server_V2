@@ -11,7 +11,7 @@ import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
-import com.togedy.togedy_server_v2.global.util.DateTimeUtils;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -78,7 +78,7 @@ public class CalendarService {
 
         if (dDaySchedule.isPresent()) {
             return GetDdayScheduleResponse.of(dDaySchedule.get(),
-                    DateTimeUtils.calculateRemainingDays(dDaySchedule.get().getStartDate()));
+                    TimeUtil.calculateRemainingDays(dDaySchedule.get().getStartDate()));
         }
 
         return GetDdayScheduleResponse.temp();
@@ -178,11 +178,11 @@ public class CalendarService {
     private Comparator<ScheduleComparable> scheduleComparator() {
         return Comparator
                 .<ScheduleComparable>comparingLong(sc ->
-                        DateTimeUtils.durationInSeconds(
+                        TimeUtil.durationInSeconds(
                                 sc.getStartDate(), sc.getStartTime(),
                                 sc.getEndDate(),   sc.getEndTime()))
                 .thenComparing(sc ->
-                        DateTimeUtils.toStartDateTime(sc.getStartDate(), sc.getStartTime()))
+                        TimeUtil.toStartDateTime(sc.getStartDate(), sc.getStartTime()))
                 .reversed();
     }
 }

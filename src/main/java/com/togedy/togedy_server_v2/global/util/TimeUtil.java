@@ -75,7 +75,7 @@ public class TimeUtil {
         return Math.min(percent, 100);
     }
 
-    public static String timeConvert(Long seconds) {
+    public static String toTimeFormat(Long seconds) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
 
         if (seconds >= 86399) {
@@ -85,7 +85,7 @@ public class TimeUtil {
         return LocalTime.ofSecondOfDay(seconds).format(formatter);
     }
 
-    public static String secondToTimeConvert(Long second) {
+    public static String toDurationFormat(Long second) {
         long minutes = second / 60;
         long hours = second / 3600;
 
