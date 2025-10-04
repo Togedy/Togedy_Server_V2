@@ -11,6 +11,7 @@ import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
+import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +22,6 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
-import java.time.LocalTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,8 +60,8 @@ public class StudyE2ETest extends AbstractE2ETest {
                 .param("studyName", "챌린지 스터디")
                 .param("studyDescription", "챌린지 스터디를 생성한다.")
                 .param("studyMemberLimit", "30")
-                .param("studyTag", "내신/학교 생활")
-                .param("goalTime", "05:00:00")
+                .param("studyTag", "내신/학교생활")
+                .param("goalTime", "5")
                 .header("Authorization", accessToken)
                 .contentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -76,16 +76,16 @@ public class StudyE2ETest extends AbstractE2ETest {
         Study study = saved.get();
 
         assertThat(study.getName()).isEqualTo("챌린지 스터디");
-        assertThat(study.getType()).isEqualTo("CHALLENGE");
+        assertThat(study.getType()).isEqualTo(StudyType.CHALLENGE);
         assertThat(study.getDescription()).isEqualTo("챌린지 스터디를 생성한다.");
         assertThat(study.getMemberLimit()).isEqualTo(30);
         assertThat(study.getImageUrl()).isEqualTo("https://mock-s3/test.png");
-        assertThat(study.getGoalTime()).isEqualTo(LocalTime.of(5, 0, 0));
+        assertThat(study.getGoalTime()).isEqualTo(18000);
 
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(study.getId(), user.getId())
                 .orElseThrow();
 
-        assertThat(userStudy.getRole()).isEqualTo(StudyRole.LEADER.name());
+        assertThat(userStudy.getRole()).isEqualTo(StudyRole.LEADER);
     }
 
     @Test
@@ -121,7 +121,7 @@ public class StudyE2ETest extends AbstractE2ETest {
         Study study = saved.get();
 
         assertThat(study.getName()).isEqualTo("일반 스터디");
-        assertThat(study.getType()).isEqualTo("NORMAL");
+        assertThat(study.getType()).isEqualTo(StudyType.NORMAL);
         assertThat(study.getDescription()).isEqualTo("일반 스터디를 생성한다.");
         assertThat(study.getMemberLimit()).isEqualTo(10);
         assertThat(study.getImageUrl()).isEqualTo("https://mock-s3/test.png");
@@ -129,7 +129,7 @@ public class StudyE2ETest extends AbstractE2ETest {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(study.getId(), user.getId())
                 .orElseThrow();
 
-        assertThat(userStudy.getRole()).isEqualTo(StudyRole.LEADER.name());
+        assertThat(userStudy.getRole()).isEqualTo(StudyRole.LEADER);
     }
 
     @DisplayName("리더가 스터디를 조회한다.")
@@ -150,14 +150,15 @@ public class StudyE2ETest extends AbstractE2ETest {
         //then
         mockMvc.perform(requestBuilder)
                 .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.response.isJoined").value(true))
                 .andExpect(jsonPath("$.response.isStudyLeader").value(true))
                 .andExpect(jsonPath("$.response.studyName").value(study.getName()))
                 .andExpect(jsonPath("$.response.studyDescription").value(study.getDescription()))
                 .andExpect(jsonPath("$.response.studyImageUrl").value(study.getImageUrl()))
-                .andExpect(jsonPath("$.response.studyTag").value(study.getTag()))
-                .andExpect(jsonPath("$.response.studyTier").value(study.getTier()))
-                .andExpect(jsonPath("$.response.studyMemberCount").value(1))
-//                .andExpect(jsonPath("$.response.completedMemberCount").value(null))
+                .andExpect(jsonPath("$.response.studyTag").value(study.getTag().getDescription()))
+                .andExpect(jsonPath("$.response.studyTier").value("티어"))
+                .andExpect(jsonPath("$.response.studyMemberCount").value(study.getMemberCount()))
+                .andExpect(jsonPath("$.response.completedMemberCount").value(0))
                 .andExpect(jsonPath("$.response.studyMemberLimit").value(study.getMemberLimit()))
                 .andExpect(jsonPath("$.response.studyPassword").value(Matchers.nullValue()));
     }
@@ -203,7 +204,7 @@ public class StudyE2ETest extends AbstractE2ETest {
 
         assertThat(savedStudy.getName()).isEqualTo("스터디 이름 변경");
         assertThat(savedStudy.getDescription()).isEqualTo("스터디 이름을 변경한다.");
-        assertThat(savedStudy.getTag()).isEqualTo(StudyTag.FREE.getDescription());
+        assertThat(savedStudy.getTag()).isEqualTo(StudyTag.FREE);
         assertThat(savedStudy.getImageUrl()).isEqualTo("https://mock-s3/test.png");
         assertThat(savedStudy.getPassword()).isEqualTo("1234");
     }
@@ -389,7 +390,7 @@ public class StudyE2ETest extends AbstractE2ETest {
         UserStudy modifiedLeaderStudy = userStudyRepository.findById(leaderStudy.getId()).orElseThrow();
         UserStudy modifiedMemberStudy = userStudyRepository.findById(memberStudy.getId()).orElseThrow();
 
-        assertThat(modifiedLeaderStudy.getRole()).isEqualTo(StudyRole.MEMBER.name());
-        assertThat(modifiedMemberStudy.getRole()).isEqualTo(StudyRole.LEADER.name());
+        assertThat(modifiedLeaderStudy.getRole()).isEqualTo(StudyRole.MEMBER);
+        assertThat(modifiedMemberStudy.getRole()).isEqualTo(StudyRole.LEADER);
     }
 }
