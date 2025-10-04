@@ -140,6 +140,8 @@ public class StudyService {
      * @return          해당 스터디 정보 DTO
      */
     public GetStudyResponse findStudyInfo(Long studyId, Long userId) {
+        boolean isJoined = userStudyRepository.existsByStudyIdAndUserId(studyId, userId);
+
         Integer count = null;
         String studyPassword = null;
         Study study = studyRepository.findById(studyId)
@@ -156,7 +158,7 @@ public class StudyService {
         if (isStudyLeader) {
             studyPassword = study.getPassword();
         }
-        return GetStudyResponse.of(isStudyLeader, study, leader, count, studyPassword);
+        return GetStudyResponse.of(isJoined, isStudyLeader, study, leader, count, studyPassword);
     }
 
     /**

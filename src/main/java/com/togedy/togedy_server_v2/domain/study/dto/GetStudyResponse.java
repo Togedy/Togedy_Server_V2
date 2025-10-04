@@ -9,6 +9,7 @@ import lombok.Getter;
 @Builder
 public class GetStudyResponse {
 
+    private Boolean isJoined;
     private Boolean isStudyLeader;
     private String studyName;
     private String studyLeaderName;
@@ -21,12 +22,16 @@ public class GetStudyResponse {
     private Integer studyMemberLimit;
     private String studyPassword;
 
-    public static GetStudyResponse of(boolean isStudyLeader,
-                                      Study study,
-                                      User leader,
-                                      Integer completedMemberCount,
-                                      String studyPassword) {
+    public static GetStudyResponse of(
+            boolean isJoined,
+            boolean isStudyLeader,
+            Study study,
+            User leader,
+            Integer completedMemberCount,
+            String studyPassword
+    ) {
         return GetStudyResponse.builder()
+                .isJoined(isJoined)
                 .isStudyLeader(isStudyLeader)
                 .studyName(study.getName())
                 .studyLeaderName(leader.getNickname())
@@ -40,6 +45,4 @@ public class GetStudyResponse {
                 .studyPassword(studyPassword)
                 .build();
     }
-
-
 }
