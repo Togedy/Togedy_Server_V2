@@ -372,12 +372,20 @@ public class StudyService {
      * @return          스터디 그룹원 조회 DTO
      */
     public List<GetStudyMemberResponse> findStudyMember(Long studyId, Long userId) {
+        LocalDate today = LocalDate.now();
         List<Object[]> rows = userRepository.findAllByStudyIdOrderByCreatedAtAsc(studyId);
 
         List<GetStudyMemberResponse> responses = rows.stream()
                 .map(row -> {
                     User user = (User) row[0];
                     StudyRole role = (StudyRole) row[1];
+                    Optional<DailyStudySummary> dailyStudySummary
+                            = dailyStudySummaryRepository.findByUserIdAndCreatedAt(user.getId(), today.atStartOfDay(), today.atTime(LocalTime.MAX));
+
+                    if (dailyStudySummary.isPresent()) {
+                        return GetStudyMemberResponse.of(user, dailyStudySummary.get(), role);
+                    }
+
                     return GetStudyMemberResponse.of(user, role);
                 })
                 .collect(Collectors.toList());
