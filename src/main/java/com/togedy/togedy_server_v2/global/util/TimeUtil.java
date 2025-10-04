@@ -8,9 +8,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
-public class DateTimeUtils {
+public class TimeUtil {
 
-    private DateTimeUtils(){
+    private TimeUtil(){
     }
 
     public static long durationInSeconds(
