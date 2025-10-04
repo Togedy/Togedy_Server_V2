@@ -17,7 +17,8 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     @Query("""
             SELECT s
             FROM Study s
-            JOIN UserStudy us ON us.userId = :userId
+            JOIN UserStudy us ON us.studyId = s.id
+            WHERE us.userId = :userId
             ORDER BY us.createdAt ASC
             """)
     List<Study> findAllByUserIdOrderByCreatedAtAsc(Long userId);

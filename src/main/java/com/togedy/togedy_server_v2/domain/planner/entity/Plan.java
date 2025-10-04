@@ -27,7 +27,7 @@ public class Plan extends BaseEntity {
     @Column(name = "plan_id", nullable = false, updatable = false)
     private Long id;
 
-    @Column(name = "study_categody_id", nullable = false)
+    @Column(name = "study_category_id", nullable = false)
     private Long studyCategoryId;
 
     @Column(name = "name", nullable = false, updatable = true)

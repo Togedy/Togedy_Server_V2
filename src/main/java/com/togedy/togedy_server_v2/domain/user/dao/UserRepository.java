@@ -40,7 +40,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("""
             SELECT u, us.role
             FROM User u
-            JOIN UserStudy us ON u.id = us.id
+            JOIN UserStudy us ON u.id = us.userId
             WHERE us.studyId = :studyId
             ORDER BY us.createdAt ASC
             """)

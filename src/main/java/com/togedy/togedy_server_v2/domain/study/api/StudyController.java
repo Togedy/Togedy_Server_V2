@@ -145,7 +145,7 @@ public class StudyController {
     }
 
     @Operation(summary = "스터디 그룹원 플래너 조회", description = "스터디 그룹원의 플래너를 조회한다.")
-    @GetMapping("/studyies/{studyId}/members/{userId}/planners")
+    @GetMapping("/studies/{studyId}/members/{userId}/planners")
     public ApiResponse<GetStudyMemberPlannerResponse> readStudyMemberPlanner(
             @PathVariable Long studyId,
             @PathVariable Long userId,

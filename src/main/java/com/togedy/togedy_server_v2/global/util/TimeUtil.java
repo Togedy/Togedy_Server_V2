@@ -76,6 +76,10 @@ public class TimeUtil {
     }
 
     public static String toTimeFormat(Long second) {
+        if (second == null) {
+            return "00:00:00";
+        }
+
         long hours = second / 3600;
         long minutes = (second % 3600) / 60;
         long seconds = second % 60;

@@ -703,6 +703,10 @@ public class StudyService {
     }
 
     private int calculateCompleteRate(int completedMemberCount, int studyMemberCount) {
+        if (studyMemberCount == 0) {
+            return 0;
+        }
+
         return (int) ((double) completedMemberCount / studyMemberCount);
     }
 
