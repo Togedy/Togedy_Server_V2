@@ -75,21 +75,12 @@ public class TimeUtil {
         return Math.min(percent, 100);
     }
 
-    public static String toTimeFormat(Long seconds) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-
-        if (seconds >= 86399) {
-            return LocalTime.MAX.format(formatter);
-        }
-
-        return LocalTime.ofSecondOfDay(seconds).format(formatter);
-    }
-
-    public static String toDurationFormat(Long second) {
-        long minutes = second / 60;
+    public static String toTimeFormat(Long second) {
         long hours = second / 3600;
+        long minutes = (second % 3600) / 60;
+        long seconds = second % 60;
 
-        return String.format("%d:%02d", hours, minutes);
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
 }

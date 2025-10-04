@@ -504,7 +504,7 @@ public class StudyService {
 
         return GetStudyMemberProfileResponse.of(
                 member,
-                TimeUtil.toDurationFormat(totalStudyTime),
+                TimeUtil.toTimeFormat(totalStudyTime),
                 elapsedDays
         );
     }
