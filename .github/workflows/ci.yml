@@ -11,29 +11,6 @@ jobs:
     permissions:
       write-all
 
-    services:
-      mysql:
-        image: mysql:8.0
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_DATABASE: testdb
-          MYSQL_ROOT_PASSWORD: testdb
-        options: >-
-          --health-cmd="mysqladmin ping --silent"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=3
-
-      redis:
-        image: redis:7-alpine
-        ports: [ "6379:6379" ]
-        options: >-
-          --health-cmd="redis-cli ping || exit 1"
-          --health-interval=5s
-          --health-timeout=3s
-          --health-retries=20
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -44,46 +21,24 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Install MySQL & Redis clients
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y default-mysql-client redis-tools
-
       - name: Setup Gradle (with caching)
         uses: gradle/actions/setup-gradle@v3
         with:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
-
-      - name: Wait for MySQL to be ready
-        run: |
-          for i in $(seq 1 30); do
-            mysqladmin ping -h127.0.0.1 -uroot -ptestdb &>/dev/null && break
-            echo "Waiting for MySQL ($i/30)..."
-            sleep 1
-          done
-
-      - name: Wait for Redis
-        run: |
-          for i in {1..60}; do
-            redis-cli -h 127.0.0.1 -p 6379 ping | grep -q PONG && break
-            echo "Waiting for Redis ($i/60)..."; sleep 1
-          done
 
       - name: Permission gradlew
         run: chmod +x gradlew
 
       - name: Build & Test
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/testdb
-          SPRING_DATASOURCE_USERNAME: root
-          SPRING_DATASOURCE_PASSWORD: testdb
-          SPRING_JPA_HIBERNATE_DDL_AUTO: create-drop
+          SPRING_PROFILES_ACTIVE: test
+
           JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
           SWAGGER_URL: ${{ secrets.SWAGGER_URL }}
 
-          SPRING_DATA_REDIS_HOST: 127.0.0.1
-          SPRING_DATA_REDIS_PORT: 6379
-          SPRING_DATA_REDIS_PASSWORD: ""
+          SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
+          SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
+          SPRING_CLOUD_AWS_S3_BUCKET: test
         run: ./gradlew build --build-cache --info
 
       - name: Post result

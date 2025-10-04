@@ -2,7 +2,7 @@ package com.togedy.togedy_server_v2.domain.schedule.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
-import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleType;
+import com.togedy.togedy_server_v2.domain.schedule.entity.enums.ScheduleType;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionSchedule;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -19,7 +19,6 @@ spring:
     url: ${MYSQL_HOST}
     username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
@@ -28,6 +27,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
 
   jackson:
     serialization:
@@ -64,3 +64,19 @@ spring:
 logging:
   level:
     org.springframework.data.redis: DEBUG
+
+---
+
+# AWS S3
+spring:
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key: ${ACCESS_KEY}
+        secret-key: ${SECRET_KEY:}
+      s3:
+        bucket: ${BUCKET_NAME}
+#        endpoint: http://127.0.0.1:4566
+#        path-style-access-enabled: true
