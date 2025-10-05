@@ -1,8 +1,11 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
+import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,7 +24,7 @@ public class UserStudy extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_study_id", nullable = false)
-    private Long userStudyId;
+    private Long id;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
@@ -29,13 +32,18 @@ public class UserStudy extends BaseEntity {
     @Column(name = "study_id", nullable = false)
     private Long studyId;
 
-    @Column(name = "role", nullable = false)
-    private String role;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false, columnDefinition = "varchar(20)")
+    private StudyRole role;
 
     @Builder
-    public UserStudy(Long userId, Long studyId, String role) {
+    public UserStudy(Long userId, Long studyId, StudyRole role) {
         this.userId = userId;
         this.studyId = studyId;
         this.role = role;
+    }
+
+    public void modifyRole(StudyRole studyRole) {
+        this.role = studyRole;
     }
 }

@@ -1,5 +1,6 @@
-package com.togedy.togedy_server_v2.domain.study.entity;
+package com.togedy.togedy_server_v2.domain.planner.entity;
 
+import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -12,29 +13,26 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "user_badge")
 @Getter
+@Table(name = "daily_study_summary")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class UserBadge {
+public class DailyStudySummary extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_badge_id", nullable = false)
-    private Long userBadgeId;
+    @Column(name = "daily_study_summary_id", nullable = false, updatable = false)
+    private Long id;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "badge_id", nullable = false)
-    private Long badgeId;
-
-    @Column(name = "is_representative", nullable = false)
-    private boolean isRepresentative;
+    @Column(name = "study_time", nullable = false)
+    private Long studyTime;
 
     @Builder
-    public UserBadge(Long userId, Long badgeId, boolean isRepresentative) {
+    public DailyStudySummary(Long userId, Long studyTime) {
         this.userId = userId;
-        this.badgeId = badgeId;
-        this.isRepresentative = isRepresentative;
+        this.studyTime = studyTime;
     }
+
 }

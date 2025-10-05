@@ -28,6 +28,7 @@ public enum ErrorCode {
     USER_NOT_FOUND(HttpStatus.NOT_FOUND, "U2000", "사용자를 찾을 수 없습니다."),
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "U2001", "동일한 닉네임이 존재합니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U2002", "동일한 이메일이 존재합니다."),
+    USER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "U2003", "유저 접근 권한이 존재하지 않습니다."),
 
     // CATEGORY (3000)
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "C3000", "해당 카테고리를 찾을 수 없습니다."),
@@ -47,7 +48,23 @@ public enum ErrorCode {
     DUPLICATE_UNIVERSITY_ADMISSION_METHOD(HttpStatus.BAD_REQUEST, "UAM6001", "이미 추가한 대학 입시 전형입니다."),
 
     // USER_UNIVERSITY_METHOD (7000)
-    USER_UNIVERSITY_METHOD_NOT_OWNED(HttpStatus.FORBIDDEN, "UUM7000", "해당 유저가 보유하지 않은 대학 입시 전형입니다.");
+    USER_UNIVERSITY_METHOD_NOT_OWNED(HttpStatus.FORBIDDEN, "UUM7000", "해당 유저가 보유하지 않은 대학 입시 전형입니다."),
+
+    // STUDY (8000)
+    DUPLICATE_STUDY_NAME(HttpStatus.BAD_REQUEST, "S8000", "이름이 동일한 스터디가 존재합니다."),
+    STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "S8001", "해당 스터디를 찾을 수 없습니다."),
+    STUDY_LEADER_REQUIRED(HttpStatus.FORBIDDEN, "S8002", "스터디 리더만 수행할 수 있습니다."),
+    STUDY_PASSWORD_REQUIRED(HttpStatus.UNPROCESSABLE_ENTITY, "S8003", "스터디 비밀번호를 입력해야 합니다."),
+    STUDY_PASSWORD_MISMATCH(HttpStatus.FORBIDDEN, "S8004", "스터디 비밀번호가 일치하지 않습니다."),
+    STUDY_MEMBER_REQUIRED(HttpStatus.FORBIDDEN, "S8005", "스터디 멤버만 수행할 수 있습니다."),
+    STUDY_MEMBER_LIMIT_EXCEEDED(HttpStatus.CONFLICT, "S8006", "스터디 멤버 수가 최대에 도달했습니다."),
+    STUDY_MEMBER_LIMIT_INCREASE_REQUIRED(HttpStatus.BAD_REQUEST, "S8007", "기존 스터디 최대 인원보다 더 커야 합니다."),
+    STUDY_LEADER_NOT_FOUND(HttpStatus.NOT_FOUND, "S8008", "해당 스터디의 리더를 찾을 수 없습니다."),
+    STUDY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "S8009", "해당 스터디에 참여한 유저가 아닙니다."),
+    INVALID_STUDY_TAG(HttpStatus.BAD_REQUEST, "S8010", "유효하지 않은 스터디 태그입니다."),
+
+    // USER_STUDY(9000)
+    USER_STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "US9000", "해당 유저가 가입한 스터디를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
