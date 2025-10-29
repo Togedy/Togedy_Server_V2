@@ -24,18 +24,35 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     List<Study> findAllByUserIdOrderByCreatedAtAsc(Long userId);
 
     @Query("""
-            SELECT s
-            FROM Study s
-            WHERE (:tag IS NULL OR s.tag = :tag)
-            AND (:joinable = false OR s.memberCount < s.memberLimit)
-            AND (:challenge = false OR s.type = 'CHALLENGE')
-            ORDER BY
-                CASE WHEN :filter = 'latest' THEN s.createdAt END DESC,
-                CASE WHEN :filter = 'most' THEN s.memberCount END DESC,
-                CASE WHEN :filter = 'least' THEN s.memberCount END ASC
+                SELECT s
+                FROM Study s
+                WHERE s.tag IN :studyTags
+                AND (:joinable = false OR s.memberCount < s.memberLimit)
+                AND (:challenge = false OR s.type = 'CHALLENGE')
+                ORDER BY
+                    CASE WHEN :filter = 'latest' THEN s.createdAt END DESC,
+                    CASE WHEN :filter = 'most' THEN s.memberCount END DESC,
+                    CASE WHEN :filter = 'least' THEN s.memberCount END ASC
             """)
-    Slice<Study> findStudiesByConditions(
-            @Param("tag") StudyTag tag,
+    Slice<Study> findStudiesWithTags(
+            @Param("studyTags") List<StudyTag> studyTags,
+            @Param("filter") String filter,
+            @Param("joinable") boolean joinable,
+            @Param("challenge") boolean challenge,
+            Pageable pageable
+    );
+
+    @Query("""
+                SELECT s
+                FROM Study s
+                WHERE (:joinable = false OR s.memberCount < s.memberLimit)
+                AND (:challenge = false OR s.type = 'CHALLENGE')
+                ORDER BY
+                    CASE WHEN :filter = 'latest' THEN s.createdAt END DESC,
+                    CASE WHEN :filter = 'most' THEN s.memberCount END DESC,
+                    CASE WHEN :filter = 'least' THEN s.memberCount END ASC
+            """)
+    Slice<Study> findStudiesWithoutTags(
             @Param("filter") String filter,
             @Param("joinable") boolean joinable,
             @Param("challenge") boolean challenge,

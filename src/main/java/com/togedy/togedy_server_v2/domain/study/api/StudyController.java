@@ -104,7 +104,7 @@ public class StudyController {
     @Operation(summary = "스터디 탐색", description = "스터디를 탐색한다.")
     @GetMapping("/studies")
     public ApiResponse<GetStudySearchResponse> readStudySearch(
-            @RequestParam(name = "tag", required = false) String tag,
+            @RequestParam(name = "tag", required = false) List<String> tags,
             @RequestParam(name = "filter", required = false, defaultValue = "latest") String filter,
             @RequestParam(name = "joinable", required = false, defaultValue = "false") boolean joinable,
             @RequestParam(name = "challenge", required = false, defaultValue = "false") boolean challenge,
@@ -114,7 +114,7 @@ public class StudyController {
     )
     {
         GetStudySearchResponse response =
-                studyService.findStudySearch(tag, filter, joinable, challenge, page, size, user.getId());
+                studyService.findStudySearch(tags, filter, joinable, challenge, page, size, user.getId());
         return ApiUtil.success(response);
     }
 

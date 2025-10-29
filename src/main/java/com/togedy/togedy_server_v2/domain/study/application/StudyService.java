@@ -454,7 +454,7 @@ public class StudyService {
     }
 
     public GetStudySearchResponse findStudySearch(
-            String tag,
+            List<String> tags,
             String filter,
             boolean joinable,
             boolean challenge,
@@ -462,13 +462,20 @@ public class StudyService {
             int size,
             Long userId)
     {
-        StudyTag studyTag = null;
-        if (tag != null) {
-            studyTag = StudyTag.fromDescription(tag);
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
+        List<StudyTag> studyTags = null;
+        if (tags != null && !tags.isEmpty()) {
+            studyTags = tags.stream()
+                    .map(StudyTag::fromDescription)
+                    .collect(Collectors.toList());
         }
 
-        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
-        Slice<Study> studyList = studyRepository.findStudiesByConditions(studyTag, filter, joinable, challenge, pageRequest);
+        Slice<Study> studyList;
+        if (studyTags == null || studyTags.isEmpty()) {
+            studyList = studyRepository.findStudiesWithoutTags(filter, joinable, challenge, pageRequest);
+        } else {
+            studyList = studyRepository.findStudiesWithTags(studyTags, filter, joinable, challenge, pageRequest);
+        }
 
         List<StudySearchDto> studySearchDtos = studyList.stream()
                 .map(study -> {
