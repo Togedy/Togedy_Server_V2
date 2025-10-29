@@ -16,6 +16,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.StudySearchDto;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
@@ -115,6 +116,13 @@ public class StudyController {
     {
         GetStudySearchResponse response =
                 studyService.findStudySearch(tags, filter, joinable, challenge, page, size, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "최다 공부 인원 스터디 조회", description = "최다 공부 인원 스터디를 조회한다.")
+    @GetMapping("/studies/active")
+    public ApiResponse<List<StudySearchDto>> readMostActiveStudy() {
+        List<StudySearchDto> response = studyService.findMostActiveStudies();
         return ApiUtil.success(response);
     }
 

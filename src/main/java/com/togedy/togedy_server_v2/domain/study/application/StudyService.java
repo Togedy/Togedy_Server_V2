@@ -52,8 +52,10 @@ import com.togedy.togedy_server_v2.domain.user.exception.UserAccessDeniedExcepti
 import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.util.Collections;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -498,6 +500,32 @@ public class StudyService {
                 .toList();
 
         return GetStudySearchResponse.of(studyList.hasNext(), studySearchDtos);
+    }
+
+    public List<StudySearchDto> findMostActiveStudies() {
+        Pageable pageable = PageRequest.of(0, 20);
+        List<Study> studies = studyRepository.findMostAcitveStudies(pageable);
+        Collections.shuffle(studies);
+        return studies.stream()
+                .limit(3)
+                .map(study -> {
+                    List<User> userList = userRepository.findAllByStudyId(study.getId());
+                    Optional<User> user = userList.stream().max(Comparator.comparing(User::getLastActivatedAt));
+                    String lastActivatedAt = null;
+                    if (user.isPresent()) {
+                        lastActivatedAt = TimeUtil.formatTimeAgo(user.get().getLastActivatedAt());
+                    }
+
+                    User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER)
+                            .orElseThrow(StudyLeaderNotFoundException::new);
+
+                    String studyLeaderImageUrl = leader.getProfileImageUrl();
+                    String challengeGoalTime = TimeUtil.toTimeFormat(study.getGoalTime());
+                    boolean isNewlyCreated = validateNewlyCreated(study.getCreatedAt());
+                    boolean hasPassword = study.getPassword() != null;
+                    return StudySearchDto.of(study, studyLeaderImageUrl, isNewlyCreated, lastActivatedAt, challengeGoalTime, hasPassword);
+                })
+                .toList();
     }
 
     public GetStudyMemberProfileResponse findStudyMemberProfile(Long studyId, Long memberId, Long userId) {

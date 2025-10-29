@@ -58,4 +58,15 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
             @Param("challenge") boolean challenge,
             Pageable pageable
     );
+
+    @Query("""
+                SELECT s
+                FROM Study s
+                JOIN UserStudy us ON s.id = us.studyId
+                JOIN User u ON us.userId = u.id
+                WHERE u.status = 'STUDYING'
+                GROUP BY s.id
+                ORDER BY COUNT(u.id) DESC
+            """)
+    List<Study> findMostAcitveStudies(Pageable pageable);
 }
