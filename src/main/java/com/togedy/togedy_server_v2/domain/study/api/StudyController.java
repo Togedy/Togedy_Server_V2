@@ -120,9 +120,9 @@ public class StudyController {
     }
 
     @Operation(summary = "최다 공부 인원 스터디 조회", description = "최다 공부 인원 스터디를 조회한다.")
-    @GetMapping("/studies/active")
-    public ApiResponse<List<StudySearchDto>> readMostActiveStudy() {
-        List<StudySearchDto> response = studyService.findMostActiveStudies();
+    @GetMapping("/studies/popular")
+    public ApiResponse<List<StudySearchDto>> readPopularStudies() {
+        List<StudySearchDto> response = studyService.findPopularStudies();
         return ApiUtil.success(response);
     }
 

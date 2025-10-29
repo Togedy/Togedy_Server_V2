@@ -502,7 +502,7 @@ public class StudyService {
         return GetStudySearchResponse.of(studyList.hasNext(), studySearchDtos);
     }
 
-    public List<StudySearchDto> findMostActiveStudies() {
+    public List<StudySearchDto> findPopularStudies() {
         Pageable pageable = PageRequest.of(0, 20);
         List<Study> studies = studyRepository.findMostAcitveStudies(pageable);
         Collections.shuffle(studies);
