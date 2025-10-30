@@ -16,6 +16,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.StudySearchDto;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
@@ -104,7 +105,7 @@ public class StudyController {
     @Operation(summary = "스터디 탐색", description = "스터디를 탐색한다.")
     @GetMapping("/studies")
     public ApiResponse<GetStudySearchResponse> readStudySearch(
-            @RequestParam(name = "tag", required = false) String tag,
+            @RequestParam(name = "tag", required = false) List<String> tags,
             @RequestParam(name = "filter", required = false, defaultValue = "latest") String filter,
             @RequestParam(name = "joinable", required = false, defaultValue = "false") boolean joinable,
             @RequestParam(name = "challenge", required = false, defaultValue = "false") boolean challenge,
@@ -114,7 +115,14 @@ public class StudyController {
     )
     {
         GetStudySearchResponse response =
-                studyService.findStudySearch(tag, filter, joinable, challenge, page, size, user.getId());
+                studyService.findStudySearch(tags, filter, joinable, challenge, page, size, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "최다 공부 인원 스터디 조회", description = "최다 공부 인원 스터디를 조회한다.")
+    @GetMapping("/studies/popular")
+    public ApiResponse<List<StudySearchDto>> readPopularStudies() {
+        List<StudySearchDto> response = studyService.findPopularStudies();
         return ApiUtil.success(response);
     }
 

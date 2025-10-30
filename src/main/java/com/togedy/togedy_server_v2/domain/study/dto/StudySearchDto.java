@@ -18,7 +18,7 @@ public class StudySearchDto {
 
     private String studyDescription;
 
-    private StudyTag studyTag;
+    private String studyTag;
 
     private String studyLeaderImageUrl;
 
@@ -50,7 +50,7 @@ public class StudySearchDto {
                 .studyType(study.getType())
                 .studyName(study.getName())
                 .studyDescription(study.getDescription())
-                .studyTag(study.getTag())
+                .studyTag(study.getTag().getDescription())
                 .studyLeaderImageUrl(studyLeaderImageUrl)
                 .studyMemberCount(study.getMemberCount())
                 .studyMemberLimit(study.getMemberLimit())
