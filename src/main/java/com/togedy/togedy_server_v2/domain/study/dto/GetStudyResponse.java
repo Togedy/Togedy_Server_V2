@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.dto;
 
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
+import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import lombok.Builder;
 import lombok.Getter;
@@ -11,6 +12,7 @@ public class GetStudyResponse {
 
     private Boolean isJoined;
     private Boolean isStudyLeader;
+    private StudyType studyType;
     private String studyName;
     private String studyLeaderName;
     private String studyDescription;
@@ -33,6 +35,7 @@ public class GetStudyResponse {
         return GetStudyResponse.builder()
                 .isJoined(isJoined)
                 .isStudyLeader(isStudyLeader)
+                .studyType(study.getType())
                 .studyName(study.getName())
                 .studyLeaderName(leader.getNickname())
                 .studyDescription(study.getDescription())
