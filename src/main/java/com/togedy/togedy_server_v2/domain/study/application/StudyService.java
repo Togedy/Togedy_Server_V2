@@ -98,6 +98,7 @@ public class StudyService {
 
         String imageUrl = null;
         StudyType type = StudyType.NORMAL;
+        String tier = null;
         Long goalTime = null;
 
         if (request.getStudyImage() != null) {
@@ -106,6 +107,7 @@ public class StudyService {
 
         if (request.getGoalTime() != null) {
             type = StudyType.CHALLENGE;
+            tier = "tier";
             goalTime = request.getGoalTime() * 3600L;
         }
 
@@ -118,7 +120,7 @@ public class StudyService {
                 .type(type)
                 .goalTime(goalTime)
                 .password(request.getStudyPassword())
-                .tier("tier")
+                .tier(tier)
                 .build();
 
         Study savedStudy = studyRepository.save(study);

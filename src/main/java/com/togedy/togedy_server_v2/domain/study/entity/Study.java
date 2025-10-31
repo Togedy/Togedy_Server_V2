@@ -58,7 +58,7 @@ public class Study extends BaseEntity {
     @Column(name = "password", nullable = true)
     private String password;
 
-    @Column(name = "tier", nullable = false)
+    @Column(name = "tier", nullable = true)
     private String tier;
 
     @Builder
