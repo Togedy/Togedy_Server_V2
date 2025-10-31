@@ -37,10 +37,10 @@ public class StudyDto {
     {
         return StudyDto.builder()
                 .studyId(study.getId())
-                .studyName(study.getName())
                 .studyType(study.getType())
                 .challengeGoalTime(TimeUtil.toTimeFormat(study.getGoalTime()))
                 .challengeAchievement(challengeAchievement)
+                .studyName(study.getName())
                 .completedMemberCount(completedMemberCount)
                 .studyMemberCount(study.getMemberCount())
                 .activeMemberList(activeMemberList)
