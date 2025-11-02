@@ -29,6 +29,7 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
                 WHERE s.tag IN :studyTags
                 AND (:joinable = false OR s.memberCount < s.memberLimit)
                 AND (:challenge = false OR s.type = 'CHALLENGE')
+                AND (:name IS NULL OR s.name LIKE %:name%)
                 ORDER BY
                     CASE WHEN :filter = 'latest' THEN s.createdAt END DESC,
                     CASE WHEN :filter = 'most' THEN s.memberCount END DESC,
