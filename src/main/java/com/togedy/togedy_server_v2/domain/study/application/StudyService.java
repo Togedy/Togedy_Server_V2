@@ -458,6 +458,7 @@ public class StudyService {
     }
 
     public GetStudySearchResponse findStudySearch(
+            String name,
             List<String> tags,
             String filter,
             boolean joinable,
@@ -476,9 +477,9 @@ public class StudyService {
 
         Slice<Study> studyList;
         if (studyTags == null || studyTags.isEmpty()) {
-            studyList = studyRepository.findStudiesWithoutTags(filter, joinable, challenge, pageRequest);
+            studyList = studyRepository.findStudiesWithoutTags(name, filter, joinable, challenge, pageRequest);
         } else {
-            studyList = studyRepository.findStudiesWithTags(studyTags, filter, joinable, challenge, pageRequest);
+            studyList = studyRepository.findStudiesWithTags(name, studyTags, filter, joinable, challenge, pageRequest);
         }
 
         List<StudySearchDto> studySearchDtos = studyList.stream()
