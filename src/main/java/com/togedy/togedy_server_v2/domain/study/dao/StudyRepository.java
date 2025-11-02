@@ -29,12 +29,14 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
                 WHERE s.tag IN :studyTags
                 AND (:joinable = false OR s.memberCount < s.memberLimit)
                 AND (:challenge = false OR s.type = 'CHALLENGE')
+                AND (:name IS NULL OR s.name LIKE %:name%)
                 ORDER BY
                     CASE WHEN :filter = 'latest' THEN s.createdAt END DESC,
                     CASE WHEN :filter = 'most' THEN s.memberCount END DESC,
                     CASE WHEN :filter = 'least' THEN s.memberCount END ASC
             """)
     Slice<Study> findStudiesWithTags(
+            @Param("name") String name,
             @Param("studyTags") List<StudyTag> studyTags,
             @Param("filter") String filter,
             @Param("joinable") boolean joinable,
@@ -47,12 +49,14 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
                 FROM Study s
                 WHERE (:joinable = false OR s.memberCount < s.memberLimit)
                 AND (:challenge = false OR s.type = 'CHALLENGE')
+                AND (:name IS NULL OR s.name LIKE %:name%)
                 ORDER BY
                     CASE WHEN :filter = 'latest' THEN s.createdAt END DESC,
                     CASE WHEN :filter = 'most' THEN s.memberCount END DESC,
                     CASE WHEN :filter = 'least' THEN s.memberCount END ASC
             """)
     Slice<Study> findStudiesWithoutTags(
+            @Param("name") String name,
             @Param("filter") String filter,
             @Param("joinable") boolean joinable,
             @Param("challenge") boolean challenge,

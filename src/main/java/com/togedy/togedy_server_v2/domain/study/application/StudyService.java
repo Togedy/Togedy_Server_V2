@@ -39,7 +39,7 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedExcep
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitExceededException;
-import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitIncreaseRequiredException;
+import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
@@ -238,8 +238,8 @@ public class StudyService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        if (request.getStudyMemberLimit() < study.getMemberLimit()) {
-            throw new StudyMemberLimitIncreaseRequiredException();
+        if (request.getStudyMemberLimit() < study.getMemberCount()) {
+            throw new InvalidStudyMemberLimitException();
         }
 
         study.updateMemberLimit(request);
@@ -458,6 +458,7 @@ public class StudyService {
     }
 
     public GetStudySearchResponse findStudySearch(
+            String name,
             List<String> tags,
             String filter,
             boolean joinable,
@@ -476,9 +477,9 @@ public class StudyService {
 
         Slice<Study> studyList;
         if (studyTags == null || studyTags.isEmpty()) {
-            studyList = studyRepository.findStudiesWithoutTags(filter, joinable, challenge, pageRequest);
+            studyList = studyRepository.findStudiesWithoutTags(name, filter, joinable, challenge, pageRequest);
         } else {
-            studyList = studyRepository.findStudiesWithTags(studyTags, filter, joinable, challenge, pageRequest);
+            studyList = studyRepository.findStudiesWithTags(name, studyTags, filter, joinable, challenge, pageRequest);
         }
 
         List<StudySearchDto> studySearchDtos = studyList.stream()
