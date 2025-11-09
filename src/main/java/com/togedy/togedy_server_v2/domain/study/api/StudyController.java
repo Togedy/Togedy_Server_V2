@@ -1,6 +1,8 @@
 package com.togedy.togedy_server_v2.domain.study.api;
 
-import com.togedy.togedy_server_v2.domain.study.application.StudyService;
+import com.togedy.togedy_server_v2.domain.study.application.StudyExternalService;
+import com.togedy.togedy_server_v2.domain.study.application.StudyInternalService;
+import com.togedy.togedy_server_v2.domain.study.application.StudyMemberService;
 import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
@@ -45,13 +47,15 @@ import java.util.List;
 @Tag(name = "Study", description = "스터디 API")
 public class StudyController {
 
-    private final StudyService studyService;
+    private final StudyMemberService studyMemberService;
+    private final StudyExternalService studyExternalService;
+    private final StudyInternalService studyInternalService;
 
     @Operation(summary = "스터디 생성", description = "스터디를 생성한다.")
     @PostMapping(value = "/studies", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Void> createStudy(@ModelAttribute PostStudyRequest request,
                                          @AuthenticationPrincipal AuthUser user) {
-        studyService.generateStudy(request, user.getId());
+        studyExternalService.generateStudy(request, user.getId());
         return ApiUtil.successOnly();
     }
 
@@ -63,7 +67,7 @@ public class StudyController {
             @AuthenticationPrincipal AuthUser user
     )
     {
-        studyService.registerStudyMember(request, studyId, user.getId());
+        studyInternalService.registerStudyMember(request, studyId, user.getId());
         return ApiUtil.successOnly();
     }
 
@@ -71,7 +75,7 @@ public class StudyController {
     @GetMapping("/studies/{studyId}")
     public ApiResponse<GetStudyResponse> readStudyInfo(@PathVariable Long studyId,
                                                        @AuthenticationPrincipal AuthUser user) {
-        GetStudyResponse response = studyService.findStudyInfo(studyId, user.getId());
+        GetStudyResponse response = studyInternalService.findStudyInfo(studyId, user.getId());
         return ApiUtil.success(response);
     }
 
@@ -81,7 +85,7 @@ public class StudyController {
             @RequestParam("name") String name
     )
     {
-        GetStudyNameDuplicateResponse response = studyService.findStudyNameDuplicate(name);
+        GetStudyNameDuplicateResponse response = studyExternalService.findStudyNameDuplicate(name);
         return ApiUtil.success(response);
     }
 
@@ -91,14 +95,14 @@ public class StudyController {
             @PathVariable Long studyId,
             @AuthenticationPrincipal AuthUser user
     ) {
-        List<GetStudyMemberResponse> response = studyService.findStudyMember(studyId, user.getId());
+        List<GetStudyMemberResponse> response = studyInternalService.findStudyMember(studyId, user.getId());
         return ApiUtil.success(response);
     }
 
     @Operation(summary = "본인 스터디 조회", description = "본인의 스터디 관련 정보를 조회한다.")
     @GetMapping("/users/me/studies")
     public ApiResponse<GetMyStudyInfoResponse> readMyStudyInfo(@AuthenticationPrincipal AuthUser user) {
-        GetMyStudyInfoResponse response = studyService.findMyStudyInfo(user.getId());
+        GetMyStudyInfoResponse response = studyExternalService.findMyStudyInfo(user.getId());
         return ApiUtil.success(response);
     }
 
@@ -116,14 +120,14 @@ public class StudyController {
     )
     {
         GetStudySearchResponse response =
-                studyService.findStudySearch(name, tags, filter, joinable, challenge, page, size, user.getId());
+                studyExternalService.findStudySearch(name, tags, filter, joinable, challenge, page, size, user.getId());
         return ApiUtil.success(response);
     }
 
     @Operation(summary = "최다 공부 인원 스터디 조회", description = "최다 공부 인원 스터디를 조회한다.")
     @GetMapping("/studies/popular")
     public ApiResponse<List<StudySearchDto>> readPopularStudies() {
-        List<StudySearchDto> response = studyService.findPopularStudies();
+        List<StudySearchDto> response = studyExternalService.findPopularStudies();
         return ApiUtil.success(response);
     }
 
@@ -136,7 +140,7 @@ public class StudyController {
     )
     {
         GetStudyMemberProfileResponse response =
-                studyService.findStudyMemberProfile(studyId, userId, user.getId());
+                studyMemberService.findStudyMemberProfile(studyId, userId, user.getId());
         return ApiUtil.success(response);
     }
 
@@ -149,7 +153,7 @@ public class StudyController {
     )
     {
         GetStudyMemberStudyTimeResponse response =
-                studyService.findStudyMemberStudyTime(studyId, userId, user.getId());
+                studyMemberService.findStudyMemberStudyTime(studyId, userId, user.getId());
         return ApiUtil.success(response);
     }
 
@@ -162,7 +166,7 @@ public class StudyController {
     )
     {
         GetStudyMemberPlannerResponse response =
-                studyService.findStudyMemberPlanner(studyId, userId, user.getId());
+                studyMemberService.findStudyMemberPlanner(studyId, userId, user.getId());
         return ApiUtil.success(response);
     }
 
@@ -174,7 +178,7 @@ public class StudyController {
     )
     {
         List<GetStudyMemberManagementResponse> response =
-                studyService.findStudyMemberManagement(studyId, user.getId());
+                studyMemberService.findStudyMemberManagement(studyId, user.getId());
         return ApiUtil.success(response);
     }
 
@@ -186,7 +190,7 @@ public class StudyController {
             @PathVariable Long studyId
     )
     {
-        List<GetStudyAttendanceResponse> response = studyService.findStudyAttendance(startDate, endDate, studyId);
+        List<GetStudyAttendanceResponse> response = studyMemberService.findStudyAttendance(startDate, endDate, studyId);
         return ApiUtil.success(response);
     }
 
@@ -197,7 +201,7 @@ public class StudyController {
             @ModelAttribute PatchStudyInfoRequest request,
             @AuthenticationPrincipal AuthUser user)
     {
-        studyService.modifyStudyInfo(request, studyId, user.getId());
+        studyInternalService.modifyStudyInfo(request, studyId, user.getId());
         return ApiUtil.successOnly();
     }
 
@@ -209,7 +213,7 @@ public class StudyController {
             @AuthenticationPrincipal AuthUser user
     )
     {
-        studyService.modifyStudyMemberLimit(request, studyId, user.getId());
+        studyInternalService.modifyStudyMemberLimit(request, studyId, user.getId());
         return ApiUtil.successOnly();
     }
 
@@ -221,7 +225,7 @@ public class StudyController {
             @AuthenticationPrincipal AuthUser user
     )
     {
-        studyService.modifyStudyLeader(studyId, userId, user.getId());
+        studyInternalService.modifyStudyLeader(studyId, userId, user.getId());
         return ApiUtil.successOnly();
     }
 
@@ -234,7 +238,7 @@ public class StudyController {
             @AuthenticationPrincipal AuthUser user
     )
     {
-        studyService.modifyPlannerVisibility(request, studyId, userId, user.getId());
+        studyMemberService.modifyPlannerVisibility(request, studyId, userId, user.getId());
         return ApiUtil.successOnly();
     }
 
@@ -242,7 +246,7 @@ public class StudyController {
     @DeleteMapping("/studies/{studyId}")
     public ApiResponse<Void> deleteStudy(@PathVariable Long studyId,
                                          @AuthenticationPrincipal AuthUser user) {
-        studyService.removeStudy(studyId, user.getId());
+        studyInternalService.removeStudy(studyId, user.getId());
         return ApiUtil.successOnly();
     }
 
@@ -250,7 +254,7 @@ public class StudyController {
     @DeleteMapping("/studies/{studyId}/members/me")
     public ApiResponse<Void> deleteMyStudyMembership(@PathVariable Long studyId,
                                                      @AuthenticationPrincipal AuthUser user) {
-        studyService.removeMyStudyMembership(studyId, user.getId());
+        studyInternalService.removeMyStudyMembership(studyId, user.getId());
         return ApiUtil.successOnly();
     }
 
@@ -261,7 +265,7 @@ public class StudyController {
             @PathVariable Long userId,
             @AuthenticationPrincipal AuthUser user)
     {
-        studyService.removeStudyMember(studyId, userId, user.getId());
+        studyInternalService.removeStudyMember(studyId, userId, user.getId());
         return ApiUtil.successOnly();
     }
 }
