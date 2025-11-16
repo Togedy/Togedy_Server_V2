@@ -12,6 +12,7 @@ public class GetStudyResponse {
 
     private Boolean isJoined;
     private Boolean isStudyLeader;
+    private Boolean hasPassword;
     private StudyType studyType;
     private String studyName;
     private String studyLeaderName;
@@ -27,6 +28,7 @@ public class GetStudyResponse {
     public static GetStudyResponse of(
             boolean isJoined,
             boolean isStudyLeader,
+            boolean hasPassword,
             Study study,
             User leader,
             Integer completedMemberCount,
@@ -35,6 +37,7 @@ public class GetStudyResponse {
         return GetStudyResponse.builder()
                 .isJoined(isJoined)
                 .isStudyLeader(isStudyLeader)
+                .hasPassword(hasPassword)
                 .studyType(study.getType())
                 .studyName(study.getName())
                 .studyLeaderName(leader.getNickname())
