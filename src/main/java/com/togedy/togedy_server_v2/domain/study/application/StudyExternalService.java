@@ -42,6 +42,8 @@ public class StudyExternalService {
     private final UserRepository userRepository;
     private final S3Service s3Service;
 
+    private static final String TIER = "tier";
+
     /**
      * 스터디를 생성한다.
      *
@@ -50,21 +52,9 @@ public class StudyExternalService {
      */
     @Transactional
     public void generateStudy(PostStudyRequest request, Long userId) {
-
-        String imageUrl = null;
-        StudyType type = StudyType.NORMAL;
-        String tier = null;
-        Long goalTime = null;
-
-        if (request.getStudyImage() != null) {
-            imageUrl = s3Service.uploadFile(request.getStudyImage());
-        }
-
-        if (request.getGoalTime() != null) {
-            type = StudyType.CHALLENGE;
-            tier = "tier";
-            goalTime = request.getGoalTime() * 3600L;
-        }
+        Long goalTime = request.getGoalTime() * 3600L;
+        String imageUrl = convertImageToUrl(request);
+        StudyType type = detemineStudyType(request);
 
         Study study = Study.builder()
                 .name(request.getStudyName())
@@ -75,7 +65,7 @@ public class StudyExternalService {
                 .type(type)
                 .goalTime(goalTime)
                 .password(request.getStudyPassword())
-                .tier(tier)
+                .tier(TIER)
                 .build();
 
         Study savedStudy = studyRepository.save(study);
@@ -126,7 +116,6 @@ public class StudyExternalService {
                     if (isChallenge) {
                         int completedMemberCount = countCompletedMember(study);
                         int challengeAchievement = calculateCompleteRate(completedMemberCount, study.getMemberCount());
-
                         return StudyDto.of(study, challengeAchievement, completedMemberCount, activeMemberDtoList);
                     }
 
@@ -265,5 +254,19 @@ public class StudyExternalService {
         LocalDateTime current = now.minusDays(7);
 
         return createdAt.isAfter(current) && createdAt.isBefore(now);
+    }
+
+    private StudyType detemineStudyType(PostStudyRequest request) {
+        if (request.getGoalTime() != null) {
+            return StudyType.CHALLENGE;
+        }
+        return StudyType.NORMAL;
+    }
+
+    private String convertImageToUrl(PostStudyRequest request) {
+        if (request.getStudyImage() != null) {
+            return s3Service.uploadFile(request.getStudyImage());
+        }
+        return null;
     }
 }
