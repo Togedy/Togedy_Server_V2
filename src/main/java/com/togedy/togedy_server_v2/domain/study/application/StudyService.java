@@ -148,6 +148,8 @@ public class StudyService {
 
         Integer count = null;
         String studyPassword = null;
+        Boolean hasPassword = false;
+
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
@@ -162,7 +164,12 @@ public class StudyService {
         if (isStudyLeader) {
             studyPassword = study.getPassword();
         }
-        return GetStudyResponse.of(isJoined, isStudyLeader, study, leader, count, studyPassword);
+
+        if (study.getPassword() != null) {
+            hasPassword = true;
+        }
+
+        return GetStudyResponse.of(isJoined, isStudyLeader, hasPassword, study, leader, count, studyPassword);
     }
 
     /**
