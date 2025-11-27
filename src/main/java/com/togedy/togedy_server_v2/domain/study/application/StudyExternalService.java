@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -124,7 +123,7 @@ public class StudyExternalService {
                 .toList();
 
         Optional<Study> challengeStudy = studyList.stream()
-                .filter(study -> study.getType() == StudyType.CHALLENGE)
+                .filter(Study::isChallengeStudy)
                 .max(Comparator.comparing(Study::getGoalTime));
 
         if (challengeStudy.isPresent()) {
@@ -181,7 +180,7 @@ public class StudyExternalService {
 
                     String studyLeaderImageUrl = leader.getProfileImageUrl();
                     String challengeGoalTime = TimeUtil.toTimeFormat(study.getGoalTime());
-                    boolean isNewlyCreated = validateNewlyCreated(study.getCreatedAt());
+                    boolean isNewlyCreated = study.validateNewlyCreated();
                     boolean hasPassword = study.getPassword() != null;
                     return StudySearchDto.of(study, studyLeaderImageUrl, isNewlyCreated, lastActivatedAt, challengeGoalTime, hasPassword);
                 })
@@ -209,7 +208,7 @@ public class StudyExternalService {
 
                     String studyLeaderImageUrl = leader.getProfileImageUrl();
                     String challengeGoalTime = TimeUtil.toTimeFormat(study.getGoalTime());
-                    boolean isNewlyCreated = validateNewlyCreated(study.getCreatedAt());
+                    boolean isNewlyCreated = study.validateNewlyCreated();
                     boolean hasPassword = study.getPassword() != null;
                     return StudySearchDto.of(study, studyLeaderImageUrl, isNewlyCreated, lastActivatedAt, challengeGoalTime, hasPassword);
                 })
@@ -247,13 +246,6 @@ public class StudyExternalService {
         }
 
         return (int) ((double) completedMemberCount / studyMemberCount);
-    }
-
-    private boolean validateNewlyCreated(LocalDateTime createdAt) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime current = now.minusDays(7);
-
-        return createdAt.isAfter(current) && createdAt.isBefore(now);
     }
 
     private StudyType detemineStudyType(PostStudyRequest request) {

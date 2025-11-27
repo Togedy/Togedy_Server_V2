@@ -1,9 +1,12 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
-import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
+import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitExceededException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,6 +20,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "study")
@@ -103,15 +108,57 @@ public class Study extends BaseEntity {
         }
     }
 
-    public void updateMemberLimit(PatchStudyMemberLimitRequest request) {
-        this.memberLimit = request.getStudyMemberLimit();
+    public void updateMemberLimit(int memberLimit) {
+        validateUpdatableMemberLimit(memberLimit);
+        this.memberLimit = memberLimit;
     }
 
     public void increaseMemberCount() {
+        validateAddMember();
         this.memberCount++;
     }
 
     public void decreaseMemberCount() {
         this.memberCount--;
+    }
+
+    public void validatePassword(String password) {
+        validatePasswordRequired(password);
+        validatePasswordMatches(password);
+    }
+
+    public boolean isChallengeStudy() {
+        return this.type.equals(StudyType.CHALLENGE);
+    }
+
+    public boolean validateNewlyCreated() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime current = now.minusDays(7);
+
+        return this.getCreatedAt().isAfter(current) && this.getCreatedAt().isBefore(now);
+    }
+
+    private void validateUpdatableMemberLimit(int memberLimit) {
+        if (memberLimit < this.memberCount) {
+            throw new InvalidStudyMemberLimitException();
+        }
+    }
+
+    private void validateAddMember() {
+        if (this.memberLimit == this.memberCount) {
+            throw new StudyMemberLimitExceededException();
+        }
+    }
+
+    private void validatePasswordRequired(String password) {
+        if (this.password != null && password == null) {
+            throw new StudyPasswordRequiredException();
+        }
+    }
+
+    private void validatePasswordMatches(String password) {
+        if (this.password != null && !password.equals(this.password)) {
+            throw new StudyPasswordMismatchException();
+        }
     }
 }

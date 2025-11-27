@@ -1,6 +1,8 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,5 +47,17 @@ public class UserStudy extends BaseEntity {
 
     public void modifyRole(StudyRole studyRole) {
         this.role = studyRole;
+    }
+
+    public void validateStudyLeader() {
+        if (!this.role.equals(StudyRole.LEADER)) {
+            throw new StudyLeaderRequiredException();
+        }
+    }
+
+    public void validateStudyMember() {
+        if (!this.role.equals(StudyRole.MEMBER)) {
+            throw new StudyMemberRequiredException();
+        }
     }
 }

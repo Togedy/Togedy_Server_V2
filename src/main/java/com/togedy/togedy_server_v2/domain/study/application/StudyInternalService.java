@@ -10,8 +10,9 @@ import com.togedy.togedy_server_v2.domain.study.dto.*;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
-import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
-import com.togedy.togedy_server_v2.domain.study.exception.*;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
+import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.service.S3Service;
@@ -58,7 +59,7 @@ public class StudyInternalService {
         User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER)
                 .orElseThrow(StudyLeaderNotFoundException::new);
 
-        if (study.getType().equals(StudyType.CHALLENGE)) {
+        if (study.isChallengeStudy()) {
             count = countCompletedMember(study);
         }
 
@@ -81,7 +82,7 @@ public class StudyInternalService {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        validateStudyLeader(userStudy);
+        userStudy.validateStudyLeader();
 
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
@@ -107,7 +108,7 @@ public class StudyInternalService {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        validateStudyLeader(userStudy);
+        userStudy.validateStudyLeader();
 
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
@@ -137,16 +138,12 @@ public class StudyInternalService {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        validateStudyLeader(userStudy);
+        userStudy.validateStudyLeader();
 
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        if (request.getStudyMemberLimit() < study.getMemberCount()) {
-            throw new InvalidStudyMemberLimitException();
-        }
-
-        study.updateMemberLimit(request);
+        study.updateMemberLimit(request.getStudyMemberLimit());
         studyRepository.save(study);
     }
 
@@ -163,16 +160,9 @@ public class StudyInternalService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        if (study.getMemberCount() == study.getMemberLimit()) {
-            throw new StudyMemberLimitExceededException();
-        }
-
-        if (study.getPassword() != null && request.getStudyPassword() == null) {
-            throw new StudyPasswordRequiredException();
-        }
-        if (study.getPassword() != null && !study.getPassword().equals(request.getStudyPassword())) {
-            throw new StudyPasswordMismatchException();
-        }
+        study.validatePassword(request.getStudyPassword());
+        study.increaseMemberCount();
+        studyRepository.save(study);
 
         UserStudy userStudy = UserStudy.builder()
                 .userId(userId)
@@ -181,9 +171,6 @@ public class StudyInternalService {
                 .build();
 
         userStudyRepository.save(userStudy);
-
-        study.increaseMemberCount();
-        studyRepository.save(study);
     }
 
     /**
@@ -201,9 +188,7 @@ public class StudyInternalService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        if (!userStudy.getRole().equals(StudyRole.MEMBER)) {
-            throw new StudyMemberRequiredException();
-        }
+        userStudy.validateStudyMember();
 
         study.decreaseMemberCount();
         studyRepository.save(study);
@@ -226,7 +211,7 @@ public class StudyInternalService {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        validateStudyLeader(userStudy);
+        userStudy.validateStudyLeader();
 
         study.decreaseMemberCount();
 
@@ -247,7 +232,7 @@ public class StudyInternalService {
         UserStudy leaderStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        validateStudyLeader(leaderStudy);
+        leaderStudy.validateStudyLeader();
 
         UserStudy memberStudy = userStudyRepository.findByStudyIdAndUserId(studyId, memberId)
                 .orElseThrow(UserStudyNotFoundException::new);
@@ -295,17 +280,6 @@ public class StudyInternalService {
                 });
 
         return responses;
-    }
-
-    /**
-     * 스터디 리더를 검증한다.
-     *
-     * @param userStudy 유저 스터디 테이블
-     */
-    private void validateStudyLeader(UserStudy userStudy) {
-        if (!userStudy.getRole().equals(StudyRole.LEADER)) {
-            throw new StudyLeaderRequiredException();
-        }
     }
 
     private int countCompletedMember(Study study) {
