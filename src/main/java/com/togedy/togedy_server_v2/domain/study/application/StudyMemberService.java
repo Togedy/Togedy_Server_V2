@@ -60,7 +60,7 @@ public class StudyMemberService {
         Long totalStudyTime = dailyStudySummaryRepository.findTotalStudyTimeByUserId(memberId).orElse(0L);
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, memberId)
                 .orElseThrow(UserStudyNotFoundException::new);
-        int elapsedDays = calculateElapsedDays(userStudy.getCreatedAt());
+        int elapsedDays = userStudy.calculateElapsedDays();
 
         return GetStudyMemberProfileResponse.of(
                 member,
@@ -224,13 +224,6 @@ public class StudyMemberService {
         if (!userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
             throw new StudyAccessDeniedException();
         }
-    }
-
-    private int calculateElapsedDays(LocalDateTime createdAt) {
-        LocalDate now = LocalDate.now();
-        LocalDate createdDate = createdAt.toLocalDate();
-
-        return (int) ChronoUnit.DAYS.between(createdDate, now);
     }
 
     private int determineLevelByStudyTime(Long seconds) {

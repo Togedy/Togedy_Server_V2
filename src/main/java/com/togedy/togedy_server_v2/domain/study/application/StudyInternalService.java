@@ -87,9 +87,7 @@ public class StudyInternalService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        if (study.getImageUrl() != null) {
-            s3Service.deleteFile(study.getImageUrl());
-        }
+        s3Service.deleteFile(study.getImageUrl());
 
         userStudyRepository.deleteAllByStudyId(studyId);
         studyRepository.delete(study);
@@ -117,7 +115,8 @@ public class StudyInternalService {
 
         if (request.getStudyImage() != null) {
             studyImageUrl = s3Service.uploadFile(request.getStudyImage());
-            s3Service.deleteFile(study.getImageUrl());
+            String oldUrl = study.changeImageUrl(studyImageUrl);
+            s3Service.deleteFile(oldUrl);
         }
 
         study.updateInfo(request, studyImageUrl);
@@ -232,13 +231,10 @@ public class StudyInternalService {
         UserStudy leaderStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        leaderStudy.validateStudyLeader();
-
         UserStudy memberStudy = userStudyRepository.findByStudyIdAndUserId(studyId, memberId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        leaderStudy.modifyRole(StudyRole.MEMBER);
-        memberStudy.modifyRole(StudyRole.LEADER);
+        leaderStudy.delegateLeader(memberStudy);
 
         userStudyRepository.save(leaderStudy);
         userStudyRepository.save(memberStudy);

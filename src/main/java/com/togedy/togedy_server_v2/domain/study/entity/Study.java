@@ -131,6 +131,12 @@ public class Study extends BaseEntity {
         return this.type.equals(StudyType.CHALLENGE);
     }
 
+    public String changeImageUrl(String imageUrl) {
+        String oldImageUrl = this.imageUrl;
+        this.imageUrl = imageUrl;
+        return oldImageUrl;
+    }
+
     public boolean validateNewlyCreated() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime current = now.minusDays(7);

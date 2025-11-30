@@ -17,6 +17,9 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+
 @Entity
 @Table(name = "user_study")
 @Getter
@@ -45,10 +48,6 @@ public class UserStudy extends BaseEntity {
         this.role = role;
     }
 
-    public void modifyRole(StudyRole studyRole) {
-        this.role = studyRole;
-    }
-
     public void validateStudyLeader() {
         if (!this.role.equals(StudyRole.LEADER)) {
             throw new StudyLeaderRequiredException();
@@ -59,5 +58,18 @@ public class UserStudy extends BaseEntity {
         if (!this.role.equals(StudyRole.MEMBER)) {
             throw new StudyMemberRequiredException();
         }
+    }
+
+    public void delegateLeader(UserStudy member) {
+        this.validateStudyLeader();
+        this.role = StudyRole.LEADER;
+        member.role = StudyRole.MEMBER;
+    }
+
+    public int calculateElapsedDays() {
+        LocalDate now = LocalDate.now();
+        LocalDate createdDate = this.getCreatedAt().toLocalDate();
+
+        return (int) ChronoUnit.DAYS.between(createdDate, now);
     }
 }
