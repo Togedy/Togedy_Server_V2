@@ -23,6 +23,7 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -52,8 +53,8 @@ public class StudyExternalService {
     @Transactional
     public void generateStudy(PostStudyRequest request, Long userId) {
         Long goalTime = request.getGoalTime() * 3600L;
-        String imageUrl = convertImageToUrl(request);
-        StudyType type = detemineStudyType(request);
+        String imageUrl = convertImageToUrl(request.getStudyImage());
+        StudyType type = detemineStudyType(request.getGoalTime());
 
         Study study = Study.builder()
                 .name(request.getStudyName())
@@ -248,16 +249,16 @@ public class StudyExternalService {
         return (int) ((double) completedMemberCount / studyMemberCount);
     }
 
-    private StudyType detemineStudyType(PostStudyRequest request) {
-        if (request.getGoalTime() != null) {
+    private StudyType detemineStudyType(Integer goalTime) {
+        if (goalTime != null) {
             return StudyType.CHALLENGE;
         }
         return StudyType.NORMAL;
     }
 
-    private String convertImageToUrl(PostStudyRequest request) {
-        if (request.getStudyImage() != null) {
-            return s3Service.uploadFile(request.getStudyImage());
+    private String convertImageToUrl(MultipartFile image) {
+        if (image != null) {
+            return s3Service.uploadFile(image);
         }
         return null;
     }
