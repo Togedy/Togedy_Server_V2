@@ -28,7 +28,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -111,11 +110,7 @@ public class StudyExternalService {
                 .map(DailyStudySummary::getStudyTime)
                 .orElse(0L);
 
-        List<Long> studyIds = studies.stream()
-                .map(Study::getId)
-                .toList();
-
-        List<UserStudy> userStudies = userStudyRepository.findAllByStudyIds(studyIds);
+        List<UserStudy> userStudies = loadUserStudies(studies);
 
         Map<Long, List<UserStudy>> userStudyMap = userStudies.stream()
                 .collect(Collectors.groupingBy(UserStudy::getStudyId));
@@ -125,9 +120,8 @@ public class StudyExternalService {
                 .distinct()
                 .toList();
 
-        List<User> allMembers = userRepository.findAllById(memberIds);
-
-        Map<Long, User> memberMap = allMembers.stream()
+        Map<Long, User> memberMap = userRepository.findAllById(memberIds)
+                .stream()
                 .collect(Collectors.toMap(User::getId, user -> user));
 
         List<DailyStudySummary> dailyStudySummaries = dailyStudySummaryRepository.findAllByUserIdsAndPeriod(
@@ -143,43 +137,10 @@ public class StudyExternalService {
                 ));
 
         List<StudyDto> studyDtos = studies.stream()
-                .map(study -> {
-                    List<UserStudy> memberStudies = userStudyMap.get(study.getId());
-
-                    List<User> members = memberStudies.stream()
-                            .map(userStudy -> memberMap.get(userStudy.getUserId()))
-                            .toList();
-                            
-                    List<ActiveMemberDto> activeMemberDtos = members.stream()
-                            .map(ActiveMemberDto::from)
-                            .toList();
-
-                    if (study.isChallengeStudy()) {
-                        int completedMemberCount = countCompletedMembers(study, members, studyTimeMap);
-                        int challengeAchievement = calculateCompleteRate(completedMemberCount, study.getMemberCount());
-                        return StudyDto.of(study, challengeAchievement, completedMemberCount, activeMemberDtos);
-                    }
-
-                    return StudyDto.of(study, activeMemberDtos);
-                })
+                .map(study -> toStudyDto(study, userStudyMap, memberMap, studyTimeMap))
                 .toList();
 
-        Optional<Study> challengeStudy = studies.stream()
-                .filter(Study::isChallengeStudy)
-                .max(Comparator.comparing(Study::getGoalTime));
-
-        if (challengeStudy.isPresent()) {
-            long goalTime = challengeStudy.get().getGoalTime();
-            int achievement = TimeUtil.calculateAchievement(studyTime, goalTime);
-            return GetMyStudyInfoResponse.of(
-                    TimeUtil.toTimeFormat(goalTime),
-                    TimeUtil.toTimeFormat(studyTime),
-                    achievement,
-                    studyDtos
-            );
-        }
-
-        return GetMyStudyInfoResponse.from(studyDtos);
+        return buildMydStudyInfoResponse(studies, studyTime, studyDtos);
     }
 
     public GetStudySearchResponse findStudySearch(
@@ -296,10 +257,9 @@ public class StudyExternalService {
                 .distinct()
                 .toList();
 
-        Map<Long, User> userMap = userRepository.findAllById(userIds)
+        return userRepository.findAllById(userIds)
                 .stream()
                 .collect(Collectors.toMap(User::getId, user -> user));
-        return userMap;
     }
 
     private StudySearchDto toStudySearchDto(
@@ -343,5 +303,51 @@ public class StudyExternalService {
                 .findFirst()
                 .map(userStudy -> userMap.get(userStudy.getUserId()))
                 .orElseThrow(StudyLeaderNotFoundException::new);
+    }
+
+    private StudyDto toStudyDto(
+            Study study,
+            Map<Long, List<UserStudy>> userStudyMap,
+            Map<Long, User> memberMap,
+            Map<Long, Long> studyTimeMap
+    ) {
+        List<UserStudy> memberStudies = userStudyMap.get(study.getId());
+
+        List<User> members = memberStudies.stream()
+                .map(userStudy -> memberMap.get(userStudy.getUserId()))
+                .toList();
+
+        List<ActiveMemberDto> activeMemberDtos = members.stream()
+                .map(ActiveMemberDto::from)
+                .toList();
+
+        if (study.isChallengeStudy()) {
+            int completedMemberCount = countCompletedMembers(study, members, studyTimeMap);
+            int challengeAchievement = calculateCompleteRate(completedMemberCount, study.getMemberCount());
+            return StudyDto.of(study, challengeAchievement, completedMemberCount, activeMemberDtos);
+        }
+
+        return StudyDto.of(study, activeMemberDtos);
+    }
+
+    private GetMyStudyInfoResponse buildMydStudyInfoResponse(
+            List<Study> studies,
+            Long studyTime,
+            List<StudyDto> studyDtos
+    ) {
+        return studies.stream()
+                .filter(Study::isChallengeStudy)
+                .max(Comparator.comparing(Study::getGoalTime))
+                .map(challengeStudy -> {
+                    long goalTime = challengeStudy.getGoalTime();
+                    int achievement = TimeUtil.calculateAchievement(studyTime, goalTime);
+                    return GetMyStudyInfoResponse.of(
+                            TimeUtil.toTimeFormat(goalTime),
+                            TimeUtil.toTimeFormat(studyTime),
+                            achievement,
+                            studyDtos
+                    );
+                })
+                .orElse(GetMyStudyInfoResponse.from(studyDtos));
     }
 }
