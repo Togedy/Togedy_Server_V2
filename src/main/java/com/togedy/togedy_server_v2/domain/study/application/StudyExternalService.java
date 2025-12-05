@@ -52,7 +52,7 @@ public class StudyExternalService {
      */
     @Transactional
     public void generateStudy(PostStudyRequest request, Long userId) {
-        Long goalTime = request.getGoalTime() * 3600L;
+        Long goalTime = TimeUtil.convertHoursToSeconds(request.getGoalTime());
         String imageUrl = convertImageToUrl(request.getStudyImage());
         StudyType type = detemineStudyType(request.getGoalTime());
 
