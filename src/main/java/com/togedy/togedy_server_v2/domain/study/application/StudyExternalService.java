@@ -169,123 +169,44 @@ public class StudyExternalService {
                     .toList();
         }
 
-        Slice<Study> studies = CollectionUtils.isEmpty(studyTags)
+        Slice<Study> studySlice = CollectionUtils.isEmpty(studyTags)
                 ? studyRepository.findStudiesWithoutTags(name, filter, joinable, challenge, pageRequest)
                 : studyRepository.findStudiesWithTags(name, studyTags, filter, joinable, challenge, pageRequest);
 
-        List<Long> studyIds = studies.stream()
-                .map(Study::getId)
-                .toList();
+        List<Study> studies = studySlice.getContent();
 
-        List<UserStudy> userStudies = userStudyRepository.findAllByStudyIds(studyIds);
+        List<UserStudy> userStudies = loadUserStudies(studies);
 
         Map<Long, List<UserStudy>> userStudyMap = userStudies.stream()
                 .collect(Collectors.groupingBy(UserStudy::getStudyId));
 
-        List<Long> userIds = userStudies.stream()
-                .map(UserStudy::getUserId)
-                .distinct()
+        Map<Long, User> userMap = mapUsersById(userStudies);
+
+        List<StudySearchDto> studySearchDtos = studySlice.stream()
+                .map(study -> toStudySearchDto(study, userStudyMap, userMap))
                 .toList();
 
-        Map<Long, User> userMap = userRepository.findAllById(userIds)
-                .stream()
-                .collect(Collectors.toMap(User::getId, user -> user));
-
-        List<StudySearchDto> studySearchDtos = studies.stream()
-                .map(study -> {
-                    List<UserStudy> members = userStudyMap.get(study.getId());
-
-                    User leader = members.stream()
-                            .filter(userStudy -> userStudy.getRole() == StudyRole.LEADER)
-                            .findFirst()
-                            .map(userStudy -> userMap.get(userStudy.getUserId()))
-                            .orElseThrow(StudyLeaderNotFoundException::new);
-
-                    User lastAcivatedUser = members.stream()
-                            .map(userStudy -> userMap.get(userStudy.getUserId()))
-                            .filter(Objects::nonNull)
-                            .max(Comparator.comparing(User::getLastActivatedAt,
-                                    Comparator.nullsLast(Comparator.naturalOrder())))
-                            .orElse(null);
-
-                    String lastActivatedAt = lastAcivatedUser != null
-                            ? TimeUtil.formatTimeAgo(lastAcivatedUser.getLastActivatedAt())
-                            : null;
-
-                    String challengeGoalTime = TimeUtil.toTimeFormat(study.getGoalTime());
-                    boolean isNewlyCreated = study.validateNewlyCreated();
-                    boolean hasPassword = study.getPassword() != null;
-
-                    return StudySearchDto.of(
-                            study,
-                            leader.getProfileImageUrl(),
-                            isNewlyCreated,
-                            lastActivatedAt,
-                            challengeGoalTime,
-                            hasPassword
-                    );
-                }).toList();
-
-        return GetStudySearchResponse.of(studies.hasNext(), studySearchDtos);
+        return GetStudySearchResponse.of(studySlice.hasNext(), studySearchDtos);
     }
 
     public List<StudySearchDto> findPopularStudies() {
         Pageable pageable = PageRequest.of(0, 20);
         List<Study> studies = studyRepository.findMostAcitveStudies(pageable);
         Collections.shuffle(studies);
-        List<Long> studyIds = studies.stream()
-                .map(Study::getId)
+
+        List<Study> selectedStudies = studies.stream()
+                .limit(3)
                 .toList();
 
-        List<UserStudy> userStudies = userStudyRepository.findAllByStudyIds(studyIds);
+        List<UserStudy> userStudies = loadUserStudies(selectedStudies);
 
         Map<Long, List<UserStudy>> userStudyMap = userStudies.stream()
                 .collect(Collectors.groupingBy(UserStudy::getStudyId));
 
-        List<Long> userIds = userStudies.stream()
-                .map(UserStudy::getUserId)
-                .distinct()
-                .toList();
+        Map<Long, User> userMap = mapUsersById(userStudies);
 
-        Map<Long, User> userMap = userRepository.findAllById(userIds)
-                .stream()
-                .collect(Collectors.toMap(User::getId, user -> user));
-
-        return studies.stream()
-                .limit(3)
-                .map(study -> {
-                    List<UserStudy> members = userStudyMap.get(study.getId());
-
-                    User leader = members.stream()
-                            .filter(userStudy -> userStudy.getRole() == StudyRole.LEADER)
-                            .findFirst()
-                            .map(userStudy -> userMap.get(userStudy.getUserId()))
-                            .orElseThrow(StudyLeaderNotFoundException::new);
-
-                    User lastAcivatedUser = members.stream()
-                            .map(userStudy -> userMap.get(userStudy.getUserId()))
-                            .filter(Objects::nonNull)
-                            .max(Comparator.comparing(User::getLastActivatedAt,
-                                    Comparator.nullsLast(Comparator.naturalOrder())))
-                            .orElse(null);
-
-                    String lastActivatedAt = lastAcivatedUser != null
-                            ? TimeUtil.formatTimeAgo(lastAcivatedUser.getLastActivatedAt())
-                            : null;
-
-                    String challengeGoalTime = TimeUtil.toTimeFormat(study.getGoalTime());
-                    boolean isNewlyCreated = study.validateNewlyCreated();
-                    boolean hasPassword = study.getPassword() != null;
-
-                    return StudySearchDto.of(
-                            study,
-                            leader.getProfileImageUrl(),
-                            isNewlyCreated,
-                            lastActivatedAt,
-                            challengeGoalTime,
-                            hasPassword
-                    );
-                })
+        return selectedStudies.stream()
+                .map(study -> toStudySearchDto(study, userStudyMap, userMap))
                 .toList();
     }
 
@@ -334,5 +255,71 @@ public class StudyExternalService {
             return s3Service.uploadFile(image);
         }
         return null;
+    }
+
+    private List<UserStudy> loadUserStudies(List<Study> studies) {
+        List<Long> studyIds = studies
+                .stream()
+                .map(Study::getId)
+                .toList();
+
+        return userStudyRepository.findAllByStudyIds(studyIds);
+    }
+
+    private Map<Long, User> mapUsersById(List<UserStudy> userStudies) {
+        List<Long> userIds = userStudies.stream()
+                .map(UserStudy::getUserId)
+                .distinct()
+                .toList();
+
+        Map<Long, User> userMap = userRepository.findAllById(userIds)
+                .stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+        return userMap;
+    }
+
+    private StudySearchDto toStudySearchDto(
+            Study study,
+            Map<Long, List<UserStudy>> userStudyMap,
+            Map<Long, User> userMap
+    ) {
+        List<UserStudy> members = userStudyMap.get(study.getId());
+
+        User leader = findLeaderInStudy(userMap, members);
+        User lastAcivatedUser = findLastActivatedUserInStudy(userMap, members);
+
+        String lastActivatedAt = lastAcivatedUser != null
+                ? TimeUtil.formatTimeAgo(lastAcivatedUser.getLastActivatedAt())
+                : null;
+
+        String challengeGoalTime = TimeUtil.toTimeFormat(study.getGoalTime());
+        boolean isNewlyCreated = study.validateNewlyCreated();
+        boolean hasPassword = study.getPassword() != null;
+
+        return StudySearchDto.of(
+                study,
+                leader.getProfileImageUrl(),
+                isNewlyCreated,
+                lastActivatedAt,
+                challengeGoalTime,
+                hasPassword
+        );
+    }
+
+    private User findLastActivatedUserInStudy(Map<Long, User> userMap, List<UserStudy> members) {
+        return members.stream()
+                .map(userStudy -> userMap.get(userStudy.getUserId()))
+                .filter(Objects::nonNull)
+                .max(Comparator.comparing(User::getLastActivatedAt,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
+                .orElse(null);
+    }
+
+    private User findLeaderInStudy(Map<Long, User> userMap, List<UserStudy> members) {
+        return members.stream()
+                .filter(userStudy -> userStudy.getRole() == StudyRole.LEADER)
+                .findFirst()
+                .map(userStudy -> userMap.get(userStudy.getUserId()))
+                .orElseThrow(StudyLeaderNotFoundException::new);
     }
 }
