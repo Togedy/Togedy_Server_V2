@@ -4,7 +4,13 @@ import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepositor
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
-import com.togedy.togedy_server_v2.domain.study.dto.*;
+import com.togedy.togedy_server_v2.domain.study.dto.ActiveMemberDto;
+import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudySearchResponse;
+import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.StudyDto;
+import com.togedy.togedy_server_v2.domain.study.dto.StudySearchDto;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
@@ -16,6 +22,14 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,14 +37,8 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,8 +55,8 @@ public class StudyExternalService {
     /**
      * 스터디를 생성한다.
      *
-     * @param request   스터디 생성 DTO
-     * @param userId    유저 ID
+     * @param request 스터디 생성 DTO
+     * @param userId  유저 ID
      */
     @Transactional
     public void generateStudy(PostStudyRequest request, Long userId) {
@@ -82,7 +90,7 @@ public class StudyExternalService {
     /**
      * 스터디 이름의 중복 여부를 검사한다.
      *
-     * @param studyName     스터디 이름
+     * @param studyName 스터디 이름
      * @return
      */
     public GetStudyNameDuplicateResponse findStudyNameDuplicate(String studyName) {
@@ -150,68 +158,133 @@ public class StudyExternalService {
             boolean challenge,
             int page,
             int size,
-            Long userId)
-    {
+            Long userId) {
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
-        List<StudyTag> studyTags = null;
-        if (tags != null && !tags.isEmpty()) {
+
+        List<StudyTag> studyTags = List.of();
+
+        if (!CollectionUtils.isEmpty(tags)) {
             studyTags = tags.stream()
                     .map(StudyTag::fromDescription)
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
-        Slice<Study> studyList;
-        if (studyTags == null || studyTags.isEmpty()) {
-            studyList = studyRepository.findStudiesWithoutTags(name, filter, joinable, challenge, pageRequest);
-        } else {
-            studyList = studyRepository.findStudiesWithTags(name, studyTags, filter, joinable, challenge, pageRequest);
-        }
+        Slice<Study> studies = CollectionUtils.isEmpty(studyTags)
+                ? studyRepository.findStudiesWithoutTags(name, filter, joinable, challenge, pageRequest)
+                : studyRepository.findStudiesWithTags(name, studyTags, filter, joinable, challenge, pageRequest);
 
-        List<StudySearchDto> studySearchDtos = studyList.stream()
+        List<Long> studyIds = studies.stream()
+                .map(Study::getId)
+                .toList();
+
+        List<UserStudy> userStudies = userStudyRepository.findAllByStudyIds(studyIds);
+
+        Map<Long, List<UserStudy>> userStudyMap = userStudies.stream()
+                .collect(Collectors.groupingBy(UserStudy::getStudyId));
+
+        List<Long> userIds = userStudies.stream()
+                .map(UserStudy::getUserId)
+                .distinct()
+                .toList();
+
+        Map<Long, User> userMap = userRepository.findAllById(userIds)
+                .stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+
+        List<StudySearchDto> studySearchDtos = studies.stream()
                 .map(study -> {
-                    List<User> userList = userRepository.findAllByStudyId(study.getId());
-                    Optional<User> user = userList.stream().max(Comparator.comparing(User::getLastActivatedAt));
-                    String lastActivatedAt = null;
-                    if (user.isPresent()) {
-                        lastActivatedAt = TimeUtil.formatTimeAgo(user.get().getLastActivatedAt());
-                    }
+                    List<UserStudy> members = userStudyMap.get(study.getId());
 
-                    User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER)
+                    User leader = members.stream()
+                            .filter(userStudy -> userStudy.getRole() == StudyRole.LEADER)
+                            .findFirst()
+                            .map(userStudy -> userMap.get(userStudy.getUserId()))
                             .orElseThrow(StudyLeaderNotFoundException::new);
 
-                    String studyLeaderImageUrl = leader.getProfileImageUrl();
+                    User lastAcivatedUser = members.stream()
+                            .map(userStudy -> userMap.get(userStudy.getUserId()))
+                            .filter(Objects::nonNull)
+                            .max(Comparator.comparing(User::getLastActivatedAt,
+                                    Comparator.nullsLast(Comparator.naturalOrder())))
+                            .orElse(null);
+
+                    String lastActivatedAt = lastAcivatedUser != null
+                            ? TimeUtil.formatTimeAgo(lastAcivatedUser.getLastActivatedAt())
+                            : null;
+
                     String challengeGoalTime = TimeUtil.toTimeFormat(study.getGoalTime());
                     boolean isNewlyCreated = study.validateNewlyCreated();
                     boolean hasPassword = study.getPassword() != null;
-                    return StudySearchDto.of(study, studyLeaderImageUrl, isNewlyCreated, lastActivatedAt, challengeGoalTime, hasPassword);
-                })
-                .toList();
 
-        return GetStudySearchResponse.of(studyList.hasNext(), studySearchDtos);
+                    return StudySearchDto.of(
+                            study,
+                            leader.getProfileImageUrl(),
+                            isNewlyCreated,
+                            lastActivatedAt,
+                            challengeGoalTime,
+                            hasPassword
+                    );
+                }).toList();
+
+        return GetStudySearchResponse.of(studies.hasNext(), studySearchDtos);
     }
 
     public List<StudySearchDto> findPopularStudies() {
         Pageable pageable = PageRequest.of(0, 20);
         List<Study> studies = studyRepository.findMostAcitveStudies(pageable);
         Collections.shuffle(studies);
+        List<Long> studyIds = studies.stream()
+                .map(Study::getId)
+                .toList();
+
+        List<UserStudy> userStudies = userStudyRepository.findAllByStudyIds(studyIds);
+
+        Map<Long, List<UserStudy>> userStudyMap = userStudies.stream()
+                .collect(Collectors.groupingBy(UserStudy::getStudyId));
+
+        List<Long> userIds = userStudies.stream()
+                .map(UserStudy::getUserId)
+                .distinct()
+                .toList();
+
+        Map<Long, User> userMap = userRepository.findAllById(userIds)
+                .stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+
         return studies.stream()
                 .limit(3)
                 .map(study -> {
-                    List<User> userList = userRepository.findAllByStudyId(study.getId());
-                    Optional<User> user = userList.stream().max(Comparator.comparing(User::getLastActivatedAt));
-                    String lastActivatedAt = null;
-                    if (user.isPresent()) {
-                        lastActivatedAt = TimeUtil.formatTimeAgo(user.get().getLastActivatedAt());
-                    }
+                    List<UserStudy> members = userStudyMap.get(study.getId());
 
-                    User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER)
+                    User leader = members.stream()
+                            .filter(userStudy -> userStudy.getRole() == StudyRole.LEADER)
+                            .findFirst()
+                            .map(userStudy -> userMap.get(userStudy.getUserId()))
                             .orElseThrow(StudyLeaderNotFoundException::new);
 
-                    String studyLeaderImageUrl = leader.getProfileImageUrl();
+                    User lastAcivatedUser = members.stream()
+                            .map(userStudy -> userMap.get(userStudy.getUserId()))
+                            .filter(Objects::nonNull)
+                            .max(Comparator.comparing(User::getLastActivatedAt,
+                                    Comparator.nullsLast(Comparator.naturalOrder())))
+                            .orElse(null);
+
+                    String lastActivatedAt = lastAcivatedUser != null
+                            ? TimeUtil.formatTimeAgo(lastAcivatedUser.getLastActivatedAt())
+                            : null;
+
                     String challengeGoalTime = TimeUtil.toTimeFormat(study.getGoalTime());
                     boolean isNewlyCreated = study.validateNewlyCreated();
                     boolean hasPassword = study.getPassword() != null;
-                    return StudySearchDto.of(study, studyLeaderImageUrl, isNewlyCreated, lastActivatedAt, challengeGoalTime, hasPassword);
+
+                    return StudySearchDto.of(
+                            study,
+                            leader.getProfileImageUrl(),
+                            isNewlyCreated,
+                            lastActivatedAt,
+                            challengeGoalTime,
+                            hasPassword
+                    );
                 })
                 .toList();
     }
