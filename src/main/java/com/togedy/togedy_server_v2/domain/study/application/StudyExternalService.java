@@ -294,15 +294,13 @@ public class StudyExternalService {
 
         String challengeGoalTime = TimeUtil.toTimeFormat(study.getGoalTime());
         boolean isNewlyCreated = study.validateNewlyCreated();
-        boolean hasPassword = study.getPassword() != null;
 
         return StudySearchDto.of(
                 study,
                 leader.getProfileImageUrl(),
                 isNewlyCreated,
                 lastActivatedAt,
-                challengeGoalTime,
-                hasPassword
+                challengeGoalTime
         );
     }
 

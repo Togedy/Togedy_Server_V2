@@ -16,12 +16,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "study")
@@ -142,6 +141,10 @@ public class Study extends BaseEntity {
         LocalDateTime current = now.minusDays(7);
 
         return this.getCreatedAt().isAfter(current) && this.getCreatedAt().isBefore(now);
+    }
+
+    public boolean hasPassword() {
+        return this.password != null;
     }
 
     private void validateUpdatableMemberLimit(int memberLimit) {
