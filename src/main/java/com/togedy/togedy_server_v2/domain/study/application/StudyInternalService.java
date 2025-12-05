@@ -53,6 +53,8 @@ public class StudyInternalService {
 
         Integer count = null;
         String studyPassword = null;
+        boolean hasPassword = false;
+
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
@@ -67,7 +69,12 @@ public class StudyInternalService {
         if (isStudyLeader) {
             studyPassword = study.getPassword();
         }
-        return GetStudyResponse.of(isJoined, isStudyLeader, study, leader, count, studyPassword);
+
+        if (studyPassword != null) {
+            hasPassword = true;
+        }
+
+        return GetStudyResponse.of(isJoined, isStudyLeader, hasPassword, study, leader, count, studyPassword);
     }
 
     /**
