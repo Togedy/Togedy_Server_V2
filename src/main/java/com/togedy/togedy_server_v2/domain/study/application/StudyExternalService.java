@@ -19,10 +19,10 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -101,53 +101,85 @@ public class StudyExternalService {
 
     public GetMyStudyInfoResponse findMyStudyInfo(Long userId) {
         LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
 
-        List<Study> studyList = studyRepository.findAllByUserIdOrderByCreatedAtAsc(userId);
-        Optional<DailyStudySummary> todaySummaryOpt = dailyStudySummaryRepository.findByUserIdAndCreatedAt(
-                userId,
-                today.atStartOfDay(),
-                today.plusDays(1).atStartOfDay()
-        );
+        List<Study> studies = studyRepository.findAllByUserIdOrderByCreatedAtAsc(userId);
 
-        long todayStudyTime = todaySummaryOpt
+        Long studyTime = dailyStudySummaryRepository
+                .findByUserIdAndCreatedAt(userId, startOfDay, endOfDay)
                 .map(DailyStudySummary::getStudyTime)
                 .orElse(0L);
 
-        List<StudyDto> studyDtoList = studyList.stream()
+        List<Long> studyIds = studies.stream()
+                .map(Study::getId)
+                .toList();
+
+        List<UserStudy> userStudies = userStudyRepository.findAllByStudyIds(studyIds);
+
+        Map<Long, List<UserStudy>> userStudyMap = userStudies.stream()
+                .collect(Collectors.groupingBy(UserStudy::getStudyId));
+
+        List<Long> memberIds = userStudies.stream()
+                .map(UserStudy::getUserId)
+                .distinct()
+                .toList();
+
+        List<User> allMembers = userRepository.findAllById(memberIds);
+
+        Map<Long, User> memberMap = allMembers.stream()
+                .collect(Collectors.toMap(User::getId, user -> user));
+
+        List<DailyStudySummary> dailyStudySummaries = dailyStudySummaryRepository.findAllByUserIdsAndPeriod(
+                memberIds,
+                startOfDay,
+                endOfDay
+        );
+
+        Map<Long, Long> studyTimeMap = dailyStudySummaries.stream()
+                .collect(Collectors.toMap(
+                        DailyStudySummary::getUserId,
+                        DailyStudySummary::getStudyTime
+                ));
+
+        List<StudyDto> studyDtos = studies.stream()
                 .map(study -> {
-                    boolean isChallenge = study.getType() == StudyType.CHALLENGE;
-                    List<User> userList = userRepository.findAllByStudyIdAndStatus(study.getId(), UserStatus.STUDYING);
-                    List<ActiveMemberDto> activeMemberDtoList = userList.stream()
+                    List<UserStudy> memberStudies = userStudyMap.get(study.getId());
+
+                    List<User> members = memberStudies.stream()
+                            .map(userStudy -> memberMap.get(userStudy.getUserId()))
+                            .toList();
+                            
+                    List<ActiveMemberDto> activeMemberDtos = members.stream()
                             .map(ActiveMemberDto::from)
                             .toList();
 
-                    if (isChallenge) {
-                        int completedMemberCount = countCompletedMember(study);
+                    if (study.isChallengeStudy()) {
+                        int completedMemberCount = countCompletedMembers(study, members, studyTimeMap);
                         int challengeAchievement = calculateCompleteRate(completedMemberCount, study.getMemberCount());
-                        return StudyDto.of(study, challengeAchievement, completedMemberCount, activeMemberDtoList);
+                        return StudyDto.of(study, challengeAchievement, completedMemberCount, activeMemberDtos);
                     }
 
-                    return StudyDto.of(study, activeMemberDtoList);
+                    return StudyDto.of(study, activeMemberDtos);
                 })
                 .toList();
 
-        Optional<Study> challengeStudy = studyList.stream()
+        Optional<Study> challengeStudy = studies.stream()
                 .filter(Study::isChallengeStudy)
                 .max(Comparator.comparing(Study::getGoalTime));
 
         if (challengeStudy.isPresent()) {
             long goalTime = challengeStudy.get().getGoalTime();
-            int achievement = TimeUtil.calculateAchievement(todayStudyTime, goalTime);
+            int achievement = TimeUtil.calculateAchievement(studyTime, goalTime);
             return GetMyStudyInfoResponse.of(
                     TimeUtil.toTimeFormat(goalTime),
-                    TimeUtil.toTimeFormat(todayStudyTime),
+                    TimeUtil.toTimeFormat(studyTime),
                     achievement,
-                    studyDtoList
+                    studyDtos
             );
         }
 
-        return GetMyStudyInfoResponse.from(studyDtoList);
-
+        return GetMyStudyInfoResponse.from(studyDtos);
     }
 
     public GetStudySearchResponse findStudySearch(
@@ -210,28 +242,20 @@ public class StudyExternalService {
                 .toList();
     }
 
-    private int countCompletedMember(Study study) {
+    private int countCompletedMembers(
+            Study study,
+            List<User> members,
+            Map<Long, Long> summaryMap
+    ) {
+        long goalTime = study.getGoalTime();
+
         int count = 0;
-        LocalDate today = LocalDate.now();
-
-        List<User> memberList = userRepository.findAllByStudyId(study.getId());
-        List<Long> memberIdList = memberList.stream()
-                .map(User::getId)
-                .toList();
-
-        List<DailyStudySummary> dailyStudySummaryList =
-                dailyStudySummaryRepository.findAllByUserIdsAndCreatedAt(
-                        memberIdList,
-                        today.atStartOfDay(),
-                        today.plusDays(1).atStartOfDay()
-                );
-
-        for (DailyStudySummary dailyStudySummary : dailyStudySummaryList) {
-            if (study.getGoalTime() <= dailyStudySummary.getStudyTime()) {
+        for (User member : members) {
+            long studyTime = summaryMap.getOrDefault(member.getId(), 0L);
+            if (studyTime >= goalTime) {
                 count++;
             }
         }
-
         return count;
     }
 
