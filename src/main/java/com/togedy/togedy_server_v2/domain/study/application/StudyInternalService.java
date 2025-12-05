@@ -21,6 +21,7 @@ import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Objects;
@@ -52,25 +53,24 @@ public class StudyInternalService {
     public GetStudyResponse findStudyInfo(Long studyId, Long userId) {
         boolean isJoined = userStudyRepository.existsByStudyIdAndUserId(studyId, userId);
 
-        Integer count = null;
-        String studyPassword = null;
-
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
         User leader = userRepository.findByStudyIdAndRole(study.getId(), StudyRole.LEADER)
                 .orElseThrow(StudyLeaderNotFoundException::new);
 
-        if (study.isChallengeStudy()) {
-            count = countCompletedMember(study);
-        }
+        Integer completedCount = study.isChallengeStudy()
+                ? countCompletedMembers(study)
+                : null;
 
-        boolean isStudyLeader = leader.getId().equals(userId);
+        boolean isStudyLeader = leader.getId()
+                .equals(userId);
+
         if (isStudyLeader) {
-            studyPassword = study.getPassword();
+            return GetStudyResponse.ofLeader(isJoined, study, leader, completedCount);
         }
 
-        return GetStudyResponse.of(isJoined, isStudyLeader, study, leader, count, studyPassword);
+        return GetStudyResponse.ofMember(isJoined, study, leader, completedCount);
     }
 
     /**
@@ -273,28 +273,26 @@ public class StudyInternalService {
         return responses;
     }
 
-    private int countCompletedMember(Study study) {
-        int count = 0;
+    private int countCompletedMembers(Study study) {
         LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
 
-        List<User> memberList = userRepository.findAllByStudyId(study.getId());
-        List<Long> memberIdList = memberList.stream()
+        List<User> members = userRepository.findAllByStudyId(study.getId());
+
+        List<Long> memberIds = members.stream()
                 .map(User::getId)
                 .toList();
 
-        List<DailyStudySummary> dailyStudySummaryList =
+        List<DailyStudySummary> todaySummaries =
                 dailyStudySummaryRepository.findAllByUserIdsAndCreatedAt(
-                        memberIdList,
-                        today.atStartOfDay(),
-                        today.plusDays(1).atStartOfDay()
+                        memberIds,
+                        startOfDay,
+                        endOfDay
                 );
 
-        for (DailyStudySummary dailyStudySummary : dailyStudySummaryList) {
-            if (study.getGoalTime() <= dailyStudySummary.getStudyTime()) {
-                count++;
-            }
-        }
-
-        return count;
+        return (int) todaySummaries.stream()
+                .filter(study::isAchieved)
+                .count();
     }
 }

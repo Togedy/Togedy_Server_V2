@@ -25,7 +25,25 @@ public class GetStudyResponse {
     private Integer studyMemberLimit;
     private String studyPassword;
 
-    public static GetStudyResponse of(
+    public static GetStudyResponse ofLeader(
+            boolean isJoined,
+            Study study,
+            User leader,
+            Integer completedCount
+    ) {
+        return of(isJoined, true, study, leader, completedCount, study.getPassword());
+    }
+
+    public static GetStudyResponse ofMember(
+            boolean isJoined,
+            Study study,
+            User leader,
+            Integer completedCount
+    ) {
+        return of(isJoined, false, study, leader, completedCount, null);
+    }
+
+    private static GetStudyResponse of(
             boolean isJoined,
             boolean isStudyLeader,
             Study study,

@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
+import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
@@ -145,6 +146,10 @@ public class Study extends BaseEntity {
 
     public boolean hasPassword() {
         return this.password != null;
+    }
+
+    public boolean isAchieved(DailyStudySummary dailyStudySummary) {
+        return dailyStudySummary.getStudyTime() >= this.goalTime;
     }
 
     private void validateUpdatableMemberLimit(int memberLimit) {
