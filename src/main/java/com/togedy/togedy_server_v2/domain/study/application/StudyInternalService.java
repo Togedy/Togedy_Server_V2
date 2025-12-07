@@ -112,13 +112,7 @@ public class StudyInternalService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        String studyImageUrl = null;
-
-        if (request.getStudyImage() != null) {
-            studyImageUrl = s3Service.uploadFile(request.getStudyImage());
-            String oldUrl = study.changeImageUrl(studyImageUrl);
-            s3Service.deleteFile(oldUrl);
-        }
+        String studyImageUrl = updateStudyImage(request, study);
 
         study.updateInfo(request, studyImageUrl);
         studyRepository.save(study);
@@ -294,5 +288,15 @@ public class StudyInternalService {
         return (int) todaySummaries.stream()
                 .filter(study::isAchieved)
                 .count();
+    }
+
+    private String updateStudyImage(PatchStudyInfoRequest request, Study study) {
+        if (request.getStudyImage() != null) {
+            String studyImageUrl = s3Service.uploadFile(request.getStudyImage());
+            String oldUrl = study.changeImageUrl(studyImageUrl);
+            s3Service.deleteFile(oldUrl);
+            return studyImageUrl;
+        }
+        return null;
     }
 }
