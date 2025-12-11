@@ -37,11 +37,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllByStudyId(Long studyId);
 
     @Query("""
-            SELECT u, us.role
-            FROM User u
-            JOIN UserStudy us ON u.id = us.userId
-            WHERE us.studyId = :studyId
-            ORDER BY us.createdAt ASC
+                SELECT u, us.role
+                FROM User u
+                JOIN UserStudy us ON u.id = us.userId
+                WHERE us.studyId = :studyId
+                ORDER BY us.createdAt ASC
             """)
     List<Object[]> findAllByStudyIdOrderByCreatedAtAsc(Long studyId);
 

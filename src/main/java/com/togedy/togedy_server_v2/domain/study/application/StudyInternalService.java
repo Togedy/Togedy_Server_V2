@@ -22,10 +22,9 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -238,33 +237,34 @@ public class StudyInternalService {
      */
     public List<GetStudyMemberResponse> findStudyMember(Long studyId, Long userId) {
         LocalDate today = LocalDate.now();
-        List<Object[]> rows = userRepository.findAllByStudyIdOrderByCreatedAtAsc(studyId);
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
 
-        List<GetStudyMemberResponse> responses = rows.stream()
-                .map(row -> {
-                    User user = (User) row[0];
-                    StudyRole role = (StudyRole) row[1];
-                    Optional<DailyStudySummary> dailyStudySummary
-                            = dailyStudySummaryRepository.findByUserIdAndCreatedAt(user.getId(), today.atStartOfDay(),
-                            today.atTime(LocalTime.MAX));
+        List<Object[]> membersWithRoles = userRepository.findAllByStudyIdOrderByCreatedAtAsc(studyId);
+        List<Long> memberIds = membersWithRoles.stream()
+                .map(memberWithRole -> ((User) memberWithRole[0]).getId())
+                .toList();
 
-                    if (dailyStudySummary.isPresent()) {
-                        return GetStudyMemberResponse.of(user, dailyStudySummary.get(), role);
-                    }
+        Map<Long, DailyStudySummary> dailyStudySummaryMap = loadDailyStudySummaryMap(
+                memberIds, startOfDay, endOfDay);
 
-                    return GetStudyMemberResponse.of(user, role);
-                })
+        List<GetStudyMemberResponse> responses = membersWithRoles.stream()
+                .map(memberWithRole -> mapToMemberResponse(memberWithRole, dailyStudySummaryMap))
                 .collect(Collectors.toList());
 
-        responses.stream()
-                .filter(r -> Objects.equals(r.getUserId(), userId))
-                .findFirst()
-                .ifPresent(target -> {
-                    responses.remove(target);
-                    responses.add(0, target);
-                });
+        moveCurrentUserToTop(userId, responses);
 
         return responses;
+    }
+
+    private static void moveCurrentUserToTop(Long userId, List<GetStudyMemberResponse> responses) {
+        responses.stream()
+                .filter(response -> Objects.equals(response.getUserId(), userId))
+                .findFirst()
+                .ifPresent(self -> {
+                    responses.remove(self);
+                    responses.add(0, self);
+                });
     }
 
     private int countCompletedMembers(Study study) {
@@ -298,5 +298,34 @@ public class StudyInternalService {
             return studyImageUrl;
         }
         return null;
+    }
+
+    private GetStudyMemberResponse mapToMemberResponse(
+            Object[] memberWithRole,
+            Map<Long, DailyStudySummary> dailyStudySummaryMap
+    ) {
+        User member = (User) memberWithRole[0];
+        StudyRole role = (StudyRole) memberWithRole[1];
+
+        DailyStudySummary todaySummary = dailyStudySummaryMap.get(member.getId());
+
+        if (todaySummary != null) {
+            return GetStudyMemberResponse.of(member, todaySummary, role);
+        }
+        return GetStudyMemberResponse.of(member, role);
+    }
+
+    private Map<Long, DailyStudySummary> loadDailyStudySummaryMap(
+            List<Long> memberIds,
+            LocalDateTime startOfDay,
+            LocalDateTime endOfDay
+    ) {
+        return dailyStudySummaryRepository
+                .findAllByUserIdsAndCreatedAt(memberIds, startOfDay, endOfDay)
+                .stream()
+                .collect(Collectors.toMap(
+                        DailyStudySummary::getUserId,
+                        dailyStudySummary -> dailyStudySummary
+                ));
     }
 }
