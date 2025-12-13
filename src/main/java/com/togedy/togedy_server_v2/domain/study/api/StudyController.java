@@ -24,6 +24,8 @@ import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.time.LocalDate;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -37,9 +39,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.LocalDate;
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -65,8 +64,7 @@ public class StudyController {
             @RequestBody(required = false) PostStudyMemberRequest request,
             @PathVariable Long studyId,
             @AuthenticationPrincipal AuthUser user
-    )
-    {
+    ) {
         studyInternalService.registerStudyMember(request, studyId, user.getId());
         return ApiUtil.successOnly();
     }
@@ -83,8 +81,7 @@ public class StudyController {
     @GetMapping("/studies/duplicate")
     public ApiResponse<GetStudyNameDuplicateResponse> readStudyNameDuplicate(
             @RequestParam("name") String name
-    )
-    {
+    ) {
         GetStudyNameDuplicateResponse response = studyExternalService.findStudyNameDuplicate(name);
         return ApiUtil.success(response);
     }
@@ -117,8 +114,7 @@ public class StudyController {
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
             @AuthenticationPrincipal AuthUser user
-    )
-    {
+    ) {
         GetStudySearchResponse response =
                 studyExternalService.findStudySearch(name, tags, filter, joinable, challenge, page, size, user.getId());
         return ApiUtil.success(response);
@@ -137,8 +133,7 @@ public class StudyController {
             @PathVariable Long studyId,
             @PathVariable Long userId,
             @AuthenticationPrincipal AuthUser user
-    )
-    {
+    ) {
         GetStudyMemberProfileResponse response =
                 studyMemberService.findStudyMemberProfile(studyId, userId, user.getId());
         return ApiUtil.success(response);
@@ -150,8 +145,7 @@ public class StudyController {
             @PathVariable Long studyId,
             @PathVariable Long userId,
             @AuthenticationPrincipal AuthUser user
-    )
-    {
+    ) {
         GetStudyMemberStudyTimeResponse response =
                 studyMemberService.findStudyMemberStudyTime(studyId, userId, user.getId());
         return ApiUtil.success(response);
@@ -163,8 +157,7 @@ public class StudyController {
             @PathVariable Long studyId,
             @PathVariable Long userId,
             @AuthenticationPrincipal AuthUser user
-    )
-    {
+    ) {
         GetStudyMemberPlannerResponse response =
                 studyMemberService.findStudyMemberPlanner(studyId, userId, user.getId());
         return ApiUtil.success(response);
@@ -175,10 +168,9 @@ public class StudyController {
     public ApiResponse<List<GetStudyMemberManagementResponse>> readStudyMemberManagement(
             @PathVariable Long studyId,
             @AuthenticationPrincipal AuthUser user
-    )
-    {
+    ) {
         List<GetStudyMemberManagementResponse> response =
-                studyMemberService.findStudyMemberManagement(studyId, user.getId());
+                studyInternalService.findStudyMemberManagement(studyId, user.getId());
         return ApiUtil.success(response);
     }
 
@@ -188,8 +180,7 @@ public class StudyController {
             @RequestParam(name = "startDate") LocalDate startDate,
             @RequestParam(name = "endDate") LocalDate endDate,
             @PathVariable Long studyId
-    )
-    {
+    ) {
         List<GetStudyAttendanceResponse> response = studyMemberService.findStudyAttendance(startDate, endDate, studyId);
         return ApiUtil.success(response);
     }
@@ -199,8 +190,7 @@ public class StudyController {
     public ApiResponse<Void> updateStudyInfo(
             @PathVariable Long studyId,
             @ModelAttribute PatchStudyInfoRequest request,
-            @AuthenticationPrincipal AuthUser user)
-    {
+            @AuthenticationPrincipal AuthUser user) {
         studyInternalService.modifyStudyInfo(request, studyId, user.getId());
         return ApiUtil.successOnly();
     }
@@ -211,8 +201,7 @@ public class StudyController {
             @PathVariable Long studyId,
             @RequestBody PatchStudyMemberLimitRequest request,
             @AuthenticationPrincipal AuthUser user
-    )
-    {
+    ) {
         studyInternalService.modifyStudyMemberLimit(request, studyId, user.getId());
         return ApiUtil.successOnly();
     }
@@ -223,8 +212,7 @@ public class StudyController {
             @PathVariable Long studyId,
             @PathVariable Long userId,
             @AuthenticationPrincipal AuthUser user
-    )
-    {
+    ) {
         studyInternalService.modifyStudyLeader(studyId, userId, user.getId());
         return ApiUtil.successOnly();
     }
@@ -236,8 +224,7 @@ public class StudyController {
             @PathVariable Long userId,
             @RequestBody PatchPlannerVisibilityRequest request,
             @AuthenticationPrincipal AuthUser user
-    )
-    {
+    ) {
         studyMemberService.modifyPlannerVisibility(request, studyId, userId, user.getId());
         return ApiUtil.successOnly();
     }
@@ -263,8 +250,7 @@ public class StudyController {
     public ApiResponse<Void> deleteStudyMember(
             @PathVariable Long studyId,
             @PathVariable Long userId,
-            @AuthenticationPrincipal AuthUser user)
-    {
+            @AuthenticationPrincipal AuthUser user) {
         studyInternalService.removeStudyMember(studyId, userId, user.getId());
         return ApiUtil.successOnly();
     }

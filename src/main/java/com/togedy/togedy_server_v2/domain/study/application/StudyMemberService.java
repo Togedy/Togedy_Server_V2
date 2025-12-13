@@ -10,7 +10,6 @@ import com.togedy.togedy_server_v2.domain.planner.enums.PlanStatus;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyPlannerDto;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
-import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberStudyTimeResponse;
@@ -34,7 +33,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -141,23 +139,6 @@ public class StudyMemberService {
         }
 
         return GetStudyMemberPlannerResponse.of(isMyPlanner, false);
-    }
-
-    public List<GetStudyMemberManagementResponse> findStudyMemberManagement(Long studyId, Long userId) {
-        validateStudyMember(studyId, userId);
-
-        List<GetStudyMemberManagementResponse> responses = userStudyRepository.findStudyMembersByStudyId(
-                studyId);
-
-        responses.stream()
-                .filter(response -> Objects.equals(response.getUserId(), userId))
-                .findFirst()
-                .ifPresent(currentUser -> {
-                    responses.remove(currentUser);
-                    responses.add(0, currentUser);
-                });
-
-        return responses;
     }
 
     public List<GetStudyAttendanceResponse> findStudyAttendance(LocalDate startDate, LocalDate endDate, Long studyId) {

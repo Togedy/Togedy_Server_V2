@@ -6,6 +6,7 @@ import com.togedy.togedy_server_v2.domain.planner.dao.StudyCategoryRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
@@ -257,7 +258,22 @@ public class StudyInternalService {
         return responses;
     }
 
-    private static void moveCurrentUserToTop(Long userId, List<GetStudyMemberResponse> responses) {
+    public List<GetStudyMemberManagementResponse> findStudyMemberManagement(Long studyId, Long userId) {
+        List<GetStudyMemberManagementResponse> responses = userStudyRepository.findStudyMembersByStudyId(
+                studyId);
+
+        responses.stream()
+                .filter(response -> Objects.equals(response.getUserId(), userId))
+                .findFirst()
+                .ifPresent(currentUser -> {
+                    responses.remove(currentUser);
+                    responses.add(0, currentUser);
+                });
+
+        return responses;
+    }
+
+    private void moveCurrentUserToTop(Long userId, List<GetStudyMemberResponse> responses) {
         responses.stream()
                 .filter(response -> Objects.equals(response.getUserId(), userId))
                 .findFirst()
