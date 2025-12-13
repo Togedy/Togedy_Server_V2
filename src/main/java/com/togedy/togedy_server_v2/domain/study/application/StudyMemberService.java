@@ -49,23 +49,26 @@ public class StudyMemberService {
     private final PlanRepository planRepository;
 
     public GetStudyMemberProfileResponse findStudyMemberProfile(Long studyId, Long memberId, Long userId) {
-        validateStudyMember(studyId, userId);
+        validateUserInStudy(studyId, userId);
 
-        User member = userRepository.findById(memberId).orElseThrow(UserNotFoundException::new);
-        Long totalStudyTime = dailyStudySummaryRepository.findTotalStudyTimeByUserId(memberId).orElse(0L);
+        User member = userRepository.findById(memberId)
+                .orElseThrow(UserNotFoundException::new);
+
+        Long totalStudyTime = dailyStudySummaryRepository.findTotalStudyTimeByUserId(memberId)
+                .orElse(0L);
+
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, memberId)
                 .orElseThrow(UserStudyNotFoundException::new);
-        int elapsedDays = userStudy.calculateElapsedDays();
 
         return GetStudyMemberProfileResponse.of(
                 member,
                 TimeUtil.toTimeFormat(totalStudyTime),
-                elapsedDays
+                userStudy.calculateElapsedDays()
         );
     }
 
     public GetStudyMemberStudyTimeResponse findStudyMemberStudyTime(Long studyId, Long memberId, Long userId) {
-        validateStudyMember(studyId, userId);
+        validateUserInStudy(studyId, userId);
 
         LocalDateTime startDateTime = LocalDate.now().minusMonths(1).withDayOfMonth(1).atStartOfDay();
         LocalDateTime endDateTime = LocalDate.now().plusMonths(1).withDayOfMonth(1).atStartOfDay();
@@ -95,7 +98,7 @@ public class StudyMemberService {
     }
 
     public GetStudyMemberPlannerResponse findStudyMemberPlanner(Long studyId, Long memberId, Long userId) {
-        validateStudyMember(studyId, userId);
+        validateUserInStudy(studyId, userId);
 
         User member = userRepository.findById(memberId)
                 .orElseThrow(UserNotFoundException::new);
@@ -208,12 +211,12 @@ public class StudyMemberService {
     }
 
     /**
-     * 스터디에 해당 유저의 존재 여부를 검증한다.
+     * 해당 유저가 스터디에 속해 있는지(참여 중인지) 검증한다.
      *
      * @param studyId 스터디 ID
      * @param userId  유저 ID
      */
-    private void validateStudyMember(Long studyId, Long userId) {
+    private void validateUserInStudy(Long studyId, Long userId) {
         if (!userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
             throw new StudyAccessDeniedException();
         }
