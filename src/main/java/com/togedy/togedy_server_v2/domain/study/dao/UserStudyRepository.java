@@ -26,6 +26,7 @@ public interface UserStudyRepository extends JpaRepository<UserStudy, Long> {
             SELECT new com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse (
                 u.id,
                 u.nickname,
+                u.profileImageUrl,
                 us.role
             )
             FROM UserStudy us

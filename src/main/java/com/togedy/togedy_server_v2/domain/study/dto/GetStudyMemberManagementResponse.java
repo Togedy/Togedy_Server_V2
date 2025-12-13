@@ -12,6 +12,8 @@ public class GetStudyMemberManagementResponse {
 
     private String userName;
 
+    private String userProfileImageUrl;
+
     private StudyRole studyRole;
 
 }

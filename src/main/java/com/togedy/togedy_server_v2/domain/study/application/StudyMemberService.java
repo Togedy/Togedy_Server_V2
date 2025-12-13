@@ -7,15 +7,15 @@ import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.entity.Plan;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyCategory;
 import com.togedy.togedy_server_v2.domain.planner.enums.PlanStatus;
-import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
-import com.togedy.togedy_server_v2.domain.study.dto.PatchPlannerVisibilityRequest;
+import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyPlannerDto;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
-import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberStudyTimeResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.MonthlyStudyTimeDto;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchPlannerVisibilityRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PlanDto;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedException;
@@ -25,9 +25,6 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.UserAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -37,8 +34,11 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -85,7 +85,8 @@ public class StudyMemberService {
             YearMonth yearMonth = entry.getKey();
             List<DailyStudySummary> dailyStudySummaryList = entry.getValue();
 
-            monthlyStudyTimeDtoList.add(toMonthlyStudyTimeDto(yearMonth.getYear(), yearMonth.getMonthValue(), dailyStudySummaryList));
+            monthlyStudyTimeDtoList.add(
+                    toMonthlyStudyTimeDto(yearMonth.getYear(), yearMonth.getMonthValue(), dailyStudySummaryList));
 
             if (yearMonth.equals(YearMonth.now())) {
                 studyTimeCount = dailyStudySummaryList.size();
@@ -115,7 +116,8 @@ public class StudyMemberService {
 
             for (StudyCategory studyCategory : studyCategoryList) {
                 List<Plan> planList =
-                        planRepository.findByStudyCategoryIdAndCreatedAtBetween(studyCategory.getId(), startOfDay, endOfDay);
+                        planRepository.findByStudyCategoryIdAndCreatedAtBetween(studyCategory.getId(), startOfDay,
+                                endOfDay);
 
                 totalPlanCount += planList.size();
                 completedPlanCount += (int) planList.stream()
@@ -143,7 +145,19 @@ public class StudyMemberService {
 
     public List<GetStudyMemberManagementResponse> findStudyMemberManagement(Long studyId, Long userId) {
         validateStudyMember(studyId, userId);
-        return userStudyRepository.findStudyMembersByStudyId(studyId);
+
+        List<GetStudyMemberManagementResponse> responses = userStudyRepository.findStudyMembersByStudyId(
+                studyId);
+
+        responses.stream()
+                .filter(response -> Objects.equals(response.getUserId(), userId))
+                .findFirst()
+                .ifPresent(currentUser -> {
+                    responses.remove(currentUser);
+                    responses.add(0, currentUser);
+                });
+
+        return responses;
     }
 
     public List<GetStudyAttendanceResponse> findStudyAttendance(LocalDate startDate, LocalDate endDate, Long studyId) {
@@ -202,7 +216,8 @@ public class StudyMemberService {
         return response;
     }
 
-    public void modifyPlannerVisibility(PatchPlannerVisibilityRequest request, Long studyId, Long memberId, Long userId) {
+    public void modifyPlannerVisibility(PatchPlannerVisibilityRequest request, Long studyId, Long memberId,
+                                        Long userId) {
         if (!memberId.equals(userId)) {
             throw new UserAccessDeniedException();
         }
@@ -214,8 +229,8 @@ public class StudyMemberService {
     /**
      * 스터디에 해당 유저의 존재 여부를 검증한다.
      *
-     * @param studyId   스터디 ID
-     * @param userId    유저 ID
+     * @param studyId 스터디 ID
+     * @param userId  유저 ID
      */
     private void validateStudyMember(Long studyId, Long userId) {
         if (!userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
@@ -226,10 +241,18 @@ public class StudyMemberService {
     private int determineLevelByStudyTime(Long seconds) {
         long hours = seconds / 3600;
 
-        if (hours == 0) return 1;
-        if (hours < 2) return 2;
-        if (hours < 4) return 3;
-        if (hours < 6) return 4;
+        if (hours == 0) {
+            return 1;
+        }
+        if (hours < 2) {
+            return 2;
+        }
+        if (hours < 4) {
+            return 3;
+        }
+        if (hours < 6) {
+            return 4;
+        }
         return 5;
     }
 
