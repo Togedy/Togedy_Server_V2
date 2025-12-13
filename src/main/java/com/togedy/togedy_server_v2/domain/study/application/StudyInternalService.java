@@ -15,6 +15,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
@@ -259,6 +260,10 @@ public class StudyInternalService {
     }
 
     public List<GetStudyMemberManagementResponse> findStudyMemberManagement(Long studyId, Long userId) {
+        if (!userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
+            throw new StudyAccessDeniedException();
+        }
+
         List<GetStudyMemberManagementResponse> responses = userStudyRepository.findStudyMembersByStudyId(
                 studyId);
 
