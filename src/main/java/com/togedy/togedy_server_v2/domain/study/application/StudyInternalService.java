@@ -26,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -253,8 +254,7 @@ public class StudyInternalService {
                 .map(memberWithRole -> mapToMemberResponse(memberWithRole, dailyStudySummaryMap))
                 .collect(Collectors.toList());
 
-        moveCurrentUserToTop(userId, responses);
-
+        moveCurrentUserToTop(userId, responses, GetStudyMemberResponse::getUserId);
         return responses;
     }
 
@@ -262,24 +262,21 @@ public class StudyInternalService {
         List<GetStudyMemberManagementResponse> responses = userStudyRepository.findStudyMembersByStudyId(
                 studyId);
 
+        moveCurrentUserToTop(userId, responses, GetStudyMemberManagementResponse::getUserId);
+        return responses;
+    }
+
+    private <T> void moveCurrentUserToTop(
+            Long userId,
+            List<T> responses,
+            Function<T, Long> extractUserId
+    ) {
         responses.stream()
-                .filter(response -> Objects.equals(response.getUserId(), userId))
+                .filter(response -> Objects.equals(extractUserId.apply(response), userId))
                 .findFirst()
                 .ifPresent(currentUser -> {
                     responses.remove(currentUser);
                     responses.add(0, currentUser);
-                });
-
-        return responses;
-    }
-
-    private void moveCurrentUserToTop(Long userId, List<GetStudyMemberResponse> responses) {
-        responses.stream()
-                .filter(response -> Objects.equals(response.getUserId(), userId))
-                .findFirst()
-                .ifPresent(self -> {
-                    responses.remove(self);
-                    responses.add(0, self);
                 });
     }
 
