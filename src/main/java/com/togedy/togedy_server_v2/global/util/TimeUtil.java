@@ -4,13 +4,13 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
+import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 public class TimeUtil {
 
-    private TimeUtil(){
+    private TimeUtil() {
     }
 
     public static long durationInSeconds(
@@ -89,6 +89,14 @@ public class TimeUtil {
 
     public static Long convertHoursToSeconds(int hour) {
         return hour * 3600L;
+    }
+
+    public static LocalDateTime startOfMonthsAgo(int monthsAgo) {
+        return YearMonth.now().minusMonths(monthsAgo).atDay(1).atStartOfDay();
+    }
+
+    public static LocalDateTime startOfNextMonth() {
+        return YearMonth.now().plusMonths(1).atDay(1).atStartOfDay();
     }
 
 }

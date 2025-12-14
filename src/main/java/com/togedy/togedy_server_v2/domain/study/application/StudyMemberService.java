@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -48,51 +49,37 @@ public class StudyMemberService {
     private final StudyCategoryRepository studyCategoryRepository;
     private final PlanRepository planRepository;
 
+    private static final int MONTH_RANGE = 6;
+
     public GetStudyMemberProfileResponse findStudyMemberProfile(Long studyId, Long memberId, Long userId) {
         validateUserInStudy(studyId, userId);
 
-        User member = userRepository.findById(memberId)
-                .orElseThrow(UserNotFoundException::new);
+        User member = userRepository.findById(memberId).orElseThrow(UserNotFoundException::new);
 
-        Long totalStudyTime = dailyStudySummaryRepository.findTotalStudyTimeByUserId(memberId)
-                .orElse(0L);
+        Long totalStudyTime = dailyStudySummaryRepository.findTotalStudyTimeByUserId(memberId).orElse(0L);
 
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, memberId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        return GetStudyMemberProfileResponse.of(
-                member,
-                TimeUtil.toTimeFormat(totalStudyTime),
-                userStudy.calculateElapsedDays()
-        );
+        return GetStudyMemberProfileResponse.of(member, TimeUtil.toTimeFormat(totalStudyTime),
+                userStudy.calculateElapsedDays());
     }
 
     public GetStudyMemberStudyTimeResponse findStudyMemberStudyTime(Long studyId, Long memberId, Long userId) {
         validateUserInStudy(studyId, userId);
 
-        LocalDateTime startDateTime = LocalDate.now().minusMonths(1).withDayOfMonth(1).atStartOfDay();
-        LocalDateTime endDateTime = LocalDate.now().plusMonths(1).withDayOfMonth(1).atStartOfDay();
+        LocalDateTime start = TimeUtil.startOfMonthsAgo(5);
+        LocalDateTime end = TimeUtil.startOfNextMonth();
 
-        List<DailyStudySummary> grouped =
-                dailyStudySummaryRepository.findAllByUserIdAndPeriod(memberId, startDateTime, endDateTime);
+        List<DailyStudySummary> dailyStudySummaries =
+                dailyStudySummaryRepository.findAllByUserIdAndPeriod(memberId, start, end);
 
-        Map<YearMonth, List<DailyStudySummary>> monthListMap = grouped.stream()
-                .collect(Collectors.groupingBy(dailyStudySummary -> YearMonth.from(dailyStudySummary.getCreatedAt())));
+        Map<YearMonth, List<DailyStudySummary>> summariesByMonth = dailyStudySummaries.stream()
+                .collect(Collectors.groupingBy(dss -> YearMonth.from(dss.getCreatedAt())));
 
         List<MonthlyStudyTimeDto> monthlyStudyTimeDtoList = new ArrayList<>();
-        int studyTimeCount = 0;
 
-        for (Map.Entry<YearMonth, List<DailyStudySummary>> entry : monthListMap.entrySet()) {
-            YearMonth yearMonth = entry.getKey();
-            List<DailyStudySummary> dailyStudySummaryList = entry.getValue();
-
-            monthlyStudyTimeDtoList.add(
-                    toMonthlyStudyTimeDto(yearMonth.getYear(), yearMonth.getMonthValue(), dailyStudySummaryList));
-
-            if (yearMonth.equals(YearMonth.now())) {
-                studyTimeCount = dailyStudySummaryList.size();
-            }
-        }
+        int studyTimeCount = collectMonthlyStudyTime(summariesByMonth, monthlyStudyTimeDtoList);
 
         return GetStudyMemberStudyTimeResponse.of(studyTimeCount, monthlyStudyTimeDtoList);
     }
@@ -100,8 +87,7 @@ public class StudyMemberService {
     public GetStudyMemberPlannerResponse findStudyMemberPlanner(Long studyId, Long memberId, Long userId) {
         validateUserInStudy(studyId, userId);
 
-        User member = userRepository.findById(memberId)
-                .orElseThrow(UserNotFoundException::new);
+        User member = userRepository.findById(memberId).orElseThrow(UserNotFoundException::new);
 
         boolean isMyPlanner = member.getId().equals(userId);
         LocalDate today = LocalDate.now();
@@ -116,29 +102,20 @@ public class StudyMemberService {
             List<StudyCategory> studyCategoryList = studyCategoryRepository.findAllByUserId(memberId);
 
             for (StudyCategory studyCategory : studyCategoryList) {
-                List<Plan> planList =
-                        planRepository.findByStudyCategoryIdAndCreatedAtBetween(studyCategory.getId(), startOfDay,
-                                endOfDay);
+                List<Plan> planList = planRepository.findByStudyCategoryIdAndCreatedAtBetween(studyCategory.getId(),
+                        startOfDay, endOfDay);
 
                 totalPlanCount += planList.size();
-                completedPlanCount += (int) planList.stream()
-                        .filter(plan -> plan.getStatus() == PlanStatus.SUCCESS)
+                completedPlanCount += (int) planList.stream().filter(plan -> plan.getStatus() == PlanStatus.SUCCESS)
                         .count();
 
-                List<PlanDto> planDtoList = planList.stream()
-                        .map(PlanDto::from)
-                        .toList();
+                List<PlanDto> planDtoList = planList.stream().map(PlanDto::from).toList();
 
                 dailyPlannerDtoList.add(DailyPlannerDto.of(studyCategory, planDtoList));
             }
 
-            return GetStudyMemberPlannerResponse.of(
-                    isMyPlanner,
-                    true,
-                    completedPlanCount,
-                    totalPlanCount,
-                    dailyPlannerDtoList
-            );
+            return GetStudyMemberPlannerResponse.of(isMyPlanner, true, completedPlanCount, totalPlanCount,
+                    dailyPlannerDtoList);
         }
 
         return GetStudyMemberPlannerResponse.of(isMyPlanner, false);
@@ -151,51 +128,37 @@ public class StudyMemberService {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
-        List<DailyStudySummary> dailyStudySummaryList = dailyStudySummaryRepository
-                .findAllByUserIdsAndPeriod(userIds, startDateTime, endDateTime);
+        List<DailyStudySummary> dailyStudySummaryList = dailyStudySummaryRepository.findAllByUserIdsAndPeriod(userIds,
+                startDateTime, endDateTime);
 
         Map<Long, List<DailyStudySummary>> dailyStudySummaryMap = dailyStudySummaryList.stream()
                 .collect(Collectors.groupingBy(DailyStudySummary::getUserId));
 
-        List<Object[]> dailyStudyTimeList = dailyStudySummaryRepository
-                .findTotalStudyTimeByUserIdsAndPeriod(userIds, startDateTime, endDateTime);
+        List<Object[]> dailyStudyTimeList = dailyStudySummaryRepository.findTotalStudyTimeByUserIdsAndPeriod(userIds,
+                startDateTime, endDateTime);
 
-        Map<Long, Long> totalStudyTimeMap = new HashMap<>(
-                dailyStudyTimeList.stream()
-                        .collect(Collectors.toMap(
-                                row -> ((Number) row[0]).longValue(),
-                                row -> row[1] != null ? ((Number) row[1]).longValue() : 0L,
-                                Long::sum
-                        ))
-        );
+        Map<Long, Long> totalStudyTimeMap = new HashMap<>(dailyStudyTimeList.stream().collect(
+                Collectors.toMap(row -> ((Number) row[0]).longValue(),
+                        row -> row[1] != null ? ((Number) row[1]).longValue() : 0L, Long::sum)));
 
-        List<GetStudyAttendanceResponse> response = userList.stream()
-                .map(user -> {
+        List<GetStudyAttendanceResponse> response = userList.stream().map(user -> {
                     List<String> studyTimeList = new ArrayList<>();
                     for (LocalDate d = startDate; !d.isAfter(endDate); d = d.plusDays(1)) {
                         LocalDateTime dayStart = d.atStartOfDay();
                         LocalDateTime dayEnd = d.atTime(LocalTime.MAX);
 
-                        long totalStudyTime = dailyStudySummaryMap
-                                .getOrDefault(user.getId(), List.of())
-                                .stream()
-                                .filter(s -> !s.getCreatedAt().isBefore(dayStart) &&
-                                        !s.getCreatedAt().isAfter(dayEnd))
-                                .mapToLong(DailyStudySummary::getStudyTime)
-                                .sum();
+                        long totalStudyTime = dailyStudySummaryMap.getOrDefault(user.getId(), List.of()).stream()
+                                .filter(s -> !s.getCreatedAt().isBefore(dayStart) && !s.getCreatedAt().isAfter(dayEnd))
+                                .mapToLong(DailyStudySummary::getStudyTime).sum();
 
                         studyTimeList.add(
-                                Optional.of(totalStudyTime)
-                                        .filter(s -> s > 0L)
-                                        .map(TimeUtil::toTimeFormat)
-                                        .orElse(null)
-                        );
+                                Optional.of(totalStudyTime).filter(s -> s > 0L).map(TimeUtil::toTimeFormat).orElse(null));
                     }
 
                     return GetStudyAttendanceResponse.of(user, studyTimeList);
                 }).sorted(Comparator.comparingLong(
-                        (GetStudyAttendanceResponse dto) -> totalStudyTimeMap.getOrDefault(dto.getUserId(), 0L)
-                ).reversed()).collect(Collectors.toCollection(ArrayList::new));
+                        (GetStudyAttendanceResponse dto) -> totalStudyTimeMap.getOrDefault(dto.getUserId(), 0L)).reversed())
+                .collect(Collectors.toCollection(ArrayList::new));
 
         return response;
     }
@@ -240,26 +203,58 @@ public class StudyMemberService {
         return 5;
     }
 
-    private MonthlyStudyTimeDto toMonthlyStudyTimeDto(int year, int month, List<DailyStudySummary> summaries) {
-        YearMonth ym = YearMonth.of(year, month);
-        int daysInMonth = ym.lengthOfMonth();
+    private MonthlyStudyTimeDto buildMonthlyStudyTimeDto(
+            YearMonth yearMonth,
+            List<DailyStudySummary> dailyStudySummaries
+    ) {
+        Map<Integer, DailyStudySummary> summaryByDay = groupByDay(dailyStudySummaries);
+        List<Integer> studyTimeLevels = calculateDailyStudyLevels(yearMonth, summaryByDay);
+        return MonthlyStudyTimeDto.of(yearMonth, studyTimeLevels);
+    }
 
-        Map<Integer, DailyStudySummary> byDay = summaries.stream()
+    private List<Integer> calculateDailyStudyLevels(YearMonth yearMonth, Map<Integer, DailyStudySummary> summaryByDay) {
+        return IntStream.rangeClosed(1, yearMonth.lengthOfMonth())
+                .mapToObj(day -> {
+                    DailyStudySummary dailyStudySummary = summaryByDay.get(day);
+                    return (dailyStudySummary != null)
+                            ? determineLevelByStudyTime(dailyStudySummary.getStudyTime())
+                            : 0;
+                })
+                .toList();
+    }
+
+    private Map<Integer, DailyStudySummary> groupByDay(List<DailyStudySummary> dailyStudySummaries) {
+        return dailyStudySummaries.stream()
                 .collect(Collectors.toMap(
-                        dss -> dss.getCreatedAt().getDayOfMonth(),
-                        dss -> dss
+                        dailyStudySummary -> dailyStudySummary.getCreatedAt().getDayOfMonth(),
+                        dailyStudySummary -> dailyStudySummary
                 ));
+    }
 
-        List<Integer> studyTimeLevels = new ArrayList<>();
-        for (int day = 1; day <= daysInMonth; day++) {
-            DailyStudySummary dss = byDay.get(day);
-            if (dss != null) {
-                studyTimeLevels.add(determineLevelByStudyTime(dss.getStudyTime()));
-            } else {
-                studyTimeLevels.add(0);
+    private int collectMonthlyStudyTime(
+            Map<YearMonth, List<DailyStudySummary>> summariesByMonth,
+            List<MonthlyStudyTimeDto> monthlyStudyTimeDtos
+    ) {
+        YearMonth currentMonth = YearMonth.now();
+        YearMonth startMonth = currentMonth.minusMonths(MONTH_RANGE - 1);
+
+        int studyTimeCount = 0;
+
+        for (int monthOffset = 0; monthOffset < MONTH_RANGE; monthOffset++) {
+            YearMonth yearMonth = startMonth.plusMonths(monthOffset);
+
+            List<DailyStudySummary> summaries =
+                    summariesByMonth.getOrDefault(yearMonth, List.of());
+
+            if (yearMonth.equals(currentMonth)) {
+                studyTimeCount = summaries.size();
             }
+
+            monthlyStudyTimeDtos.add(buildMonthlyStudyTimeDto(yearMonth, summaries));
         }
 
-        return MonthlyStudyTimeDto.of(year, month, studyTimeLevels);
+        return studyTimeCount;
     }
+
+
 }
