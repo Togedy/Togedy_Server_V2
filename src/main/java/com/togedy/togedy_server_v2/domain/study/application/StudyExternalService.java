@@ -21,7 +21,6 @@ import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Comparator;
@@ -99,14 +98,13 @@ public class StudyExternalService {
     }
 
     public GetMyStudyInfoResponse findMyStudyInfo(Long userId) {
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfDay = today.atStartOfDay();
-        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
+        LocalDateTime start = TimeUtil.startOfToday();
+        LocalDateTime end = TimeUtil.startOfTomorrow();
 
         List<Study> studies = studyRepository.findAllByUserIdOrderByCreatedAtAsc(userId);
 
         Long studyTime = dailyStudySummaryRepository
-                .findByUserIdAndCreatedAt(userId, startOfDay, endOfDay)
+                .findByUserIdAndCreatedAt(userId, start, end)
                 .map(DailyStudySummary::getStudyTime)
                 .orElse(0L);
 
@@ -126,8 +124,8 @@ public class StudyExternalService {
 
         List<DailyStudySummary> dailyStudySummaries = dailyStudySummaryRepository.findAllByUserIdsAndPeriod(
                 memberIds,
-                startOfDay,
-                endOfDay
+                start,
+                end
         );
 
         Map<Long, Long> studyTimeMap = dailyStudySummaries.stream()

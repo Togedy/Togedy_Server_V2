@@ -90,9 +90,8 @@ public class StudyMemberService {
         User member = userRepository.findById(memberId).orElseThrow(UserNotFoundException::new);
 
         boolean isMyPlanner = member.getId().equals(userId);
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfDay = today.atStartOfDay();
-        LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
+        LocalDateTime start = TimeUtil.startOfToday();
+        LocalDateTime end = TimeUtil.startOfTomorrow();
         int completedPlanCount = 0;
         int totalPlanCount = 0;
 
@@ -103,7 +102,7 @@ public class StudyMemberService {
 
             for (StudyCategory studyCategory : studyCategoryList) {
                 List<Plan> planList = planRepository.findByStudyCategoryIdAndCreatedAtBetween(studyCategory.getId(),
-                        startOfDay, endOfDay);
+                        start, end);
 
                 totalPlanCount += planList.size();
                 completedPlanCount += (int) planList.stream().filter(plan -> plan.getStatus() == PlanStatus.SUCCESS)
@@ -126,7 +125,7 @@ public class StudyMemberService {
         List<Long> userIds = userList.stream().map(User::getId).toList();
 
         LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
 
         List<DailyStudySummary> dailyStudySummaryList = dailyStudySummaryRepository.findAllByUserIdsAndPeriod(userIds,
                 startDateTime, endDateTime);

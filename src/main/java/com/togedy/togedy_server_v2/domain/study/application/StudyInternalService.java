@@ -22,7 +22,7 @@ import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundExcep
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.service.S3Service;
-import java.time.LocalDate;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -239,9 +239,8 @@ public class StudyInternalService {
      * @return 스터디 그룹원 조회 DTO
      */
     public List<GetStudyMemberResponse> findStudyMember(Long studyId, Long userId) {
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfDay = today.atStartOfDay();
-        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
+        LocalDateTime start = TimeUtil.startOfToday();
+        LocalDateTime end = TimeUtil.startOfTomorrow();
 
         List<Object[]> membersWithRoles = userRepository.findAllByStudyIdOrderByCreatedAtAsc(studyId);
         List<Long> memberIds = membersWithRoles.stream()
@@ -249,7 +248,7 @@ public class StudyInternalService {
                 .toList();
 
         Map<Long, DailyStudySummary> dailyStudySummaryMap = loadDailyStudySummaryMap(
-                memberIds, startOfDay, endOfDay);
+                memberIds, start, end);
 
         List<GetStudyMemberResponse> responses = membersWithRoles.stream()
                 .map(memberWithRole -> mapToMemberResponse(memberWithRole, dailyStudySummaryMap))
@@ -286,9 +285,8 @@ public class StudyInternalService {
     }
 
     private int countCompletedMembers(Study study) {
-        LocalDate today = LocalDate.now();
-        LocalDateTime startOfDay = today.atStartOfDay();
-        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
+        LocalDateTime startOfDay = TimeUtil.startOfToday();
+        LocalDateTime endOfDay = TimeUtil.startOfTomorrow();
 
         List<User> members = userRepository.findAllByStudyId(study.getId());
 

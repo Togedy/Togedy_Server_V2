@@ -99,4 +99,13 @@ public class TimeUtil {
         return YearMonth.now().plusMonths(1).atDay(1).atStartOfDay();
     }
 
+    public static LocalDateTime startOfToday() {
+        return LocalDate.now().atStartOfDay();
+    }
+
+    public static LocalDateTime startOfTomorrow() {
+        return LocalDate.now().plusDays(1).atStartOfDay();
+    }
+
+
 }
