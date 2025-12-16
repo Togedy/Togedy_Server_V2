@@ -6,6 +6,7 @@ import com.togedy.togedy_server_v2.domain.planner.dao.StudyCategoryRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
+import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
@@ -23,7 +24,11 @@ import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -269,6 +274,84 @@ public class StudyInternalService {
         moveCurrentUserToTop(userId, responses, GetStudyMemberManagementResponse::getUserId);
         return responses;
     }
+
+    public List<GetStudyAttendanceResponse> findStudyAttendance(
+            LocalDate startDate,
+            LocalDate endDate,
+            Long studyId
+    ) {
+        List<User> users = userRepository.findAllByStudyId(studyId);
+        List<Long> userIds = users.stream()
+                .map(User::getId)
+                .toList();
+
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
+
+        List<Object[]> dailyStudyTimes = dailyStudySummaryRepository.findDailyStudyTimeByUserIdsAndPeriod(
+                userIds,
+                startDateTime,
+                endDateTime
+        );
+
+        Map<Long, Map<LocalDate, Long>> studyTimeMap = new HashMap<>();
+        Map<Long, Long> totalStudyTimeMap = new HashMap<>();
+
+        for (Object[] row : dailyStudyTimes) {
+            Long userId = ((Number) row[0]).longValue();
+            LocalDate date = ((java.sql.Date) row[1]).toLocalDate();
+            Long studyTime = ((Number) row[2]).longValue();
+
+            studyTimeMap.computeIfAbsent(userId, k -> new HashMap<>())
+                    .put(date, studyTime);
+
+            totalStudyTimeMap.merge(userId, studyTime, Long::sum);
+        }
+
+        return createStudyAttendanceResponses(startDate, endDate, users, studyTimeMap, totalStudyTimeMap);
+    }
+
+    private List<GetStudyAttendanceResponse> createStudyAttendanceResponses(
+            LocalDate startDate,
+            LocalDate endDate,
+            List<User> users,
+            Map<Long, Map<LocalDate, Long>> studyTimeMap,
+            Map<Long, Long> totalStudyTimeMap
+    ) {
+        return users.stream()
+                .map(user -> {
+                    Map<LocalDate, Long> userStudyTimeMap = studyTimeMap.getOrDefault(user.getId(), Map.of());
+                    List<String> studyTimes = buildStudyAttendanceTimes(startDate, endDate, userStudyTimeMap);
+
+                    return GetStudyAttendanceResponse.of(user, studyTimes);
+                })
+                .sorted(Comparator.comparingLong(
+                        (GetStudyAttendanceResponse response) ->
+                                totalStudyTimeMap.getOrDefault(response.getUserId(), 0L)
+                ).reversed())
+                .collect(Collectors.toCollection(ArrayList::new));
+    }
+
+    private List<String> buildStudyAttendanceTimes(
+            LocalDate startDate,
+            LocalDate endDate,
+            Map<LocalDate, Long> userStudyTimeMap
+    ) {
+        List<String> studyTimeList = new ArrayList<>();
+
+        for (LocalDate date = startDate; !date.isAfter(endDate); date = date.plusDays(1)) {
+            Long studyTime = userStudyTimeMap.get(date);
+
+            studyTimeList.add(
+                    studyTime != null && studyTime > 0
+                            ? TimeUtil.toTimeFormat(studyTime)
+                            : null
+            );
+        }
+
+        return studyTimeList;
+    }
+
 
     private <T> void moveCurrentUserToTop(
             Long userId,

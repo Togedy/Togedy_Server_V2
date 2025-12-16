@@ -9,7 +9,6 @@ import com.togedy.togedy_server_v2.domain.planner.entity.StudyCategory;
 import com.togedy.togedy_server_v2.domain.planner.enums.PlanStatus;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyPlannerDto;
-import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberStudyTimeResponse;
@@ -24,16 +23,11 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.UserAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
@@ -126,48 +120,6 @@ public class StudyMemberService {
                 totalPlanCount,
                 dailyPlannerDtos
         );
-    }
-
-    public List<GetStudyAttendanceResponse> findStudyAttendance(LocalDate startDate, LocalDate endDate, Long studyId) {
-        List<User> userList = userRepository.findAllByStudyId(studyId);
-        List<Long> userIds = userList.stream().map(User::getId).toList();
-
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
-
-        List<DailyStudySummary> dailyStudySummaryList = dailyStudySummaryRepository.findAllByUserIdsAndPeriod(userIds,
-                startDateTime, endDateTime);
-
-        Map<Long, List<DailyStudySummary>> dailyStudySummaryMap = dailyStudySummaryList.stream()
-                .collect(Collectors.groupingBy(DailyStudySummary::getUserId));
-
-        List<Object[]> dailyStudyTimeList = dailyStudySummaryRepository.findTotalStudyTimeByUserIdsAndPeriod(userIds,
-                startDateTime, endDateTime);
-
-        Map<Long, Long> totalStudyTimeMap = new HashMap<>(dailyStudyTimeList.stream().collect(
-                Collectors.toMap(row -> ((Number) row[0]).longValue(),
-                        row -> row[1] != null ? ((Number) row[1]).longValue() : 0L, Long::sum)));
-
-        List<GetStudyAttendanceResponse> response = userList.stream().map(user -> {
-                    List<String> studyTimeList = new ArrayList<>();
-                    for (LocalDate d = startDate; !d.isAfter(endDate); d = d.plusDays(1)) {
-                        LocalDateTime dayStart = d.atStartOfDay();
-                        LocalDateTime dayEnd = d.atTime(LocalTime.MAX);
-
-                        long totalStudyTime = dailyStudySummaryMap.getOrDefault(user.getId(), List.of()).stream()
-                                .filter(s -> !s.getCreatedAt().isBefore(dayStart) && !s.getCreatedAt().isAfter(dayEnd))
-                                .mapToLong(DailyStudySummary::getStudyTime).sum();
-
-                        studyTimeList.add(
-                                Optional.of(totalStudyTime).filter(s -> s > 0L).map(TimeUtil::toTimeFormat).orElse(null));
-                    }
-
-                    return GetStudyAttendanceResponse.of(user, studyTimeList);
-                }).sorted(Comparator.comparingLong(
-                        (GetStudyAttendanceResponse dto) -> totalStudyTimeMap.getOrDefault(dto.getUserId(), 0L)).reversed())
-                .collect(Collectors.toCollection(ArrayList::new));
-
-        return response;
     }
 
     public void modifyPlannerVisibility(PatchPlannerVisibilityRequest request, Long studyId, Long memberId,

@@ -181,7 +181,8 @@ public class StudyController {
             @RequestParam(name = "endDate") LocalDate endDate,
             @PathVariable Long studyId
     ) {
-        List<GetStudyAttendanceResponse> response = studyMemberService.findStudyAttendance(startDate, endDate, studyId);
+        List<GetStudyAttendanceResponse> response = studyInternalService.findStudyAttendance(startDate, endDate,
+                studyId);
         return ApiUtil.success(response);
     }
 

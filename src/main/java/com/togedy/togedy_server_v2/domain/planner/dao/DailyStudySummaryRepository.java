@@ -69,17 +69,22 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
     );
 
     @Query("""
-                SELECT dss.userId, SUM(dss.studyTime)
-                FROM DailyStudySummary dss
-                WHERE dss.userId IN :userIds
-                    AND dss.createdAt BETWEEN :startDateTime AND :endDateTime
-                GROUP BY dss.userId
+            SELECT
+                d.userId,
+                DATE(d.createdAt),
+                SUM(d.studyTime)
+            FROM DailyStudySummary d
+            WHERE d.userId IN :userIds
+            AND d.createdAt >= :start
+            AND d.createdAt < :end
+            GROUP BY d.userId, DATE(d.createdAt)
             """)
-    List<Object[]> findTotalStudyTimeByUserIdsAndPeriod(
-            @Param("userIds") List<Long> userIds,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime
+    List<Object[]> findDailyStudyTimeByUserIdsAndPeriod(
+            List<Long> userIds,
+            LocalDateTime start,
+            LocalDateTime end
     );
+
 
     List<DailyStudySummary> findAllByUserIdIn(Collection<Long> userIds);
 }
