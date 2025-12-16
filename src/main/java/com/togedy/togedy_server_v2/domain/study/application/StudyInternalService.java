@@ -6,6 +6,7 @@ import com.togedy.togedy_server_v2.domain.planner.dao.StudyCategoryRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
+import com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
@@ -288,7 +289,7 @@ public class StudyInternalService {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
 
-        List<Object[]> dailyStudyTimes = dailyStudySummaryRepository.findDailyStudyTimeByUserIdsAndPeriod(
+        List<DailyStudyTimeDto> dailyStudyTimes = dailyStudySummaryRepository.findDailyStudyTimeByUserIdsAndPeriod(
                 userIds,
                 startDateTime,
                 endDateTime
@@ -297,18 +298,22 @@ public class StudyInternalService {
         Map<Long, Map<LocalDate, Long>> studyTimeMap = new HashMap<>();
         Map<Long, Long> totalStudyTimeMap = new HashMap<>();
 
-        for (Object[] row : dailyStudyTimes) {
-            Long userId = ((Number) row[0]).longValue();
-            LocalDate date = ((java.sql.Date) row[1]).toLocalDate();
-            Long studyTime = ((Number) row[2]).longValue();
-
-            studyTimeMap.computeIfAbsent(userId, k -> new HashMap<>())
-                    .put(date, studyTime);
-
-            totalStudyTimeMap.merge(userId, studyTime, Long::sum);
-        }
+        accumulateStudyTimes(dailyStudyTimes, studyTimeMap, totalStudyTimeMap);
 
         return createStudyAttendanceResponses(startDate, endDate, users, studyTimeMap, totalStudyTimeMap);
+    }
+
+    private void accumulateStudyTimes(
+            List<DailyStudyTimeDto> dailyStudyTimes,
+            Map<Long, Map<LocalDate, Long>> studyTimeMap,
+            Map<Long, Long> totalStudyTimeMap
+    ) {
+        for (DailyStudyTimeDto dailyStudyTime : dailyStudyTimes) {
+            studyTimeMap.computeIfAbsent(dailyStudyTime.getUserId(), k -> new HashMap<>())
+                    .put(dailyStudyTime.getDate(), dailyStudyTime.getStudyTime());
+
+            totalStudyTimeMap.merge(dailyStudyTime.getUserId(), dailyStudyTime.getStudyTime(), Long::sum);
+        }
     }
 
     private List<GetStudyAttendanceResponse> createStudyAttendanceResponses(
