@@ -6,7 +6,6 @@ import com.togedy.togedy_server_v2.domain.planner.dao.StudyCategoryRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.entity.Plan;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyCategory;
-import com.togedy.togedy_server_v2.domain.planner.enums.PlanStatus;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyPlannerDto;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
@@ -217,7 +216,7 @@ public class StudyMemberService {
 
     private int countCompletedPlans(List<Plan> planList) {
         return (int) planList.stream()
-                .filter(plan -> plan.getStatus() == PlanStatus.SUCCESS)
+                .filter(Plan::isCompleted)
                 .count();
     }
 
