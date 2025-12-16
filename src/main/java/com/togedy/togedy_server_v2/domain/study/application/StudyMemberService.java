@@ -87,37 +87,45 @@ public class StudyMemberService {
     public GetStudyMemberPlannerResponse findStudyMemberPlanner(Long studyId, Long memberId, Long userId) {
         validateUserInStudy(studyId, userId);
 
-        User member = userRepository.findById(memberId).orElseThrow(UserNotFoundException::new);
+        User member = userRepository.findById(memberId)
+                .orElseThrow(UserNotFoundException::new);
 
         boolean isMyPlanner = member.getId().equals(userId);
-        LocalDateTime start = TimeUtil.startOfToday();
-        LocalDateTime end = TimeUtil.startOfTomorrow();
-        int completedPlanCount = 0;
-        int totalPlanCount = 0;
 
-        List<DailyPlannerDto> dailyPlannerDtoList = new ArrayList<>();
-
-        if (member.isPlannerVisible()) {
-            List<StudyCategory> studyCategoryList = studyCategoryRepository.findAllByUserId(memberId);
-
-            for (StudyCategory studyCategory : studyCategoryList) {
-                List<Plan> planList = planRepository.findByStudyCategoryIdAndCreatedAtBetween(studyCategory.getId(),
-                        start, end);
-
-                totalPlanCount += planList.size();
-                completedPlanCount += (int) planList.stream().filter(plan -> plan.getStatus() == PlanStatus.SUCCESS)
-                        .count();
-
-                List<PlanDto> planDtoList = planList.stream().map(PlanDto::from).toList();
-
-                dailyPlannerDtoList.add(DailyPlannerDto.of(studyCategory, planDtoList));
-            }
-
-            return GetStudyMemberPlannerResponse.of(isMyPlanner, true, completedPlanCount, totalPlanCount,
-                    dailyPlannerDtoList);
+        if (!member.isPlannerVisible()) {
+            return GetStudyMemberPlannerResponse.of(isMyPlanner, false);
         }
 
-        return GetStudyMemberPlannerResponse.of(isMyPlanner, false);
+        LocalDateTime startOfToday = TimeUtil.startOfToday();
+        LocalDateTime startOfTomorrow = TimeUtil.startOfTomorrow();
+
+        List<StudyCategory> studyCategories = studyCategoryRepository.findAllByUserId(memberId);
+
+        List<Long> studyCategoryIds = studyCategories.stream()
+                .map(StudyCategory::getId)
+                .toList();
+
+        List<Plan> todayPlans = planRepository.findAllByStudyCategoryIdsAndPeriod(
+                studyCategoryIds,
+                startOfToday,
+                startOfTomorrow
+        );
+
+        Map<Long, List<Plan>> plansByStudyCategoryIds = todayPlans.stream()
+                .collect(Collectors.groupingBy(Plan::getStudyCategoryId));
+
+        List<DailyPlannerDto> dailyPlannerDtos = buildDailyPlannerDtos(studyCategories, plansByStudyCategoryIds);
+
+        int completedPlanCount = countCompletedPlans(todayPlans);
+        int totalPlanCount = todayPlans.size();
+
+        return GetStudyMemberPlannerResponse.of(
+                isMyPlanner,
+                true,
+                completedPlanCount,
+                totalPlanCount,
+                dailyPlannerDtos
+        );
     }
 
     public List<GetStudyAttendanceResponse> findStudyAttendance(LocalDate startDate, LocalDate endDate, Long studyId) {
@@ -255,5 +263,28 @@ public class StudyMemberService {
         return studyTimeCount;
     }
 
+    private int countCompletedPlans(List<Plan> planList) {
+        return (int) planList.stream()
+                .filter(plan -> plan.getStatus() == PlanStatus.SUCCESS)
+                .count();
+    }
 
+    private List<DailyPlannerDto> buildDailyPlannerDtos(
+            List<StudyCategory> studyCategories,
+            Map<Long, List<Plan>> plansByStudyCategoryIds
+    ) {
+        List<DailyPlannerDto> dailyPlannerDtos = new ArrayList<>();
+
+        for (StudyCategory studyCategory : studyCategories) {
+            List<Plan> plansOfStudyCategory = plansByStudyCategoryIds.getOrDefault(studyCategory.getId(), List.of());
+
+            List<PlanDto> planDtos = plansOfStudyCategory.stream()
+                    .map(PlanDto::from)
+                    .toList();
+
+            dailyPlannerDtos.add(DailyPlannerDto.of(studyCategory, planDtos));
+        }
+
+        return dailyPlannerDtos;
+    }
 }
