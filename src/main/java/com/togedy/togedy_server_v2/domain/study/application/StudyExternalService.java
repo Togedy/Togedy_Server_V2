@@ -49,6 +49,7 @@ public class StudyExternalService {
     private final S3Service s3Service;
 
     private static final String TIER = "tier";
+    private static final int POPULAR_STUDY_SEARCH_SIZE = 3;
 
     /**
      * 스터디를 생성한다.
@@ -186,7 +187,7 @@ public class StudyExternalService {
         Collections.shuffle(studies);
 
         List<Study> selectedStudies = studies.stream()
-                .limit(3)
+                .limit(POPULAR_STUDY_SEARCH_SIZE)
                 .toList();
 
         List<UserStudy> userStudies = loadUserStudies(selectedStudies);
