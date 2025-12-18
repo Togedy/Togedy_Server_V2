@@ -69,9 +69,9 @@ public class StudyExternalService {
      */
     @Transactional
     public void generateStudy(PostStudyRequest request, Long userId) {
-        Long goalTime = TimeUtil.convertHoursToSeconds(request.getGoalTime());
-        String imageUrl = uploadStudyImage(request.getStudyImage());
         StudyType type = determineStudyTypeByGoalTime(request.getGoalTime());
+        Long goalTime = (type == StudyType.CHALLENGE) ? TimeUtil.convertHoursToSeconds(request.getGoalTime()) : null;
+        String imageUrl = uploadStudyImage(request.getStudyImage());
 
         Study study = Study.builder()
                 .name(request.getStudyName())
