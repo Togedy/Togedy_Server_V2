@@ -68,7 +68,7 @@ public class StudyMemberService {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, memberId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        return GetStudyMemberProfileResponse.of(member, TimeUtil.toTimeFormat(totalStudyTime),
+        return GetStudyMemberProfileResponse.of(member, TimeUtil.formatSecondsToHms(totalStudyTime),
                 userStudy.calculateElapsedDays());
     }
 

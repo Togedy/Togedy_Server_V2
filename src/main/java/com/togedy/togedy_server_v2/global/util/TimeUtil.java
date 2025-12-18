@@ -13,7 +13,15 @@ public class TimeUtil {
     private TimeUtil() {
     }
 
-    public static long durationInSeconds(
+    /**
+     * 시작 날짜/시간과 종료 날짜/시간 사이의 경과 시간을 초 단위로 계산한다.
+     * <p>
+     * 종료 날짜가 {@code null}인 경우 0을 반환한다. 시간 정보가 {@code null}인 경우 해당 날짜의 시작 시각을 기준으로 계산한다.
+     * </p>
+     *
+     * @return 경과 시간 (초)
+     */
+    public static long calculateDurationInSeconds(
             LocalDate startDate, LocalTime startTime,
             LocalDate endDate, LocalTime endTime
     ) {
@@ -37,11 +45,26 @@ public class TimeUtil {
         return LocalDateTime.of(date, Objects.requireNonNullElse(time, LocalTime.MIN));
     }
 
-    public static int calculateRemainingDays(LocalDate startDate) {
+    public static int calculateDaysUntil(LocalDate startDate) {
         long remainingDays = ChronoUnit.DAYS.between(LocalDate.now(), startDate);
         return (int) remainingDays;
     }
 
+    /**
+     * 기준 시각으로부터 현재까지 경과된 시간을 사람이 읽기 쉬운 형태로 변환한다.
+     * <p>
+     * 변환 규칙은 다음과 같다.
+     * <ul>
+     *     <li>10분 미만: "방금 전"</li>
+     *     <li>1시간 미만: 10분 단위로 반올림된 분 표시</li>
+     *     <li>24시간 미만: 시간 단위 표시</li>
+     *     <li>24시간 이상: {@code null} 반환</li>
+     * </ul>
+     * </p>
+     *
+     * @param time 기준 시각
+     * @return 경과 시간 문자열, 표시할 수 없는 경우 {@code null}
+     */
     public static String formatTimeAgo(LocalDateTime time) {
         if (time == null) {
             return null;
@@ -70,12 +93,22 @@ public class TimeUtil {
         return null;
     }
 
+    /**
+     * 목표 시간 대비 현재 학습 시간의 달성률을 퍼센트(%) 단위로 계산한다.
+     * <p>
+     * 달성률은 {@code (currentTime / goalTime) * 100}으로 계산되며, 최대값은 100으로 제한된다.
+     * </p>
+     *
+     * @param currentTime 현재 학습 시간 (초)
+     * @param goalTime    목표 학습 시간 (초)
+     * @return 달성률 (0~100)
+     */
     public static int calculateAchievement(Long currentTime, Long goalTime) {
         int percent = (int) ((double) currentTime / goalTime * 100);
         return Math.min(percent, 100);
     }
 
-    public static String toTimeFormat(Long second) {
+    public static String formatSecondsToHms(Long second) {
         if (second == null) {
             return "00:00:00";
         }

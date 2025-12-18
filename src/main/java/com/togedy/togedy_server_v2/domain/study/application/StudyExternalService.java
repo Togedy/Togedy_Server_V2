@@ -405,7 +405,7 @@ public class StudyExternalService {
                 ? TimeUtil.formatTimeAgo(lastAcivatedUser.getLastActivatedAt())
                 : null;
 
-        String challengeGoalTime = TimeUtil.toTimeFormat(study.getGoalTime());
+        String challengeGoalTime = TimeUtil.formatSecondsToHms(study.getGoalTime());
         boolean isNewlyCreated = study.validateNewlyCreated();
 
         return StudySearchDto.of(
@@ -515,8 +515,8 @@ public class StudyExternalService {
                     long goalTime = challengeStudy.getGoalTime();
                     int achievement = TimeUtil.calculateAchievement(studyTime, goalTime);
                     return GetMyStudyInfoResponse.of(
-                            TimeUtil.toTimeFormat(goalTime),
-                            TimeUtil.toTimeFormat(studyTime),
+                            TimeUtil.formatSecondsToHms(goalTime),
+                            TimeUtil.formatSecondsToHms(studyTime),
                             achievement,
                             studyDtos
                     );

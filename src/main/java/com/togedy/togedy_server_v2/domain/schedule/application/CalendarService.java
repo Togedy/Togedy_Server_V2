@@ -1,9 +1,9 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
-import com.togedy.togedy_server_v2.domain.schedule.dto.GetDdayScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dto.DailyScheduleListDto;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetDailyCalendarResponse;
+import com.togedy.togedy_server_v2.domain.schedule.dto.GetDdayScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetMonthlyCalendarResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.MonthlyScheduleListDto;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
@@ -12,9 +12,6 @@ import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRep
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -24,6 +21,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
@@ -37,9 +36,9 @@ public class CalendarService {
     /**
      * 유저가 해당 월에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
      *
-     * @param month     년도 및 월 정보(yyyy-MM)
-     * @param userId    유저ID
-     * @return          기간 순으로 정렬된 월별 개인 일정 및 대학 일정 DTO
+     * @param month  년도 및 월 정보(yyyy-MM)
+     * @param userId 유저ID
+     * @return 기간 순으로 정렬된 월별 개인 일정 및 대학 일정 DTO
      */
     public GetMonthlyCalendarResponse findMonthlyCalendar(YearMonth month, Long userId) {
         LocalDate startOfMonth = month.atDay(1);
@@ -55,9 +54,9 @@ public class CalendarService {
     /**
      * 유저가 해당 날짜에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
      *
-     * @param date      년도, 월, 날짜 정보 (yyyy-MM-dd)
-     * @param userId    유저ID
-     * @return          기간 순으로 정렬된 일별 유저 및 대학 일정 DTO
+     * @param date   년도, 월, 날짜 정보 (yyyy-MM-dd)
+     * @param userId 유저ID
+     * @return 기간 순으로 정렬된 일별 유저 및 대학 일정 DTO
      */
     public GetDailyCalendarResponse findDailyCalendar(LocalDate date, Long userId) {
         List<DailyScheduleListDto> dailyScheduleList = new ArrayList<>(findDailyUserSchedule(userId, date));
@@ -70,15 +69,15 @@ public class CalendarService {
     /**
      * 유저가 D-Day 설정한 개인 일정을 조회한다.
      *
-     * @param userId    유저ID
-     * @return          D-Day 설정한 개인 일정이 존재 여부 및 일정 정보 반환
+     * @param userId 유저ID
+     * @return D-Day 설정한 개인 일정이 존재 여부 및 일정 정보 반환
      */
     public GetDdayScheduleResponse findDdaySchedule(Long userId) {
         Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
 
         if (dDaySchedule.isPresent()) {
             return GetDdayScheduleResponse.of(dDaySchedule.get(),
-                    TimeUtil.calculateRemainingDays(dDaySchedule.get().getStartDate()));
+                    TimeUtil.calculateDaysUntil(dDaySchedule.get().getStartDate()));
         }
 
         return GetDdayScheduleResponse.temp();
@@ -87,10 +86,10 @@ public class CalendarService {
     /**
      * 유저가 보유 중인 해당 월의 개인 일정을 조회한다.
      *
-     * @param userId        유저ID
-     * @param startOfMonth  일정 시작 날짜
-     * @param endOfMonth    일정 종료 날짜
-     * @return              월별 일정 DTO List
+     * @param userId       유저ID
+     * @param startOfMonth 일정 시작 날짜
+     * @param endOfMonth   일정 종료 날짜
+     * @return 월별 일정 DTO List
      */
     private List<MonthlyScheduleListDto> findMonthlyUserSchedule(
             Long userId,
@@ -107,10 +106,10 @@ public class CalendarService {
     /**
      * 유저가 보유 중인 해당 월의 대학 일정을 조회한다.
      *
-     * @param userId        유저 ID
-     * @param startOfMonth  일정 시작 날짜
-     * @param endOfMonth    일정 종료 날짜
-     * @return              월별 일정 DTO List
+     * @param userId       유저 ID
+     * @param startOfMonth 일정 시작 날짜
+     * @param endOfMonth   일정 종료 날짜
+     * @return 월별 일정 DTO List
      */
     private List<MonthlyScheduleListDto> findMonthlyUniversitySchedule(
             Long userId,
@@ -135,9 +134,9 @@ public class CalendarService {
     /**
      * 유저가 보유 중인 해당 날짜의 개인 일정을 조회한다.
      *
-     * @param userId    유저ID
-     * @param date      년도, 월, 날짜 정보 (yyyy-MM-dd)
-     * @return          일별 일정 DTO List
+     * @param userId 유저ID
+     * @param date   년도, 월, 날짜 정보 (yyyy-MM-dd)
+     * @return 일별 일정 DTO List
      */
     private List<DailyScheduleListDto> findDailyUserSchedule(Long userId, LocalDate date) {
         return userScheduleRepository
@@ -150,9 +149,9 @@ public class CalendarService {
     /**
      * 유저가 보유 중인 해당 날짜의 대학 일정을 조회한다.
      *
-     * @param userId    유저ID
-     * @param date      년도, 월, 날짜 정보 (yyyy-MM-dd)
-     * @return          일별 일정 DTO List
+     * @param userId 유저ID
+     * @param date   년도, 월, 날짜 정보 (yyyy-MM-dd)
+     * @return 일별 일정 DTO List
      */
     private List<DailyScheduleListDto> findDailyUniversitySchedule(Long userId, LocalDate date) {
         return userUniversityMethodRepository
@@ -173,14 +172,14 @@ public class CalendarService {
     /**
      * 일정의 시작 및 종료 날짜 혹은 시간을 기준으로 정렬한다.
      *
-     * @return  기간 및 시작 시간 순으로 정렬하는 Comparator
+     * @return 기간 및 시작 시간 순으로 정렬하는 Comparator
      */
     private Comparator<ScheduleComparable> scheduleComparator() {
         return Comparator
                 .<ScheduleComparable>comparingLong(sc ->
-                        TimeUtil.durationInSeconds(
+                        TimeUtil.calculateDurationInSeconds(
                                 sc.getStartDate(), sc.getStartTime(),
-                                sc.getEndDate(),   sc.getEndTime()))
+                                sc.getEndDate(), sc.getEndTime()))
                 .thenComparing(sc ->
                         TimeUtil.toStartDateTime(sc.getStartDate(), sc.getStartTime()))
                 .reversed();

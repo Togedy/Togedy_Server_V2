@@ -502,7 +502,7 @@ public class StudyInternalService {
 
             studyTimeList.add(
                     studyTime != null && studyTime > 0
-                            ? TimeUtil.toTimeFormat(studyTime)
+                            ? TimeUtil.formatSecondsToHms(studyTime)
                             : null
             );
         }
