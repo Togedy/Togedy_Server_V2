@@ -176,8 +176,12 @@ public class StudyMemberService {
      * @throws UserAccessDeniedException 요청한 사용자가 본인이 아닌 경우
      * @throws UserNotFoundException     변경 대상 사용자가 존재하지 않는 경우
      */
-    public void modifyPlannerVisibility(PatchPlannerVisibilityRequest request, Long studyId, Long memberId,
-                                        Long userId) {
+    public void modifyPlannerVisibility(
+            PatchPlannerVisibilityRequest request,
+            Long studyId,
+            Long memberId,
+            Long userId
+    ) {
         if (!memberId.equals(userId)) {
             throw new UserAccessDeniedException();
         }

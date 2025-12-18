@@ -197,7 +197,8 @@ public class StudyExternalService {
             boolean challenge,
             int page,
             int size,
-            Long userId) {
+            Long userId
+    ) {
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
 
         List<StudyTag> studyTags = List.of();
