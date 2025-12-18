@@ -224,7 +224,7 @@ public class StudyExternalService {
             return 0;
         }
 
-        return (int) ((double) completedMemberCount / studyMemberCount);
+        return (int) ((completedMemberCount * 100.0) / studyMemberCount);
     }
 
     private StudyType detemineStudyType(Integer goalTime) {
