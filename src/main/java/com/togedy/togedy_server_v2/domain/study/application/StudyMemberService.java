@@ -98,7 +98,7 @@ public class StudyMemberService {
 
         List<MonthlyStudyTimeDto> monthlyStudyTimeDtoList = new ArrayList<>();
 
-        int studyTimeCount = collectMonthlyStudyTime(summariesByMonth, monthlyStudyTimeDtoList);
+        int studyTimeCount = collectMonthlyStudyTimes(summariesByMonth, monthlyStudyTimeDtoList);
 
         return GetStudyMemberStudyTimeResponse.of(studyTimeCount, monthlyStudyTimeDtoList);
     }
@@ -247,8 +247,8 @@ public class StudyMemberService {
             YearMonth yearMonth,
             List<DailyStudySummary> dailyStudySummaries
     ) {
-        Map<Integer, DailyStudySummary> summaryByDay = groupByDay(dailyStudySummaries);
-        List<Integer> studyTimeLevels = calculateDailyStudyLevels(yearMonth, summaryByDay);
+        Map<Integer, DailyStudySummary> summaryByDay = groupByDayOfMonth(dailyStudySummaries);
+        List<Integer> studyTimeLevels = calculateDailyStudyLevelsInMonth(yearMonth, summaryByDay);
         return MonthlyStudyTimeDto.of(yearMonth, studyTimeLevels);
     }
 
@@ -262,7 +262,10 @@ public class StudyMemberService {
      * @param summaryByDay 일(day) 기준으로 그룹화된 학습 요약 정보
      * @return 날짜 순서대로 정렬된 일별 학습 레벨 목록
      */
-    private List<Integer> calculateDailyStudyLevels(YearMonth yearMonth, Map<Integer, DailyStudySummary> summaryByDay) {
+    private List<Integer> calculateDailyStudyLevelsInMonth(
+            YearMonth yearMonth,
+            Map<Integer, DailyStudySummary> summaryByDay
+    ) {
         return IntStream.rangeClosed(1, yearMonth.lengthOfMonth())
                 .mapToObj(day -> {
                     DailyStudySummary dailyStudySummary = summaryByDay.get(day);
@@ -279,7 +282,7 @@ public class StudyMemberService {
      * @param dailyStudySummaries 일일 학습 기록 목록
      * @return 날짜(day)를 키로 하는 학습 요약 정보 맵
      */
-    private Map<Integer, DailyStudySummary> groupByDay(List<DailyStudySummary> dailyStudySummaries) {
+    private Map<Integer, DailyStudySummary> groupByDayOfMonth(List<DailyStudySummary> dailyStudySummaries) {
         return dailyStudySummaries.stream()
                 .collect(Collectors.toMap(
                         dailyStudySummary -> dailyStudySummary.getCreatedAt().getDayOfMonth(),
@@ -300,7 +303,7 @@ public class StudyMemberService {
      * @param monthlyStudyTimeDtos 월별 학습 DTO를 추가할 대상 리스트 (in-place 변경)
      * @return 현재 월의 학습 기록 일수
      */
-    private int collectMonthlyStudyTime(
+    private int collectMonthlyStudyTimes(
             Map<YearMonth, List<DailyStudySummary>> summariesByMonth,
             List<MonthlyStudyTimeDto> monthlyStudyTimeDtos
     ) {

@@ -76,7 +76,7 @@ public class StudyInternalService {
                 .orElseThrow(StudyLeaderNotFoundException::new);
 
         Integer completedCount = study.isChallengeStudy()
-                ? countCompletedMembers(study)
+                ? countCompletedChallengeMembers(study)
                 : null;
 
         boolean isStudyLeader = leader.getId()
@@ -149,7 +149,7 @@ public class StudyInternalService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        String studyImageUrl = updateStudyImage(request, study);
+        String studyImageUrl = replaceStudyImage(request, study);
 
         study.updateInfo(request, studyImageUrl);
         studyRepository.save(study);
@@ -344,11 +344,11 @@ public class StudyInternalService {
                 .map(memberWithRole -> ((User) memberWithRole[0]).getId())
                 .toList();
 
-        Map<Long, DailyStudySummary> dailyStudySummaryMap = loadDailyStudySummaryMap(
+        Map<Long, DailyStudySummary> dailyStudySummaryMap = findDailyStudySummaryMapByUserIds(
                 memberIds, start, end);
 
         List<GetStudyMemberResponse> responses = membersWithRoles.stream()
-                .map(memberWithRole -> mapToMemberResponse(memberWithRole, dailyStudySummaryMap))
+                .map(memberWithRole -> buildMemberResponse(memberWithRole, dailyStudySummaryMap))
                 .collect(Collectors.toList());
 
         moveCurrentUserToTop(userId, responses, GetStudyMemberResponse::getUserId);
@@ -419,7 +419,7 @@ public class StudyInternalService {
 
         accumulateStudyTimes(dailyStudyTimes, studyTimeMap, totalStudyTimeMap);
 
-        return createStudyAttendanceResponses(startDate, endDate, users, studyTimeMap, totalStudyTimeMap);
+        return buildStudyAttendanceResponses(startDate, endDate, users, studyTimeMap, totalStudyTimeMap);
     }
 
     /**
@@ -458,7 +458,7 @@ public class StudyInternalService {
      * @param totalStudyTimeMap 사용자별 총 공부 시간 맵
      * @return 스터디 출석 및 공부 시간 DTO 목록
      */
-    private List<GetStudyAttendanceResponse> createStudyAttendanceResponses(
+    private List<GetStudyAttendanceResponse> buildStudyAttendanceResponses(
             LocalDate startDate,
             LocalDate endDate,
             List<User> users,
@@ -468,7 +468,7 @@ public class StudyInternalService {
         return users.stream()
                 .map(user -> {
                     Map<LocalDate, Long> userStudyTimeMap = studyTimeMap.getOrDefault(user.getId(), Map.of());
-                    List<String> studyTimes = buildStudyAttendanceTimes(startDate, endDate, userStudyTimeMap);
+                    List<String> studyTimes = buildDailyStudyAttendanceTimes(startDate, endDate, userStudyTimeMap);
 
                     return GetStudyAttendanceResponse.of(user, studyTimes);
                 })
@@ -490,7 +490,7 @@ public class StudyInternalService {
      * @param userStudyTimeMap 사용자별 날짜별 공부 시간 맵
      * @return 날짜 순서대로 정렬된 공부 시간 문자열 목록
      */
-    private List<String> buildStudyAttendanceTimes(
+    private List<String> buildDailyStudyAttendanceTimes(
             LocalDate startDate,
             LocalDate endDate,
             Map<LocalDate, Long> userStudyTimeMap
@@ -544,7 +544,7 @@ public class StudyInternalService {
      * @param study 챌린지 스터디 엔티티
      * @return 챌린지 달성 멤버 수
      */
-    private int countCompletedMembers(Study study) {
+    private int countCompletedChallengeMembers(Study study) {
         LocalDateTime startOfDay = TimeUtil.startOfToday();
         LocalDateTime endOfDay = TimeUtil.startOfTomorrow();
 
@@ -579,7 +579,7 @@ public class StudyInternalService {
      * @param study   대상 스터디 엔티티
      * @return 변경된 이미지 URL, 변경이 없는 경우 {@code null}
      */
-    private String updateStudyImage(PatchStudyInfoRequest request, Study study) {
+    private String replaceStudyImage(PatchStudyInfoRequest request, Study study) {
         if (request.getStudyImage() != null) {
             String studyImageUrl = s3Service.uploadFile(request.getStudyImage());
             String oldUrl = study.changeImageUrl(studyImageUrl);
@@ -599,7 +599,7 @@ public class StudyInternalService {
      * @param dailyStudySummaryMap 사용자별 오늘 학습 요약 정보 맵
      * @return 스터디 멤버 조회 응답 DTO
      */
-    private GetStudyMemberResponse mapToMemberResponse(
+    private GetStudyMemberResponse buildMemberResponse(
             Object[] memberWithRole,
             Map<Long, DailyStudySummary> dailyStudySummaryMap
     ) {
@@ -622,7 +622,7 @@ public class StudyInternalService {
      * @param endOfDay   조회 종료 시각
      * @return 사용자 ID를 키로 하는 일일 학습 요약 정보 맵
      */
-    private Map<Long, DailyStudySummary> loadDailyStudySummaryMap(
+    private Map<Long, DailyStudySummary> findDailyStudySummaryMapByUserIds(
             List<Long> memberIds,
             LocalDateTime startOfDay,
             LocalDateTime endOfDay

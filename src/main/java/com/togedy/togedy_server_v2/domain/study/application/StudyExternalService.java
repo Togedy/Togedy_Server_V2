@@ -70,8 +70,8 @@ public class StudyExternalService {
     @Transactional
     public void generateStudy(PostStudyRequest request, Long userId) {
         Long goalTime = TimeUtil.convertHoursToSeconds(request.getGoalTime());
-        String imageUrl = convertImageToUrl(request.getStudyImage());
-        StudyType type = detemineStudyType(request.getGoalTime());
+        String imageUrl = uploadStudyImage(request.getStudyImage());
+        StudyType type = determineStudyTypeByGoalTime(request.getGoalTime());
 
         Study study = Study.builder()
                 .name(request.getStudyName())
@@ -136,7 +136,7 @@ public class StudyExternalService {
                 .map(DailyStudySummary::getStudyTime)
                 .orElse(0L);
 
-        List<UserStudy> userStudies = loadUserStudies(studies);
+        List<UserStudy> userStudies = findUserStudiesByStudies(studies);
 
         Map<Long, List<UserStudy>> userStudyMap = userStudies.stream()
                 .collect(Collectors.groupingBy(UserStudy::getStudyId));
@@ -163,7 +163,7 @@ public class StudyExternalService {
                 ));
 
         List<StudyDto> studyDtos = studies.stream()
-                .map(study -> toStudyDto(study, userStudyMap, memberMap, studyTimeMap))
+                .map(study -> buildStudyDto(study, userStudyMap, memberMap, studyTimeMap))
                 .toList();
 
         return buildMyStudyInfoResponse(studies, studyTime, studyDtos);
@@ -214,7 +214,7 @@ public class StudyExternalService {
 
         List<Study> studies = studySlice.getContent();
 
-        List<UserStudy> userStudies = loadUserStudies(studies);
+        List<UserStudy> userStudies = findUserStudiesByStudies(studies);
 
         Map<Long, List<UserStudy>> userStudyMap = userStudies.stream()
                 .collect(Collectors.groupingBy(UserStudy::getStudyId));
@@ -222,7 +222,7 @@ public class StudyExternalService {
         Map<Long, User> userMap = mapUsersById(userStudies);
 
         List<StudySearchDto> studySearchDtos = studySlice.stream()
-                .map(study -> toStudySearchDto(study, userStudyMap, userMap))
+                .map(study -> buildStudySearchDto(study, userStudyMap, userMap))
                 .toList();
 
         return GetStudySearchResponse.of(studySlice.hasNext(), studySearchDtos);
@@ -248,7 +248,7 @@ public class StudyExternalService {
                 .limit(POPULAR_STUDY_SEARCH_SIZE)
                 .toList();
 
-        List<UserStudy> userStudies = loadUserStudies(selectedStudies);
+        List<UserStudy> userStudies = findUserStudiesByStudies(selectedStudies);
 
         Map<Long, List<UserStudy>> userStudyMap = userStudies.stream()
                 .collect(Collectors.groupingBy(UserStudy::getStudyId));
@@ -256,7 +256,7 @@ public class StudyExternalService {
         Map<Long, User> userMap = mapUsersById(userStudies);
 
         return selectedStudies.stream()
-                .map(study -> toStudySearchDto(study, userStudyMap, userMap))
+                .map(study -> buildStudySearchDto(study, userStudyMap, userMap))
                 .toList();
     }
 
@@ -298,7 +298,7 @@ public class StudyExternalService {
      * @param studyMemberCount     스터디 참여 인원 수
      * @return 챌린지 성공률 (퍼센트, 0~100)
      */
-    private int calculateCompleteRate(int completedMemberCount, int studyMemberCount) {
+    private int calculateCompletionPercentage(int completedMemberCount, int studyMemberCount) {
         if (studyMemberCount == 0) {
             return 0;
         }
@@ -315,7 +315,7 @@ public class StudyExternalService {
      * @param goalTime 스터디 목표 시간 (시간 단위)
      * @return 결정된 스터디 타입
      */
-    private StudyType detemineStudyType(Integer goalTime) {
+    private StudyType determineStudyTypeByGoalTime(Integer goalTime) {
         if (goalTime != null) {
             return StudyType.CHALLENGE;
         }
@@ -334,7 +334,7 @@ public class StudyExternalService {
      * @param image 스터디 이미지 파일
      * @return 업로드된 이미지 URL, 이미지가 없는 경우 {@code null}
      */
-    private String convertImageToUrl(MultipartFile image) {
+    private String uploadStudyImage(MultipartFile image) {
         if (image != null) {
             return s3Service.uploadFile(image);
         }
@@ -347,7 +347,7 @@ public class StudyExternalService {
      * @param studies 스터디 목록
      * @return 스터디 ID에 속한 유저-스터디 연관 정보 목록
      */
-    private List<UserStudy> loadUserStudies(List<Study> studies) {
+    private List<UserStudy> findUserStudiesByStudies(List<Study> studies) {
         List<Long> studyIds = studies
                 .stream()
                 .map(Study::getId)
@@ -390,7 +390,7 @@ public class StudyExternalService {
      * @param userMap      사용자 ID를 키로 하고, {@link User} 엔티티를 값으로 갖는 맵
      * @return 스터디 검색 결과 DTO
      */
-    private StudySearchDto toStudySearchDto(
+    private StudySearchDto buildStudySearchDto(
             Study study,
             Map<Long, List<UserStudy>> userStudyMap,
             Map<Long, User> userMap
@@ -398,7 +398,7 @@ public class StudyExternalService {
         List<UserStudy> members = userStudyMap.get(study.getId());
 
         User leader = findLeaderInStudy(userMap, members);
-        User lastAcivatedUser = findLastActivatedUserInStudy(userMap, members);
+        User lastAcivatedUser = findLastActiveMemberInStudy(userMap, members);
 
         String lastActivatedAt = lastAcivatedUser != null
                 ? TimeUtil.formatTimeAgo(lastAcivatedUser.getLastActivatedAt())
@@ -426,7 +426,7 @@ public class StudyExternalService {
      * @param members 스터디 유저 정보 목록
      * @return 가장 최근에 활동한 사용자, 존재하지 않는 경우 {@code null}
      */
-    private User findLastActivatedUserInStudy(Map<Long, User> userMap, List<UserStudy> members) {
+    private User findLastActiveMemberInStudy(Map<Long, User> userMap, List<UserStudy> members) {
         return members.stream()
                 .map(userStudy -> userMap.get(userStudy.getUserId()))
                 .filter(Objects::nonNull)
@@ -463,7 +463,7 @@ public class StudyExternalService {
      * @param studyTimeMap 사용자별 당일 공부 시간 맵
      * @return 스터디 정보 DTO
      */
-    private StudyDto toStudyDto(
+    private StudyDto buildStudyDto(
             Study study,
             Map<Long, List<UserStudy>> userStudyMap,
             Map<Long, User> memberMap,
@@ -481,7 +481,7 @@ public class StudyExternalService {
 
         if (study.isChallengeStudy()) {
             int completedMemberCount = countCompletedMembers(study, members, studyTimeMap);
-            int challengeAchievement = calculateCompleteRate(completedMemberCount, study.getMemberCount());
+            int challengeAchievement = calculateCompletionPercentage(completedMemberCount, study.getMemberCount());
             return StudyDto.of(study, challengeAchievement, completedMemberCount, activeMemberDtos);
         }
 
