@@ -12,13 +12,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "user_study")
@@ -62,8 +61,8 @@ public class UserStudy extends BaseEntity {
 
     public void delegateLeader(UserStudy member) {
         this.validateStudyLeader();
-        this.role = StudyRole.LEADER;
-        member.role = StudyRole.MEMBER;
+        this.role = StudyRole.MEMBER;
+        member.role = StudyRole.LEADER;
     }
 
     public int calculateElapsedDays() {

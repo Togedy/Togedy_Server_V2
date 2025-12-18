@@ -82,9 +82,9 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
             GROUP BY d.userId, DATE(d.createdAt)
             """)
     List<DailyStudyTimeDto> findDailyStudyTimeByUserIdsAndPeriod(
-            List<Long> userIds,
-            LocalDateTime start,
-            LocalDateTime end
+            @Param("userIds") List<Long> userIds,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end
     );
 
 

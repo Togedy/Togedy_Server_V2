@@ -11,7 +11,7 @@ public interface PlanRepository extends JpaRepository<Plan, Long> {
                 SELECT p
                 FROM Plan p
                 WHERE p.studyCategoryId IN :studyCategoryIds
-                    AND p.createdAt BETWEEN :start AND :end
+                    AND p.createdAt BETWEEN :startOfDay AND :endOfDay
             """)
     List<Plan> findAllByStudyCategoryIdsAndPeriod(
             List<Long> studyCategoryIds,
