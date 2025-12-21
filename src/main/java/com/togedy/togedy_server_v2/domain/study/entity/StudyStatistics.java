@@ -7,6 +7,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -33,7 +35,7 @@ public class StudyStatistics {
     private Long studyId;
 
     @Column(name = "score", nullable = false)
-    private int score;
+    private long score;
 
     @Column(name = "streak_days", nullable = false)
     private int streakDays;
@@ -47,5 +49,45 @@ public class StudyStatistics {
         this.score = 0;
         this.streakDays = 0;
         this.lastProcessedDate = LocalDate.MIN;
+    }
+
+    public void applyChallengeSuccess(Study study, int completedMemberCount) {
+        if (study.isChallengeSuccessful(completedMemberCount)) {
+            this.streakDays++;
+            this.score += calculateStudyScore(study, completedMemberCount);
+        }
+    }
+
+    private long calculateStudyScore(Study study, int completeMemberCount) {
+        BigDecimal timeScore = study.challengeTimeScore();
+        BigDecimal memberScore = calculateMemberScore(completeMemberCount);
+        BigDecimal streakScore = calculateStreakDaysScore();
+
+        BigDecimal finalScore = timeScore
+                .add(memberScore.multiply(streakScore))
+                .setScale(8, RoundingMode.HALF_UP);
+
+        return finalScore
+                .multiply(BigDecimal.TEN.pow(8))
+                .longValueExact();
+    }
+
+    private BigDecimal calculateMemberScore(int completeMemberCount) {
+        return BigDecimal.valueOf(2)
+                .multiply(
+                        BigDecimal.valueOf(
+                                Math.log(completeMemberCount + 1) / Math.log(2)
+                        )
+                );
+    }
+
+    private BigDecimal calculateStreakDaysScore() {
+        return BigDecimal.valueOf(5)
+                .divide(BigDecimal.valueOf(3), 20, RoundingMode.HALF_UP)
+                .multiply(
+                        BigDecimal.valueOf(
+                                Math.log(this.streakDays + 1) / Math.log(2)
+                        )
+                );
     }
 }

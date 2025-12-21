@@ -1,7 +1,9 @@
 package com.togedy.togedy_server_v2.domain.planner.dao;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.study.dto.DailyStudySummaryRow;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -89,4 +91,17 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
 
 
     List<DailyStudySummary> findAllByUserIdIn(Collection<Long> userIds);
+
+    @Query("""
+            SELECT new com.togedy.togedy_server_v2.domain.study.dto.DailyStudySummaryRow(
+                us.studyId,
+                ds.userId,
+                ds.studyTime
+            )
+            FROM UserStudy us
+            JOIN DailyStudySummary ds ON us.userId = ds.userId
+            WHERE us.studyId IN :studyIds
+                AND DATE(ds.createdAt) = :targetDate
+            """)
+    List<DailyStudySummaryRow> findAllByStudyIdsAndDate(List<Long> studyIds, LocalDate targetDate);
 }

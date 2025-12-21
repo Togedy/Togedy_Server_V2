@@ -17,6 +17,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -150,6 +151,30 @@ public class Study extends BaseEntity {
 
     public boolean isAchieved(DailyStudySummary dailyStudySummary) {
         return dailyStudySummary.getStudyTime() >= this.goalTime;
+    }
+
+    public boolean isChallengeAchievedBy(Long goalTime) {
+        return goalTime >= this.goalTime;
+    }
+
+    public boolean isChallengeSuccessful(int completedMemberCount) {
+        return completedMemberCount * 4 >= this.memberCount * 3;
+    }
+
+    public BigDecimal challengeTimeScore() {
+        long hours = this.goalTime / 3600;
+
+        if (hours == 3) {
+            return BigDecimal.valueOf(10);
+        }
+        if (hours == 5) {
+            return BigDecimal.valueOf(20);
+        }
+        if (hours == 7) {
+            return BigDecimal.valueOf(30);
+        }
+
+        throw new RuntimeException();
     }
 
     private void validateUpdatableMemberLimit(int memberLimit) {
