@@ -1,7 +1,6 @@
 package com.togedy.togedy_server_v2.domain.study.dto;
 
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
-import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import lombok.Builder;
 import lombok.Getter;
@@ -18,7 +17,9 @@ public class StudySearchDto {
 
     private String studyDescription;
 
-    private StudyTag studyTag;
+    private String studyTag;
+
+    private String studyTier;
 
     private String studyLeaderImageUrl;
 
@@ -50,7 +51,8 @@ public class StudySearchDto {
                 .studyType(study.getType())
                 .studyName(study.getName())
                 .studyDescription(study.getDescription())
-                .studyTag(study.getTag())
+                .studyTag(study.getTag().getDescription())
+                .studyTier(study.getTier())
                 .studyLeaderImageUrl(studyLeaderImageUrl)
                 .studyMemberCount(study.getMemberCount())
                 .studyMemberLimit(study.getMemberLimit())

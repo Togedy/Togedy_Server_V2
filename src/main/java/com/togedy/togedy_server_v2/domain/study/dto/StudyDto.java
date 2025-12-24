@@ -40,6 +40,7 @@ public class StudyDto {
                 .studyType(study.getType())
                 .challengeGoalTime(TimeUtil.toTimeFormat(study.getGoalTime()))
                 .challengeAchievement(challengeAchievement)
+                .studyName(study.getName())
                 .completedMemberCount(completedMemberCount)
                 .studyMemberCount(study.getMemberCount())
                 .activeMemberList(activeMemberList)
@@ -54,6 +55,7 @@ public class StudyDto {
         return StudyDto.builder()
                 .studyId(study.getId())
                 .studyType(study.getType())
+                .studyName(study.getName())
                 .studyMemberCount(study.getMemberCount())
                 .activeMemberList(activeMemberList)
                 .build();
