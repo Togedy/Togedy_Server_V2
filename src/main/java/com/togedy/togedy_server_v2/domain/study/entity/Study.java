@@ -1,7 +1,6 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
-import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
@@ -90,18 +89,24 @@ public class Study extends BaseEntity {
         this.tier = tier;
     }
 
-    public void updateInfo(PatchStudyInfoRequest request, String studyImageUrl) {
-        if (request.getStudyName() != null) {
-            this.name = request.getStudyName();
+    public void updateInfo(
+            String studyName,
+            String studyDescription,
+            String studyTag,
+            String studyPassword,
+            String studyImageUrl
+    ) {
+        if (studyName != null) {
+            this.name = studyName;
         }
-        if (request.getStudyDescription() != null) {
-            this.description = request.getStudyDescription();
+        if (studyDescription != null) {
+            this.description = studyDescription;
         }
-        if (request.getStudyTag() != null) {
-            this.tag = StudyTag.fromDescription(request.getStudyTag());
+        if (studyTag != null) {
+            this.tag = StudyTag.fromDescription(studyTag);
         }
-        if (request.getStudyPassword() != null) {
-            this.password = request.getStudyPassword();
+        if (studyPassword != null) {
+            this.password = studyPassword;
         }
         if (studyImageUrl != null) {
             this.imageUrl = studyImageUrl;

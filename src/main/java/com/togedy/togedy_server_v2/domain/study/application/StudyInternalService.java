@@ -151,7 +151,13 @@ public class StudyInternalService {
 
         String studyImageUrl = replaceStudyImage(request, study);
 
-        study.updateInfo(request, studyImageUrl);
+        study.updateInfo(
+                request.getStudyName(),
+                request.getStudyDescription(),
+                request.getStudyTag(),
+                request.getStudyPassword(),
+                studyImageUrl
+        );
         studyRepository.save(study);
     }
 
