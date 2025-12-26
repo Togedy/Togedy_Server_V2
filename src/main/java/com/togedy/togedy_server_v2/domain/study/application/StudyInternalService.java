@@ -439,7 +439,7 @@ public class StudyInternalService {
     ) {
         for (DailyStudyTimeDto dailyStudyTime : dailyStudyTimes) {
             studyTimeMap.computeIfAbsent(dailyStudyTime.getUserId(), k -> new HashMap<>())
-                    .put(dailyStudyTime.getDate(), dailyStudyTime.getStudyTime());
+                    .put(dailyStudyTime.getDate().toLocalDate(), dailyStudyTime.getStudyTime());
 
             totalStudyTimeMap.merge(dailyStudyTime.getUserId(), dailyStudyTime.getStudyTime(), Long::sum);
         }

@@ -71,15 +71,15 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
 
     @Query("""
             SELECT new com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto(
-                d.userId,
-                DATE(d.createdAt),
-                SUM(d.studyTime)
+                d.userId as userId,
+                d.createdAt as date,
+                SUM(d.studyTime) as studyTime
             )
             FROM DailyStudySummary d
             WHERE d.userId IN :userIds
-            AND d.createdAt >= :start
-            AND d.createdAt < :end
-            GROUP BY d.userId, DATE(d.createdAt)
+                AND d.createdAt >= :start
+                AND d.createdAt < :end
+            GROUP BY d.userId, d.createdAt
             """)
     List<DailyStudyTimeDto> findDailyStudyTimeByUserIdsAndPeriod(
             @Param("userIds") List<Long> userIds,

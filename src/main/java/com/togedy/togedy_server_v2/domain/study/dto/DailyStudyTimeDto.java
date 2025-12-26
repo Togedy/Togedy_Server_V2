@@ -1,13 +1,13 @@
 package com.togedy.togedy_server_v2.domain.study.dto;
 
-import java.time.LocalDate;
-import lombok.Builder;
+import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
-@Builder
+@AllArgsConstructor
 public class DailyStudyTimeDto {
     private Long userId;
-    private LocalDate date;
+    private LocalDateTime date;
     private Long studyTime;
 }
