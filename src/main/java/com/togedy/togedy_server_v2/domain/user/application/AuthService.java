@@ -3,7 +3,7 @@ package com.togedy.togedy_server_v2.domain.user.application;
 import com.togedy.togedy_server_v2.domain.user.dao.RefreshTokenRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
+import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenInfo;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenProvider;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtInvalidException;
@@ -28,6 +28,12 @@ public class AuthService {
 
         refreshTokenRepository.save(user.getId(), tokenInfo.getRefreshToken());
 
+        return tokenInfo;
+    }
+
+    public JwtTokenInfo issueToken(Long userId) {
+        JwtTokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(userId);
+        refreshTokenRepository.save(userId, tokenInfo.getRefreshToken());
         return tokenInfo;
     }
 
