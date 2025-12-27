@@ -33,7 +33,7 @@ public class GetStudyMemberResponse {
                 .studyRole(role)
                 .userStatus(user.getStatus())
                 .userProfileImageUrl(user.getProfileImageUrl())
-                .studyTime(TimeUtil.toTimeFormat(dailyStudySummary.getStudyTime()))
+                .studyTime(TimeUtil.formatSecondsToHms(dailyStudySummary.getStudyTime()))
                 .lastActivatedAt(TimeUtil.formatTimeAgo(user.getLastActivatedAt()))
                 .build();
     }

@@ -1,9 +1,13 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
+import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
-import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
+import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitExceededException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +17,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -103,15 +108,71 @@ public class Study extends BaseEntity {
         }
     }
 
-    public void updateMemberLimit(PatchStudyMemberLimitRequest request) {
-        this.memberLimit = request.getStudyMemberLimit();
+    public void updateMemberLimit(int memberLimit) {
+        validateUpdatableMemberLimit(memberLimit);
+        this.memberLimit = memberLimit;
     }
 
     public void increaseMemberCount() {
+        validateAddMember();
         this.memberCount++;
     }
 
     public void decreaseMemberCount() {
         this.memberCount--;
+    }
+
+    public void validatePassword(String password) {
+        validatePasswordRequired(password);
+        validatePasswordMatches(password);
+    }
+
+    public boolean isChallengeStudy() {
+        return this.type.equals(StudyType.CHALLENGE);
+    }
+
+    public String changeImageUrl(String imageUrl) {
+        String oldImageUrl = this.imageUrl;
+        this.imageUrl = imageUrl;
+        return oldImageUrl;
+    }
+
+    public boolean validateNewlyCreated() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime current = now.minusDays(7);
+
+        return this.getCreatedAt().isAfter(current) && this.getCreatedAt().isBefore(now);
+    }
+
+    public boolean hasPassword() {
+        return this.password != null;
+    }
+
+    public boolean isAchieved(DailyStudySummary dailyStudySummary) {
+        return dailyStudySummary.getStudyTime() >= this.goalTime;
+    }
+
+    private void validateUpdatableMemberLimit(int memberLimit) {
+        if (memberLimit < this.memberCount) {
+            throw new InvalidStudyMemberLimitException();
+        }
+    }
+
+    private void validateAddMember() {
+        if (this.memberLimit == this.memberCount) {
+            throw new StudyMemberLimitExceededException();
+        }
+    }
+
+    private void validatePasswordRequired(String password) {
+        if (this.password != null && password == null) {
+            throw new StudyPasswordRequiredException();
+        }
+    }
+
+    private void validatePasswordMatches(String password) {
+        if (this.password != null && !password.equals(this.password)) {
+            throw new StudyPasswordMismatchException();
+        }
     }
 }

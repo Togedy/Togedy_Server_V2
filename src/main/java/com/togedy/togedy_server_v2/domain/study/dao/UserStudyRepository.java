@@ -35,4 +35,11 @@ public interface UserStudyRepository extends JpaRepository<UserStudy, Long> {
             ORDER BY u.nickname ASC
             """)
     List<GetStudyMemberManagementResponse> findStudyMembersByStudyId(Long studyId);
+
+    @Query("""
+                SELECT us
+                FROM UserStudy us
+                WHERE us.studyId IN :studyIds
+            """)
+    List<UserStudy> findAllByStudyIds(List<Long> studyIds);
 }

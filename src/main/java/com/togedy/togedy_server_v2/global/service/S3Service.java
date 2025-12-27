@@ -50,6 +50,10 @@ public class S3Service {
      * @param fileName  파일명
      */
     public void deleteFile(String fileName) {
+        if (fileName == null) {
+            return;
+        }
+
         s3Template.deleteObject(bucket, fileName);
     }
 
