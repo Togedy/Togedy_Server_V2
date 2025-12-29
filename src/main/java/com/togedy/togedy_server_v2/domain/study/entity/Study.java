@@ -165,7 +165,7 @@ public class Study extends BaseEntity {
         return dailyStudySummary.getStudyTime() >= this.goalTime;
     }
 
-    public void validateMemberLimitRange(int memberLimit) {
+    private void validateMemberLimitRange(int memberLimit) {
         if (MAX_MEMBER_LIMIT < memberLimit || memberLimit < MIN_MEMBER_LIMIT) {
             throw new StudyMemberLimitOutOfRangeException();
         }
