@@ -6,6 +6,7 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberCountExceededException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitOutOfRangeException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMinimumMemberRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
@@ -130,6 +131,7 @@ public class Study extends BaseEntity {
     }
 
     public void decreaseMemberCount() {
+        validateRemoveMember();
         this.memberCount--;
     }
 
@@ -190,6 +192,12 @@ public class Study extends BaseEntity {
     private void validatePasswordMatches(String password) {
         if (this.password != null && !password.equals(this.password)) {
             throw new StudyPasswordMismatchException();
+        }
+    }
+
+    private void validateRemoveMember() {
+        if (this.memberCount <= 1) {
+            throw new StudyMinimumMemberRequiredException();
         }
     }
 }
