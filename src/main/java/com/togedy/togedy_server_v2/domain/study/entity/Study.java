@@ -4,7 +4,8 @@ import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
-import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitExceededException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberCountExceededException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitOutOfRangeException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
@@ -165,7 +166,7 @@ public class Study extends BaseEntity {
 
     private void validateAddMember() {
         if (this.memberLimit == this.memberCount) {
-            throw new StudyMemberLimitExceededException();
+            throw new StudyMemberCountExceededException();
         }
     }
 
