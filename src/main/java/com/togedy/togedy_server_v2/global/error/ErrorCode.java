@@ -62,6 +62,7 @@ public enum ErrorCode {
     STUDY_LEADER_NOT_FOUND(HttpStatus.NOT_FOUND, "S8008", "해당 스터디의 리더를 찾을 수 없습니다."),
     STUDY_ACCESS_DENIED(HttpStatus.FORBIDDEN, "S8009", "해당 스터디에 참여한 유저가 아닙니다."),
     INVALID_STUDY_TAG(HttpStatus.BAD_REQUEST, "S8010", "유효하지 않은 스터디 태그입니다."),
+    STUDY_MEMBER_LIMIT_OUT_OF_RANGE(HttpStatus.CONFLICT, "S8011", "스터디 최대 인원은 1명 이상 30명 이하로 설정해야 합니다."),
 
     // USER_STUDY(9000)
     USER_STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "US9000", "해당 유저가 가입한 스터디를 찾을 수 없습니다.");

@@ -29,6 +29,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Study extends BaseEntity {
 
+    private static final int MAX_MEMBER_LIMIT = 30;
+    private static final int MIN_MEMBER_LIMIT = 2;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "study_id", nullable = false)
@@ -78,6 +81,7 @@ public class Study extends BaseEntity {
             String password,
             String tier
     ) {
+        validateMemberLimitRange(memberLimit);
         this.type = type;
         this.goalTime = goalTime;
         this.name = name;
@@ -115,6 +119,7 @@ public class Study extends BaseEntity {
     }
 
     public void updateMemberLimit(int memberLimit) {
+        validateMemberLimitRange(memberLimit);
         validateUpdatableMemberLimit(memberLimit);
         this.memberLimit = memberLimit;
     }
@@ -156,6 +161,12 @@ public class Study extends BaseEntity {
 
     public boolean isAchieved(DailyStudySummary dailyStudySummary) {
         return dailyStudySummary.getStudyTime() >= this.goalTime;
+    }
+
+    public void validateMemberLimitRange(int memberLimit) {
+        if (MAX_MEMBER_LIMIT < memberLimit || memberLimit < MIN_MEMBER_LIMIT) {
+            throw new StudyMemberLimitOutOfRangeException();
+        }
     }
 
     private void validateUpdatableMemberLimit(int memberLimit) {
