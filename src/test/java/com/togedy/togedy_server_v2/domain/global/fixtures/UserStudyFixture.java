@@ -8,18 +8,18 @@ public class UserStudyFixture {
     private UserStudyFixture() {
     }
 
-    public static UserStudy createLeaderUserStudy(Long userId) {
+    public static UserStudy createLeaderUserStudy(Long userId, Long studyId) {
         return UserStudy.builder()
                 .userId(userId)
-                .studyId(1L)
+                .studyId(studyId)
                 .role(StudyRole.LEADER)
                 .build();
     }
 
-    public static UserStudy createMemberUserStudy(Long userId) {
+    public static UserStudy createMemberUserStudy(Long userId, Long studyId) {
         return UserStudy.builder()
                 .userId(userId)
-                .studyId(1L)
+                .studyId(studyId)
                 .role(StudyRole.MEMBER)
                 .build();
     }
