@@ -1,9 +1,9 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
-import com.togedy.togedy_server_v2.domain.global.fixtures.UserStudyFixture;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
+import com.togedy.togedy_server_v2.global.fixtures.UserStudyFixture;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 

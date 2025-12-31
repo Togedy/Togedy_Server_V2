@@ -1,6 +1,5 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
-import com.togedy.togedy_server_v2.domain.global.fixtures.StudyFixture;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
@@ -9,6 +8,7 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitOutOfR
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMinimumMemberRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
+import com.togedy.togedy_server_v2.global.fixtures.StudyFixture;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 

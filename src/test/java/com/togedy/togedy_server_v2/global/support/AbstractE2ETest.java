@@ -1,11 +1,11 @@
-package com.togedy.togedy_server_v2.domain.global.support;
+package com.togedy.togedy_server_v2.global.support;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.togedy.togedy_server_v2.domain.global.db.DatabaseCleanerExtension;
-import com.togedy.togedy_server_v2.domain.global.factory.TestJwtFactory;
+import com.togedy.togedy_server_v2.global.db.DatabaseCleanerExtension;
+import com.togedy.togedy_server_v2.global.factory.TestJwtFactory;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;

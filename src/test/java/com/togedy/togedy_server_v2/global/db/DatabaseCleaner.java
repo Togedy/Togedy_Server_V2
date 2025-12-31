@@ -1,13 +1,12 @@
-package com.togedy.togedy_server_v2.domain.global.db;
+package com.togedy.togedy_server_v2.global.db;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class DatabaseCleaner {

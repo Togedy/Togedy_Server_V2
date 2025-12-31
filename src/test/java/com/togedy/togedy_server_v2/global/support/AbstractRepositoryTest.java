@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.global.support;
+package com.togedy.togedy_server_v2.global.support;
 
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 

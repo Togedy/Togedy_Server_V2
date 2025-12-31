@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.global.fixtures;
+package com.togedy.togedy_server_v2.global.fixtures;
 
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;

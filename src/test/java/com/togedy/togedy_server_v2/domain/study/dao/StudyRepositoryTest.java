@@ -1,13 +1,13 @@
 package com.togedy.togedy_server_v2.domain.study.dao;
 
-import com.togedy.togedy_server_v2.domain.global.fixtures.StudyFixture;
-import com.togedy.togedy_server_v2.domain.global.fixtures.UserFixture;
-import com.togedy.togedy_server_v2.domain.global.fixtures.UserStudyFixture;
-import com.togedy.togedy_server_v2.domain.global.support.AbstractRepositoryTest;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.global.fixtures.StudyFixture;
+import com.togedy.togedy_server_v2.global.fixtures.UserFixture;
+import com.togedy.togedy_server_v2.global.fixtures.UserStudyFixture;
+import com.togedy.togedy_server_v2.global.support.AbstractRepositoryTest;
 import java.util.List;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
