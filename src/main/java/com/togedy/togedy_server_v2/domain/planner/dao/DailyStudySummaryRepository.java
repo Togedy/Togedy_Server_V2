@@ -3,7 +3,6 @@ package com.togedy.togedy_server_v2.domain.planner.dao;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto;
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -86,7 +85,4 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
-
-
-    List<DailyStudySummary> findAllByUserIdIn(Collection<Long> userIds);
 }
