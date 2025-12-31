@@ -406,7 +406,7 @@ public class StudyExternalService {
                 : null;
 
         String challengeGoalTime = TimeUtil.formatSecondsToHms(study.getGoalTime());
-        boolean isNewlyCreated = study.validateNewlyCreated();
+        boolean isNewlyCreated = study.isNewlyCreated();
 
         return StudySearchDto.of(
                 study,

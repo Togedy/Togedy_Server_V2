@@ -150,7 +150,7 @@ public class Study extends BaseEntity {
         return oldImageUrl;
     }
 
-    public boolean validateNewlyCreated() {
+    public boolean isNewlyCreated() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime current = now.minusDays(7);
 

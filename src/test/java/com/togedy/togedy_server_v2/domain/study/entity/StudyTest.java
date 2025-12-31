@@ -248,7 +248,7 @@ public class StudyTest {
         ReflectionTestUtils.setField(study, "createdAt", now.minusDays(3));
 
         // when & then
-        Assertions.assertThat(study.validateNewlyCreated()).isTrue();
+        Assertions.assertThat(study.isNewlyCreated()).isTrue();
     }
 
     @Test
@@ -260,7 +260,7 @@ public class StudyTest {
         ReflectionTestUtils.setField(study, "createdAt", now.minusDays(10));
 
         // when & then
-        Assertions.assertThat(study.validateNewlyCreated()).isFalse();
+        Assertions.assertThat(study.isNewlyCreated()).isFalse();
     }
 
     @Test
