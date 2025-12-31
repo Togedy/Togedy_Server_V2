@@ -18,6 +18,10 @@ public class UserFixture {
         return user;
     }
 
+    public static User createUserWithName(String name) {
+        return User.create(name, name + "@test.com");
+    }
+
     public static User createLeader() {
         return User.create("리더", "leader@test.com");
     }
