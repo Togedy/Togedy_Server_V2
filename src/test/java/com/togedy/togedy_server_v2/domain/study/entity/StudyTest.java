@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
+import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
@@ -9,8 +10,10 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyMinimumMemberRequ
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
 import com.togedy.togedy_server_v2.global.fixtures.StudyFixture;
+import java.time.LocalDateTime;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
 
 public class StudyTest {
 
@@ -236,6 +239,49 @@ public class StudyTest {
         Assertions.assertThat(study.getImageUrl()).isEqualTo("new");
     }
 
+    @Test
+    public void 스터디가_생성된_지_7일_이내인_경우_true를_반환한다() {
+        //given
+        Study study = StudyFixture.createNormalStudy();
+
+        LocalDateTime now = LocalDateTime.now();
+        ReflectionTestUtils.setField(study, "createdAt", now.minusDays(3));
+
+        // when & then
+        Assertions.assertThat(study.validateNewlyCreated()).isTrue();
+    }
+
+    @Test
+    public void 스터디가_생성된_지_7일보다_오래된_경우_false를_반환한다() {
+        //given
+        Study study = StudyFixture.createNormalStudy();
+
+        LocalDateTime now = LocalDateTime.now();
+        ReflectionTestUtils.setField(study, "createdAt", now.minusDays(10));
+
+        // when & then
+        Assertions.assertThat(study.validateNewlyCreated()).isFalse();
+    }
+
+    @Test
+    public void 스터디의_목표_시간보다_일일_공부량이_많은_경우_true를_반환한다() {
+        //given
+        Study study = StudyFixture.createChallengeStudy();
+        DailyStudySummary dailyStudySummary = new DailyStudySummary(1L, 5 * 3600L);
+
+        // when & then
+        Assertions.assertThat(study.isAchieved(dailyStudySummary)).isTrue();
+    }
+
+    @Test
+    public void 스터디의_목표_시간이_일일_공부량보다_많은_경우_false를_반환한다() {
+        //given
+        Study study = StudyFixture.createChallengeStudy();
+        DailyStudySummary dailyStudySummary = new DailyStudySummary(1L, 1 * 3600L);
+
+        // when & then
+        Assertions.assertThat(study.isAchieved(dailyStudySummary)).isFalse();
+    }
 
     @Test
     public void 스터디_생성_시_최대_인원이_최댓값_초과인_경우_예외가_발생한다() {

@@ -29,7 +29,7 @@ public class StudyFixture {
                 .tier("티어")
                 .memberLimit(10)
                 .imageUrl(null)
-                .goalTime(18000L)
+                .goalTime(3 * 3600L)
                 .type(StudyType.CHALLENGE)
                 .build();
     }
