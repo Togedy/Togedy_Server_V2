@@ -35,11 +35,15 @@ public class StudyCategory {
     @Column(name = "status", nullable = false, updatable = true)
     private String status;
 
+    @Column(name = "order_index", nullable = false, updatable = true)
+    private Long orderIndex;
+
     @Builder
-    public StudyCategory(Long userId, String name, String color) {
+    public StudyCategory(Long userId, String name, String color, Long orderIndex) {
         this.userId = userId;
         this.name = name;
         this.color = color;
         this.status = BaseStatus.ACTIVE.name();
+        this.orderIndex = orderIndex;
     }
 }
