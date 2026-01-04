@@ -6,6 +6,7 @@ import com.togedy.togedy_server_v2.domain.user.dto.KakaoLoginResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.KakaoUserInfoResponse;
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.enums.ProviderType;
 import com.togedy.togedy_server_v2.domain.user.exception.auth.KakaoAccountNotFoundException;
 import com.togedy.togedy_server_v2.global.infrastructure.kakao.KakaoApiClient;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenInfo;
@@ -13,7 +14,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -38,27 +38,28 @@ public class KakaoAuthService {
                 : null;
 
         AuthProvider provider = authProviderRepository
-                .findByProviderAndProviderUserId("KAKAO", providerUserId)
+                .findByProviderAndProviderUserId(ProviderType.KAKAO, providerUserId)
                 .orElse(null);
 
-        Long userId;
+        User user;
         boolean completed;
 
         if (provider != null) {
-            userId = provider.getUserId();
+            user = provider.getUser();
             completed = provider.isProfileCompleted();
         } else {
-            User user = User.createTemp(email);
-            userRepository.save(user);
+            user = (email != null)
+                    ? userRepository.findByEmail(email)
+                    .orElseGet(() -> userRepository.save(User.createTemp(email)))
+                    : userRepository.save(User.createTemp(null));
 
             authProviderRepository.save(
-                    AuthProvider.kakao(user.getId(), providerUserId, email)
+                    AuthProvider.kakao(user, providerUserId, email)
             );
-            userId = user.getId();
             completed = false;
         }
 
-        JwtTokenInfo jwtTokenInfo = authService.issueToken(userId);
+        JwtTokenInfo jwtTokenInfo = authService.issueToken(user.getId());
         return new KakaoLoginResponse(jwtTokenInfo, completed);
     }
 }
