@@ -5,6 +5,7 @@ import com.togedy.togedy_server_v2.domain.user.exception.auth.InvalidKakaoTokenE
 import com.togedy.togedy_server_v2.domain.user.exception.auth.KakaoApiErrorException;
 import com.togedy.togedy_server_v2.domain.user.exception.auth.KakaoTokenExpiredException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
@@ -18,6 +19,9 @@ public class KakaoApiClient {
 
     private final RestTemplate restTemplate;
 
+    @Value("${kakao.api.url.user-info}")
+    private String kakaoUserInfoUrl;
+
     public KakaoUserInfoResponse getUserInfo(String accessToken) {
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -27,7 +31,7 @@ public class KakaoApiClient {
             HttpEntity<Void> entity = new HttpEntity<>(headers);
 
             ResponseEntity<KakaoUserInfoResponse> response = restTemplate.exchange(
-                    "https://kapi.kakao.com/v2/user/me",
+                    kakaoUserInfoUrl,
                     HttpMethod.GET,
                     entity,
                     KakaoUserInfoResponse.class
@@ -40,6 +44,5 @@ public class KakaoApiClient {
         } catch (RestClientException e) {
             throw new KakaoApiErrorException();
         }
-
     }
 }
