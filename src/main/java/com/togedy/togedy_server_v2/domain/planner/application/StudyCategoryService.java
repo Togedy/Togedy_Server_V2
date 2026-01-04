@@ -7,6 +7,7 @@ import com.togedy.togedy_server_v2.domain.planner.dto.PostStudyCategoryRequest;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyCategory;
 import com.togedy.togedy_server_v2.domain.planner.exception.DuplicateStudyCategoryException;
 import com.togedy.togedy_server_v2.domain.planner.exception.StudyCategoryNotFoundException;
+import com.togedy.togedy_server_v2.domain.planner.exception.StudyCategoryNotOwnedException;
 import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotOwnedException;
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
@@ -81,6 +82,24 @@ public class StudyCategoryService {
         validateDuplicateStudyCategory(request.getCategoryName(), request.getCategoryColor(), userId);
 
         studyCategory.update(request);
+    }
+
+    /**
+     * 유저가 해당 스터디 카테고리를 삭제한다.
+     *
+     * @param categoryId    삭제할 카테고리ID
+     * @param userId        유저ID
+     */
+    @Transactional
+    public void removeStudyCategory(Long categoryId, Long userId) {
+        StudyCategory studyCategory = studyCategoryRepository.findById(categoryId)
+                .orElseThrow(StudyCategoryNotFoundException::new);
+
+        if (!studyCategory.getUserId().equals(userId)) {
+            throw new StudyCategoryNotOwnedException();
+        }
+
+        studyCategory.delete();
     }
 
     /**

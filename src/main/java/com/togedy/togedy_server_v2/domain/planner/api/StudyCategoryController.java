@@ -45,4 +45,12 @@ public class StudyCategoryController {
         return ApiUtil.successOnly();
     }
 
+    @Operation(summary = "스터디 카테고리 삭제", description = "해당 스터디 카테고리를 삭제한다.")
+    @DeleteMapping("/{categoryId}")
+    public ApiResponse<Void> deleteCategory(@PathVariable Long categoryId,
+                                            @AuthenticationPrincipal AuthUser user) {
+        studyCategoryService.removeStudyCategory(categoryId, user.getId());
+        return ApiUtil.successOnly();
+    }
+
 }

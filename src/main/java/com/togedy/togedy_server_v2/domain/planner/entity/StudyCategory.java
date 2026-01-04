@@ -56,4 +56,8 @@ public class StudyCategory {
             this.color = request.getCategoryColor();
         }
     }
+
+    public void delete() {
+        this.status = BaseStatus.INACTIVE.name();
+    }
 }
