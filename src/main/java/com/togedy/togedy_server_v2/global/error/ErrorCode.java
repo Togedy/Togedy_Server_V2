@@ -64,7 +64,15 @@ public enum ErrorCode {
     INVALID_STUDY_TAG(HttpStatus.BAD_REQUEST, "S8010", "유효하지 않은 스터디 태그입니다."),
 
     // USER_STUDY(9000)
-    USER_STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "US9000", "해당 유저가 가입한 스터디를 찾을 수 없습니다.");
+    USER_STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "US9000", "해당 유저가 가입한 스터디를 찾을 수 없습니다."),
+
+
+
+
+    // STUDY_CATEGORY(11000)
+    STUDY_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "SC11000", "해당 카테고리를 찾을 수 없습니다."),
+    STUDY_CATEGORY_NOT_OWNED(HttpStatus.UNAUTHORIZED, "SC11001", "해당 유저의 카테고리가 아닙니다."),
+    DUPLICATE_STUDY_CATEGORY(HttpStatus.BAD_REQUEST, "SC11002", "이름과 색상이 동일한 카테고리가 존재합니다."),;
 
     private final HttpStatus httpStatus;
     private final String code;
