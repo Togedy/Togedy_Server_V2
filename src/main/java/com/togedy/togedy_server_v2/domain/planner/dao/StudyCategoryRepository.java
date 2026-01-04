@@ -12,6 +12,8 @@ public interface StudyCategoryRepository extends JpaRepository<StudyCategory, Lo
             SELECT sc
             FROM StudyCategory sc
             WHERE sc.userId = :userId
+            AND sc.status = 'ACTIVE'
+            ORDER BY sc.orderIndex ASC
             """)
     List<StudyCategory> findAllByUserId(Long userId);
 
