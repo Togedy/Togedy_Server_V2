@@ -5,8 +5,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface StudyCategoryRepository extends JpaRepository<StudyCategory, Long> {
+    @Query("""
+            SELECT sc
+            FROM StudyCategory sc
+            WHERE sc.id = :id
+            AND sc.status = 'ACTIVE'
+            """)
+    Optional<StudyCategory> findActiveById(Long id);
 
     @Query("""
             SELECT sc

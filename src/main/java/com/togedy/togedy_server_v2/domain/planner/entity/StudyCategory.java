@@ -60,4 +60,8 @@ public class StudyCategory {
     public void delete() {
         this.status = BaseStatus.INACTIVE.name();
     }
+
+    public void move(Long newOrderIndex) {
+        this.orderIndex = newOrderIndex;
+    }
 }

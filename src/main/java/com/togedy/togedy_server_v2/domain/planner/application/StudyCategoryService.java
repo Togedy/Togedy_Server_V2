@@ -2,15 +2,15 @@ package com.togedy.togedy_server_v2.domain.planner.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyCategoryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetStudyCategoryResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.PatchReorderRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PatchStudyCategoryRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostStudyCategoryRequest;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyCategory;
 import com.togedy.togedy_server_v2.domain.planner.exception.DuplicateStudyCategoryException;
+import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudyCategoryReorderException;
 import com.togedy.togedy_server_v2.domain.planner.exception.StudyCategoryNotFoundException;
 import com.togedy.togedy_server_v2.domain.planner.exception.StudyCategoryNotOwnedException;
 import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotOwnedException;
-import com.togedy.togedy_server_v2.domain.user.application.UserService;
-import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,8 +23,6 @@ import java.util.stream.Collectors;
 public class StudyCategoryService {
 
     private final StudyCategoryRepository studyCategoryRepository;
-    private final UserRepository userRepository;
-    private final UserService userService;
 
     /**
      * 스터디 카테고리를 생성한다.
@@ -72,7 +70,7 @@ public class StudyCategoryService {
      */
     @Transactional
     public void modifyStudyCategory(PatchStudyCategoryRequest request, Long categoryId, Long userId) {
-        StudyCategory studyCategory = studyCategoryRepository.findById(categoryId)
+        StudyCategory studyCategory = studyCategoryRepository.findActiveById(categoryId)
                 .orElseThrow(StudyCategoryNotFoundException::new);
 
         if (!studyCategory.getUserId().equals(userId)) {
@@ -92,7 +90,7 @@ public class StudyCategoryService {
      */
     @Transactional
     public void removeStudyCategory(Long categoryId, Long userId) {
-        StudyCategory studyCategory = studyCategoryRepository.findById(categoryId)
+        StudyCategory studyCategory = studyCategoryRepository.findActiveById(categoryId)
                 .orElseThrow(StudyCategoryNotFoundException::new);
 
         if (!studyCategory.getUserId().equals(userId)) {
@@ -100,6 +98,49 @@ public class StudyCategoryService {
         }
 
         studyCategory.delete();
+    }
+
+    @Transactional
+    public void reorderStudyCategory(PatchReorderRequest request, Long categoryId, Long userId) {
+        StudyCategory target = studyCategoryRepository.findActiveById(categoryId)
+                .orElseThrow(StudyCategoryNotFoundException::new);
+
+        if (!target.getUserId().equals(userId)) {
+            throw new StudyCategoryNotOwnedException();
+        }
+
+        validateStudyCategoryReorder(request, categoryId);
+
+        StudyCategory prev = null;
+        StudyCategory next = null;
+
+        if (request.getPrevId() != null) {
+            prev = studyCategoryRepository.findActiveById(request.getPrevId())
+                    .orElseThrow(StudyCategoryNotFoundException::new);
+            if (!prev.getUserId().equals(userId)) {
+                throw new StudyCategoryNotOwnedException();
+            }
+        }
+
+        if (request.getNextId() != null) {
+            next = studyCategoryRepository.findActiveById(request.getNextId())
+                    .orElseThrow(StudyCategoryNotFoundException::new);
+            if (!next.getUserId().equals(userId)) {
+                throw new StudyCategoryNotOwnedException();
+            }
+        }
+
+        long newOrderIndex;
+
+        if (prev == null) {                 // 맨 위로 이동
+            newOrderIndex = next.getOrderIndex() / 2;
+        } else if (next == null) {          // 맨 아래로 이동
+            newOrderIndex = prev.getOrderIndex() + 1000;
+        } else {                            // 중간 삽입
+            newOrderIndex = (prev.getOrderIndex() + next.getOrderIndex()) / 2;
+        }
+
+        target.move(newOrderIndex);
     }
 
     /**
@@ -112,6 +153,19 @@ public class StudyCategoryService {
     private void validateDuplicateStudyCategory(String categoryName, String categoryColor, Long userId) {
         if (studyCategoryRepository.existsByNameAndColorAndUserId(categoryName, categoryColor, userId)) {
             throw new DuplicateStudyCategoryException();
+        }
+    }
+
+    private void validateStudyCategoryReorder(PatchReorderRequest request, Long categoryId) {
+        if(request.getPrevId() == null && request.getNextId() == null) {
+            throw new InvalidStudyCategoryReorderException();
+        }
+
+        if (request.getPrevId() != null && request.getPrevId().equals(categoryId)) {
+            throw new InvalidStudyCategoryReorderException();
+        }
+        if (request.getNextId() != null && request.getNextId().equals(categoryId)) {
+            throw new InvalidStudyCategoryReorderException();
         }
     }
 

@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.planner.api;
 
 import com.togedy.togedy_server_v2.domain.planner.application.StudyCategoryService;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetStudyCategoryResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.PatchReorderRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PatchStudyCategoryRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostStudyCategoryRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
@@ -47,9 +48,18 @@ public class StudyCategoryController {
 
     @Operation(summary = "스터디 카테고리 삭제", description = "해당 스터디 카테고리를 삭제한다.")
     @DeleteMapping("/{categoryId}")
-    public ApiResponse<Void> deleteCategory(@PathVariable Long categoryId,
+    public ApiResponse<Void> deleteStudyCategory(@PathVariable Long categoryId,
                                             @AuthenticationPrincipal AuthUser user) {
         studyCategoryService.removeStudyCategory(categoryId, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @Operation(summary = "스터디 카테고리 순서 이동", description = "해당 스터디 카테고리의 정렬 순서를 변경한다.")
+    @PatchMapping("/{categoryId}/move")
+    public ApiResponse<Void> moveStudyCategory(@RequestBody PatchReorderRequest request,
+                                               @PathVariable Long categoryId,
+                                               @AuthenticationPrincipal AuthUser user) {
+        studyCategoryService.reorderStudyCategory(request, categoryId, user.getId());
         return ApiUtil.successOnly();
     }
 
