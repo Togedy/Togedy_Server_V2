@@ -14,4 +14,22 @@ public interface StudyCategoryRepository extends JpaRepository<StudyCategory, Lo
             WHERE sc.userId = :userId
             """)
     List<StudyCategory> findAllByUserId(Long userId);
+
+    @Query("""
+            SELECT CASE WHEN COUNT(sc) > 0 THEN true ELSE false END
+            FROM StudyCategory sc
+            WHERE sc.name = :name
+            AND sc.color = :color
+            AND sc.userId = :userId
+            AND sc.status = 'ACTIVE'
+            """)
+    boolean existsByNameAndColorAndUserId(String name, String color, Long userId);
+
+    @Query("""
+            SELECT MAX(sc.orderIndex)
+            FROM StudyCategory sc
+            WHERE sc.userId = :userId
+            AND sc.status = 'ACTIVE'
+            """)
+    Long findMaxOrderIndex(Long userId);
 }
