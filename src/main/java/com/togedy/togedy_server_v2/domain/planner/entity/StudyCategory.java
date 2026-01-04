@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.planner.entity;
 
+import com.togedy.togedy_server_v2.domain.planner.dto.PatchStudyCategoryRequest;
 import com.togedy.togedy_server_v2.global.enums.BaseStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -45,5 +46,14 @@ public class StudyCategory {
         this.color = color;
         this.status = BaseStatus.ACTIVE.name();
         this.orderIndex = orderIndex;
+    }
+
+    public void update(PatchStudyCategoryRequest request) {
+        if (request.getCategoryName() != null) {
+            this.name = request.getCategoryName();
+        }
+        if (request.getCategoryColor() != null) {
+            this.color = request.getCategoryColor();
+        }
     }
 }

@@ -2,9 +2,12 @@ package com.togedy.togedy_server_v2.domain.planner.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyCategoryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetStudyCategoryResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.PatchStudyCategoryRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostStudyCategoryRequest;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyCategory;
 import com.togedy.togedy_server_v2.domain.planner.exception.DuplicateStudyCategoryException;
+import com.togedy.togedy_server_v2.domain.planner.exception.StudyCategoryNotFoundException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotOwnedException;
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +62,34 @@ public class StudyCategoryService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * 유저가 해당 스터디 카테고리의 정보를 수정한다.
+     *
+     * @param request       카테고리 수정 DTO
+     * @param categoryId    수정할 카테고리ID
+     * @param userId        유저ID
+     */
+    @Transactional
+    public void modifyStudyCategory(PatchStudyCategoryRequest request, Long categoryId, Long userId) {
+        StudyCategory studyCategory = studyCategoryRepository.findById(categoryId)
+                .orElseThrow(StudyCategoryNotFoundException::new);
+
+        if (!studyCategory.getUserId().equals(userId)) {
+            throw new CategoryNotOwnedException();
+        }
+
+        validateDuplicateStudyCategory(request.getCategoryName(), request.getCategoryColor(), userId);
+
+        studyCategory.update(request);
+    }
+
+    /**
+     * 이름 및 색상이 동일한 스터디 카테고리가 이미 존재하는 지 검증한다.
+     *
+     * @param categoryName      카테고리명
+     * @param categoryColor     카테고리 색상
+     * @param userId            유저ID
+     */
     private void validateDuplicateStudyCategory(String categoryName, String categoryColor, Long userId) {
         if (studyCategoryRepository.existsByNameAndColorAndUserId(categoryName, categoryColor, userId)) {
             throw new DuplicateStudyCategoryException();
