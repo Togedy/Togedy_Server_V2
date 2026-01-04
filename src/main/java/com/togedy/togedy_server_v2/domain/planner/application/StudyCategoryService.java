@@ -100,6 +100,13 @@ public class StudyCategoryService {
         studyCategory.delete();
     }
 
+    /**
+     * 유저가 해당 스터디 카테고리의 정렬 순서를 변경한다.
+     *
+     * @param request       정렬 수정 요청 DTO
+     * @param categoryId    정렬 대상 카테고리ID
+     * @param userId        유저ID
+     */
     @Transactional
     public void reorderStudyCategory(PatchReorderRequest request, Long categoryId, Long userId) {
         StudyCategory target = studyCategoryRepository.findActiveById(categoryId)
@@ -156,6 +163,12 @@ public class StudyCategoryService {
         }
     }
 
+    /**
+     * 카테고리 정렬 수정의 유효성을 검증한다.
+     *
+     * @param request       정렬 수정 요청 DTO
+     * @param categoryId    정렬 대상 카테고리ID
+     */
     private void validateStudyCategoryReorder(PatchReorderRequest request, Long categoryId) {
         if(request.getPrevId() == null && request.getNextId() == null) {
             throw new InvalidStudyCategoryReorderException();
