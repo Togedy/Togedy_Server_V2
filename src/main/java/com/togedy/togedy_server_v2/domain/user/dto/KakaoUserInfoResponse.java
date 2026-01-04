@@ -6,7 +6,7 @@ import lombok.Getter;
 @Getter
 public class KakaoUserInfoResponse {
 
-    private Long id; // kakaoId
+    private Long id;
 
     @JsonProperty("kakao_account")
     private KakaoAccount kakaoAccount;

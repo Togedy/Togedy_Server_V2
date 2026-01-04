@@ -10,7 +10,7 @@ public class KakaoLoginResponse {
 
     private boolean profileCompleted;
 
-    public KakaoLoginResponse(JwtTokenInfo jwtTokenInfo, Boolean profileCompleted) {
+    public KakaoLoginResponse(JwtTokenInfo jwtTokenInfo, boolean profileCompleted) {
         this.jwtTokenInfo = jwtTokenInfo;
         this.profileCompleted = profileCompleted;
     }
