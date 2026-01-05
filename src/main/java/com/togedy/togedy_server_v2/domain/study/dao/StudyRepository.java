@@ -2,13 +2,12 @@ package com.togedy.togedy_server_v2.domain.study.dao;
 
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
+import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.util.List;
 
 public interface StudyRepository extends JpaRepository<Study, Long> {
 
@@ -72,5 +71,5 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
                 GROUP BY s.id
                 ORDER BY COUNT(u.id) DESC
             """)
-    List<Study> findMostAcitveStudies(Pageable pageable);
+    List<Study> findMostActiveStudies(Pageable pageable);
 }

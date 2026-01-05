@@ -3,7 +3,6 @@ package com.togedy.togedy_server_v2.domain.planner.dao;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto;
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -71,22 +70,19 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
 
     @Query("""
             SELECT new com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto(
-                d.userId,
-                DATE(d.createdAt),
-                SUM(d.studyTime)
+                d.userId as userId,
+                d.createdAt as date,
+                SUM(d.studyTime) as studyTime
             )
             FROM DailyStudySummary d
             WHERE d.userId IN :userIds
-            AND d.createdAt >= :start
-            AND d.createdAt < :end
-            GROUP BY d.userId, DATE(d.createdAt)
+                AND d.createdAt >= :start
+                AND d.createdAt < :end
+            GROUP BY d.userId, d.createdAt
             """)
     List<DailyStudyTimeDto> findDailyStudyTimeByUserIdsAndPeriod(
             @Param("userIds") List<Long> userIds,
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end
     );
-
-
-    List<DailyStudySummary> findAllByUserIdIn(Collection<Long> userIds);
 }

@@ -1,11 +1,12 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
-import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
-import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitExceededException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberCountExceededException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitOutOfRangeException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMinimumMemberRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
@@ -28,6 +29,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Study extends BaseEntity {
+
+    private static final int MAX_MEMBER_LIMIT = 30;
+    private static final int MIN_MEMBER_LIMIT = 2;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -78,6 +82,7 @@ public class Study extends BaseEntity {
             String password,
             String tier
     ) {
+        validateMemberLimitRange(memberLimit);
         this.type = type;
         this.goalTime = goalTime;
         this.name = name;
@@ -90,18 +95,24 @@ public class Study extends BaseEntity {
         this.tier = tier;
     }
 
-    public void updateInfo(PatchStudyInfoRequest request, String studyImageUrl) {
-        if (request.getStudyName() != null) {
-            this.name = request.getStudyName();
+    public void updateInfo(
+            String studyName,
+            String studyDescription,
+            String studyTag,
+            String studyPassword,
+            String studyImageUrl
+    ) {
+        if (studyName != null) {
+            this.name = studyName;
         }
-        if (request.getStudyDescription() != null) {
-            this.description = request.getStudyDescription();
+        if (studyDescription != null) {
+            this.description = studyDescription;
         }
-        if (request.getStudyTag() != null) {
-            this.tag = StudyTag.fromDescription(request.getStudyTag());
+        if (studyTag != null) {
+            this.tag = StudyTag.fromDescription(studyTag);
         }
-        if (request.getStudyPassword() != null) {
-            this.password = request.getStudyPassword();
+        if (studyPassword != null) {
+            this.password = studyPassword;
         }
         if (studyImageUrl != null) {
             this.imageUrl = studyImageUrl;
@@ -109,6 +120,7 @@ public class Study extends BaseEntity {
     }
 
     public void updateMemberLimit(int memberLimit) {
+        validateMemberLimitRange(memberLimit);
         validateUpdatableMemberLimit(memberLimit);
         this.memberLimit = memberLimit;
     }
@@ -119,6 +131,7 @@ public class Study extends BaseEntity {
     }
 
     public void decreaseMemberCount() {
+        validateRemoveMember();
         this.memberCount--;
     }
 
@@ -137,7 +150,7 @@ public class Study extends BaseEntity {
         return oldImageUrl;
     }
 
-    public boolean validateNewlyCreated() {
+    public boolean isNewlyCreated() {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime current = now.minusDays(7);
 
@@ -152,6 +165,12 @@ public class Study extends BaseEntity {
         return dailyStudySummary.getStudyTime() >= this.goalTime;
     }
 
+    private void validateMemberLimitRange(int memberLimit) {
+        if (MAX_MEMBER_LIMIT < memberLimit || memberLimit < MIN_MEMBER_LIMIT) {
+            throw new StudyMemberLimitOutOfRangeException();
+        }
+    }
+
     private void validateUpdatableMemberLimit(int memberLimit) {
         if (memberLimit < this.memberCount) {
             throw new InvalidStudyMemberLimitException();
@@ -160,7 +179,7 @@ public class Study extends BaseEntity {
 
     private void validateAddMember() {
         if (this.memberLimit == this.memberCount) {
-            throw new StudyMemberLimitExceededException();
+            throw new StudyMemberCountExceededException();
         }
     }
 
@@ -173,6 +192,12 @@ public class Study extends BaseEntity {
     private void validatePasswordMatches(String password) {
         if (this.password != null && !password.equals(this.password)) {
             throw new StudyPasswordMismatchException();
+        }
+    }
+
+    private void validateRemoveMember() {
+        if (this.memberCount <= 1) {
+            throw new StudyMinimumMemberRequiredException();
         }
     }
 }
