@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.global.db;
+package com.togedy.togedy_server_v2.global.db;
 
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;

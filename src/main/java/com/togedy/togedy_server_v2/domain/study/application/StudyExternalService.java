@@ -242,7 +242,7 @@ public class StudyExternalService {
      */
     public List<StudySearchDto> findPopularStudies() {
         Pageable pageable = PageRequest.of(0, 20);
-        List<Study> studies = studyRepository.findMostAcitveStudies(pageable);
+        List<Study> studies = studyRepository.findMostActiveStudies(pageable);
         Collections.shuffle(studies);
 
         List<Study> selectedStudies = studies.stream()
@@ -406,7 +406,7 @@ public class StudyExternalService {
                 : null;
 
         String challengeGoalTime = TimeUtil.formatSecondsToHms(study.getGoalTime());
-        boolean isNewlyCreated = study.validateNewlyCreated();
+        boolean isNewlyCreated = study.isNewlyCreated();
 
         return StudySearchDto.of(
                 study,

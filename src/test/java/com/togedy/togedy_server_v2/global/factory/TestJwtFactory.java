@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.global.factory;
+package com.togedy.togedy_server_v2.global.factory;
 
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;

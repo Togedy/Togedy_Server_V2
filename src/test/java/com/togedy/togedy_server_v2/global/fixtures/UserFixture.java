@@ -1,6 +1,7 @@
-package com.togedy.togedy_server_v2.domain.global.fixtures;
+package com.togedy.togedy_server_v2.global.fixtures;
 
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 
 public class UserFixture {
 
@@ -9,6 +10,16 @@ public class UserFixture {
 
     public static User createUser() {
         return User.create("유저", "test@test.com");
+    }
+
+    public static User createStudyingUser() {
+        User user = User.create("공부 중 유저", "study@test.com");
+        user.updateStatus(UserStatus.STUDYING);
+        return user;
+    }
+
+    public static User createUserWithName(String name) {
+        return User.create(name, name + "@test.com");
     }
 
     public static User createLeader() {
