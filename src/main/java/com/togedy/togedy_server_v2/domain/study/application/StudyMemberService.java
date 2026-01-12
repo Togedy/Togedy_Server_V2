@@ -92,7 +92,7 @@ public class StudyMemberService {
         LocalDate end = TimeUtil.startOfNextMonth();
 
         List<DailyStudySummary> dailyStudySummaries =
-                dailyStudySummaryRepository.findAllByUserIdAndDate(memberId, start, end);
+                dailyStudySummaryRepository.findAllByUserIdAndPeriod(memberId, start, end);
 
         Map<YearMonth, List<DailyStudySummary>> summariesByMonth = dailyStudySummaries.stream()
                 .collect(Collectors.groupingBy(dss -> YearMonth.from(dss.getDate())));

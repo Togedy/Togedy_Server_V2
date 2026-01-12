@@ -47,7 +47,7 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
                 AND dss.date >= :startDate
                 AND dss.date <= :endDate
             """)
-    List<DailyStudySummary> findAllByUserIdAndDate(
+    List<DailyStudySummary> findAllByUserIdAndPeriod(
             @Param("userId") Long userId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
