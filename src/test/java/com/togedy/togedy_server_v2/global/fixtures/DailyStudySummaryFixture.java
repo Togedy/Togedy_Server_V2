@@ -12,7 +12,7 @@ public class DailyStudySummaryFixture {
         return DailyStudySummary.builder()
                 .userId(1L)
                 .studyTime(3L * 3600L)
-                .date(LocalDate.now())
+                .date(LocalDate.of(2026, 1, 1))
                 .build();
     }
 
@@ -20,7 +20,7 @@ public class DailyStudySummaryFixture {
         return DailyStudySummary.builder()
                 .userId(userId)
                 .studyTime(3L * 3600L)
-                .date(LocalDate.now())
+                .date(LocalDate.of(2026, 1, 1))
                 .build();
     }
 
@@ -28,7 +28,7 @@ public class DailyStudySummaryFixture {
         return DailyStudySummary.builder()
                 .userId(1L)
                 .studyTime(studyTime)
-                .date(LocalDate.now())
+                .date(LocalDate.of(2026, 1, 1))
                 .build();
     }
 
