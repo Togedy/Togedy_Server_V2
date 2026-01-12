@@ -66,7 +66,13 @@ public enum ErrorCode {
     STUDY_MINIMUM_MEMBER_REQUIRED(HttpStatus.CONFLICT, "S9012", "스터디는 최소 한 명의 멤버가 존재해야 합니다."),
 
     // USER_STUDY(9000)
-    USER_STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "US9000", "해당 유저가 가입한 스터디를 찾을 수 없습니다.");
+    USER_STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "US9000", "해당 유저가 가입한 스터디를 찾을 수 없습니다."),
+
+    // KAKAO(10000)
+    KAKAO_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "K10000", "카카오 토큰이 만료되었습니다."),
+    INVALID_KAKAO_TOKEN(HttpStatus.UNAUTHORIZED, "K10001", "유효하지 않은 카카오 토큰입니다."),
+    KAKAO_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "K10002", "카카오 계정 정보를 조회할 수 없습니다."),
+    KAKAO_API_ERROR(HttpStatus.BAD_GATEWAY, "K10003", "카카오 인증 서버 통신 오류입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
