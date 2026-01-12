@@ -26,7 +26,6 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -342,16 +341,14 @@ public class StudyInternalService {
      * @return 스터디 멤버 목록 DTO
      */
     public List<GetStudyMemberResponse> findStudyMember(Long studyId, Long userId) {
-        LocalDateTime start = TimeUtil.startOfToday();
-        LocalDateTime end = TimeUtil.startOfTomorrow();
+        LocalDate today = LocalDate.now();
 
         List<Object[]> membersWithRoles = userRepository.findAllByStudyIdOrderByCreatedAtAsc(studyId);
         List<Long> memberIds = membersWithRoles.stream()
                 .map(memberWithRole -> ((User) memberWithRole[0]).getId())
                 .toList();
 
-        Map<Long, DailyStudySummary> dailyStudySummaryMap = findDailyStudySummaryMapByUserIds(
-                memberIds, start, end);
+        Map<Long, DailyStudySummary> dailyStudySummaryMap = findDailyStudySummaryMapByUserIds(memberIds, today);
 
         List<GetStudyMemberResponse> responses = membersWithRoles.stream()
                 .map(memberWithRole -> buildMemberResponse(memberWithRole, dailyStudySummaryMap))
@@ -411,13 +408,10 @@ public class StudyInternalService {
                 .map(User::getId)
                 .toList();
 
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
-
         List<DailyStudyTimeDto> dailyStudyTimes = dailyStudySummaryRepository.findDailyStudyTimeByUserIdsAndPeriod(
                 userIds,
-                startDateTime,
-                endDateTime
+                startDate,
+                endDate
         );
 
         Map<Long, Map<LocalDate, Long>> studyTimeMap = new HashMap<>();
@@ -445,7 +439,7 @@ public class StudyInternalService {
     ) {
         for (DailyStudyTimeDto dailyStudyTime : dailyStudyTimes) {
             studyTimeMap.computeIfAbsent(dailyStudyTime.getUserId(), k -> new HashMap<>())
-                    .put(dailyStudyTime.getDate().toLocalDate(), dailyStudyTime.getStudyTime());
+                    .put(dailyStudyTime.getDate(), dailyStudyTime.getStudyTime());
 
             totalStudyTimeMap.merge(dailyStudyTime.getUserId(), dailyStudyTime.getStudyTime(), Long::sum);
         }
@@ -551,8 +545,7 @@ public class StudyInternalService {
      * @return 챌린지 달성 멤버 수
      */
     private int countCompletedChallengeMembers(Study study) {
-        LocalDateTime startOfDay = TimeUtil.startOfToday();
-        LocalDateTime endOfDay = TimeUtil.startOfTomorrow();
+        LocalDate today = LocalDate.now();
 
         List<User> members = userRepository.findAllByStudyId(study.getId());
 
@@ -561,11 +554,7 @@ public class StudyInternalService {
                 .toList();
 
         List<DailyStudySummary> todaySummaries =
-                dailyStudySummaryRepository.findAllByUserIdsAndCreatedAt(
-                        memberIds,
-                        startOfDay,
-                        endOfDay
-                );
+                dailyStudySummaryRepository.findAllByUserIdsAndDate(memberIds, today);
 
         return (int) todaySummaries.stream()
                 .filter(study::isAchieved)
@@ -623,18 +612,16 @@ public class StudyInternalService {
     /**
      * 지정한 기간 내 사용자별 일일 학습 요약 정보를 맵으로 조회한다.
      *
-     * @param memberIds  조회 대상 사용자 ID 목록
-     * @param startOfDay 조회 시작 시각
-     * @param endOfDay   조회 종료 시각
+     * @param memberIds 조회 대상 사용자 ID 목록
+     * @param date      조회 날짜
      * @return 사용자 ID를 키로 하는 일일 학습 요약 정보 맵
      */
     private Map<Long, DailyStudySummary> findDailyStudySummaryMapByUserIds(
             List<Long> memberIds,
-            LocalDateTime startOfDay,
-            LocalDateTime endOfDay
+            LocalDate date
     ) {
         return dailyStudySummaryRepository
-                .findAllByUserIdsAndCreatedAt(memberIds, startOfDay, endOfDay)
+                .findAllByUserIdsAndDate(memberIds, date)
                 .stream()
                 .collect(Collectors.toMap(
                         DailyStudySummary::getUserId,

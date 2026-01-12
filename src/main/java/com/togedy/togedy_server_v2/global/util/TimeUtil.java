@@ -124,12 +124,12 @@ public class TimeUtil {
         return hour * 3600L;
     }
 
-    public static LocalDateTime startOfMonthsAgo(int monthsAgo) {
-        return YearMonth.now().minusMonths(monthsAgo).atDay(1).atStartOfDay();
+    public static LocalDate startOfMonthsAgo(int monthsAgo) {
+        return YearMonth.now().minusMonths(monthsAgo).atDay(1).atStartOfDay().toLocalDate();
     }
 
-    public static LocalDateTime startOfNextMonth() {
-        return YearMonth.now().plusMonths(1).atDay(1).atStartOfDay();
+    public static LocalDate startOfNextMonth() {
+        return YearMonth.now().plusMonths(1).atDay(1).atStartOfDay().toLocalDate();
     }
 
     public static LocalDateTime startOfToday() {
