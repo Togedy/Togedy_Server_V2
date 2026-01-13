@@ -518,6 +518,9 @@ public class StudyExternalService {
                             studyDtos
                     );
                 })
-                .orElse(GetMyStudyInfoResponse.from(studyDtos));
+                .orElse(GetMyStudyInfoResponse.from(
+                        TimeUtil.formatSecondsToHms(studyTime),
+                        studyDtos)
+                );
     }
 }
