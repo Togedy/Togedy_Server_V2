@@ -182,10 +182,8 @@ public class StudyExternalService {
      * @param challenge 챌린지 스터디만 조회할지 여부
      * @param page      페이지 번호 (1부터 시작)
      * @param size      페이지당 조회 개수
-     * @param userId    검색을 요청한 사용자 ID
      * @return 스터디 검색 결과 및 다음 페이지 존재 여부를 포함한 응답 DTO
      */
-
     public GetStudySearchResponse findStudySearch(
             String name,
             List<String> tags,
@@ -193,8 +191,7 @@ public class StudyExternalService {
             boolean joinable,
             boolean challenge,
             int page,
-            int size,
-            Long userId
+            int size
     ) {
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
 

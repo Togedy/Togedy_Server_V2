@@ -112,11 +112,10 @@ public class StudyController {
             @RequestParam(name = "joinable", required = false, defaultValue = "false") boolean joinable,
             @RequestParam(name = "challenge", required = false, defaultValue = "false") boolean challenge,
             @RequestParam(name = "page", defaultValue = "1") int page,
-            @RequestParam(name = "size", defaultValue = "20") int size,
-            @AuthenticationPrincipal AuthUser user
+            @RequestParam(name = "size", defaultValue = "20") int size
     ) {
         GetStudySearchResponse response =
-                studyExternalService.findStudySearch(name, tags, filter, joinable, challenge, page, size, user.getId());
+                studyExternalService.findStudySearch(name, tags, filter, joinable, challenge, page, size);
         return ApiUtil.success(response);
     }
 
