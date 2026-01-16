@@ -14,6 +14,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.StudyMemberRoleDto;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
@@ -343,15 +344,15 @@ public class StudyInternalService {
     public List<GetStudyMemberResponse> findStudyMember(Long studyId, Long userId) {
         LocalDate today = LocalDate.now();
 
-        List<Object[]> membersWithRoles = userRepository.findAllByStudyIdOrderByCreatedAtAsc(studyId);
+        List<StudyMemberRoleDto> membersWithRoles = userRepository.findAllByStudyIdOrderByCreatedAtAsc(studyId);
         List<Long> memberIds = membersWithRoles.stream()
-                .map(memberWithRole -> ((User) memberWithRole[0]).getId())
+                .map(studyMemberRoleDto -> studyMemberRoleDto.getUser().getId())
                 .toList();
 
         Map<Long, DailyStudySummary> dailyStudySummaryMap = findDailyStudySummaryMapByUserIds(memberIds, today);
 
         List<GetStudyMemberResponse> responses = membersWithRoles.stream()
-                .map(memberWithRole -> buildMemberResponse(memberWithRole, dailyStudySummaryMap))
+                .map(studyMemberRoleDto -> buildMemberResponse(studyMemberRoleDto, dailyStudySummaryMap))
                 .collect(Collectors.toList());
 
         moveCurrentUserToTop(userId, responses, GetStudyMemberResponse::getUserId);
@@ -595,18 +596,16 @@ public class StudyInternalService {
      * @return 스터디 멤버 조회 응답 DTO
      */
     private GetStudyMemberResponse buildMemberResponse(
-            Object[] memberWithRole,
+            StudyMemberRoleDto studyMemberRoleDto,
             Map<Long, DailyStudySummary> dailyStudySummaryMap
     ) {
-        User member = (User) memberWithRole[0];
-        StudyRole role = (StudyRole) memberWithRole[1];
-
-        DailyStudySummary todaySummary = dailyStudySummaryMap.get(member.getId());
+        DailyStudySummary todaySummary = dailyStudySummaryMap.get(studyMemberRoleDto.getUser().getId());
 
         if (todaySummary != null) {
-            return GetStudyMemberResponse.of(member, todaySummary, role);
+            return GetStudyMemberResponse.of(studyMemberRoleDto.getUser(), todaySummary,
+                    studyMemberRoleDto.getStudyRole());
         }
-        return GetStudyMemberResponse.of(member, role);
+        return GetStudyMemberResponse.of(studyMemberRoleDto.getUser(), studyMemberRoleDto.getStudyRole());
     }
 
     /**
