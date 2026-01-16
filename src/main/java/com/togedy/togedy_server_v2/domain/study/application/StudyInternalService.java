@@ -378,8 +378,8 @@ public class StudyInternalService {
             throw new StudyAccessDeniedException();
         }
 
-        List<GetStudyMemberManagementResponse> responses = userStudyRepository.findStudyMembersByStudyId(
-                studyId);
+        List<GetStudyMemberManagementResponse> responses = new ArrayList<>(
+                userStudyRepository.findStudyMembersByStudyId(studyId));
 
         moveCurrentUserToTop(userId, responses, GetStudyMemberManagementResponse::getUserId);
         return responses;
