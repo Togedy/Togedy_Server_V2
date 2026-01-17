@@ -23,6 +23,8 @@ public class StudyCategoryService {
 
     private final StudyCategoryRepository studyCategoryRepository;
 
+    private static final long ORDER_GAP = 1000L;
+
     /**
      * 스터디 카테고리를 생성한다.
      *
@@ -70,12 +72,7 @@ public class StudyCategoryService {
      */
     @Transactional
     public void modifyStudyCategory(PatchStudyCategoryRequest request, Long categoryId, Long userId) {
-        StudyCategory studyCategory = studyCategoryRepository.findActiveById(categoryId)
-                .orElseThrow(StudyCategoryNotFoundException::new);
-
-        if (!studyCategory.getUserId().equals(userId)) {
-            throw new StudyCategoryNotOwnedException();
-        }
+        StudyCategory studyCategory = findOwnedCategory(categoryId, userId);
 
         validateDuplicateOnUpdate(request.getCategoryName(), request.getCategoryColor(), userId, categoryId);
 
@@ -90,12 +87,7 @@ public class StudyCategoryService {
      */
     @Transactional
     public void removeStudyCategory(Long categoryId, Long userId) {
-        StudyCategory studyCategory = studyCategoryRepository.findActiveById(categoryId)
-                .orElseThrow(StudyCategoryNotFoundException::new);
-
-        if (!studyCategory.getUserId().equals(userId)) {
-            throw new StudyCategoryNotOwnedException();
-        }
+        StudyCategory studyCategory = findOwnedCategory(categoryId, userId);
 
         studyCategory.delete();
     }
@@ -109,44 +101,13 @@ public class StudyCategoryService {
      */
     @Transactional
     public void reorderStudyCategory(PatchReorderRequest request, Long categoryId, Long userId) {
-        StudyCategory target = studyCategoryRepository.findActiveById(categoryId)
-                .orElseThrow(StudyCategoryNotFoundException::new);
-
-        if (!target.getUserId().equals(userId)) {
-            throw new StudyCategoryNotOwnedException();
-        }
-
         validateStudyCategoryReorder(request, categoryId);
 
-        StudyCategory prev = null;
-        StudyCategory next = null;
+        StudyCategory target = findOwnedCategory(categoryId, userId);
+        StudyCategory prev = getPrevCategory(request, userId);
+        StudyCategory next = getNextCategory(request, userId);
 
-        if (request.getPrevId() != null) {
-            prev = studyCategoryRepository.findActiveById(request.getPrevId())
-                    .orElseThrow(StudyCategoryNotFoundException::new);
-            if (!prev.getUserId().equals(userId)) {
-                throw new StudyCategoryNotOwnedException();
-            }
-        }
-
-        if (request.getNextId() != null) {
-            next = studyCategoryRepository.findActiveById(request.getNextId())
-                    .orElseThrow(StudyCategoryNotFoundException::new);
-            if (!next.getUserId().equals(userId)) {
-                throw new StudyCategoryNotOwnedException();
-            }
-        }
-
-        long newOrderIndex;
-
-        if (prev == null) {                 // 맨 위로 이동
-            newOrderIndex = next.getOrderIndex() / 2;
-        } else if (next == null) {          // 맨 아래로 이동
-            newOrderIndex = prev.getOrderIndex() + 1000;
-        } else {                            // 중간 삽입
-            newOrderIndex = (prev.getOrderIndex() + next.getOrderIndex()) / 2;
-        }
-
+        long newOrderIndex = calculateNewOrderIndex(prev, next);
         target.move(newOrderIndex);
     }
 
@@ -197,6 +158,45 @@ public class StudyCategoryService {
         if (request.getNextId() != null && request.getNextId().equals(categoryId)) {
             throw new InvalidStudyCategoryReorderException();
         }
+    }
+
+    private long calculateNewOrderIndex(StudyCategory prev, StudyCategory next) {
+        if (prev == null) {
+            return next.getOrderIndex() - ORDER_GAP;
+        }
+
+        if (next == null) {
+            return prev.getOrderIndex() + ORDER_GAP;
+        }
+
+        long gap = next.getOrderIndex() - prev.getOrderIndex();
+        if (gap <= 1) {
+            throw new InvalidStudyCategoryReorderException();
+        }
+
+        return prev.getOrderIndex() + gap / 2;
+    }
+
+    private StudyCategory findOwnedCategory(Long categoryId, Long userId) {
+        StudyCategory category = studyCategoryRepository.findActiveById(categoryId)
+                .orElseThrow(StudyCategoryNotFoundException::new);
+
+        if (!category.getUserId().equals(userId)) {
+            throw new StudyCategoryNotOwnedException();
+        }
+        return category;
+    }
+
+    private StudyCategory getPrevCategory(PatchReorderRequest request, Long userId) {
+        return request.getPrevId() == null
+                ? null
+                : findOwnedCategory(request.getPrevId(), userId);
+    }
+
+    private StudyCategory getNextCategory(PatchReorderRequest request, Long userId) {
+        return request.getNextId() == null
+                ? null
+                : findOwnedCategory(request.getNextId(), userId);
     }
 
 }
