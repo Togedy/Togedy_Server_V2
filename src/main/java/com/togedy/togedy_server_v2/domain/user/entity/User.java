@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -23,7 +24,7 @@ public class User extends BaseEntity {
     @Column(name = "nickname", length = 10, nullable = false, unique = true)
     private String nickname;
 
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(name = "email", nullable = true)
     private String email;
 
     @Column(name = "profile_image_url", nullable = true)
@@ -61,5 +62,9 @@ public class User extends BaseEntity {
 
     public void updatePlannerVisibility(boolean plannerVisible) {
         this.plannerVisible = plannerVisible;
+    }
+
+    public static User createTemp(String email) {
+        return new User("tmp" + UUID.randomUUID().toString().substring(0,7), email);
     }
 }
