@@ -10,7 +10,6 @@ import com.togedy.togedy_server_v2.domain.planner.exception.DuplicateStudyCatego
 import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudyCategoryReorderException;
 import com.togedy.togedy_server_v2.domain.planner.exception.StudyCategoryNotFoundException;
 import com.togedy.togedy_server_v2.domain.planner.exception.StudyCategoryNotOwnedException;
-import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotOwnedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,7 +73,7 @@ public class StudyCategoryService {
                 .orElseThrow(StudyCategoryNotFoundException::new);
 
         if (!studyCategory.getUserId().equals(userId)) {
-            throw new CategoryNotOwnedException();
+            throw new StudyCategoryNotOwnedException();
         }
 
         validateDuplicateStudyCategory(request.getCategoryName(), request.getCategoryColor(), userId);
