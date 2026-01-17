@@ -52,6 +52,7 @@ public class StudyCategoryService {
      * @param userId    유저ID
      * @return          유저가 보유한 스터디 카테고리 정보 DTO List
      */
+    @Transactional(readOnly = true)
     public List<GetStudyCategoryResponse> findAllStudyCategoriesByUserId(Long userId) {
         List<StudyCategory> studyCategoryList = studyCategoryRepository.findAllByUserId(userId);
 
