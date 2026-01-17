@@ -26,7 +26,7 @@ public interface StudyCategoryRepository extends JpaRepository<StudyCategory, Lo
     List<StudyCategory> findAllByUserId(Long userId);
 
     @Query("""
-            SELECT CASE WHEN COUNT(sc) > 0 THEN true ELSE false END
+            SELECT count(sc) > 0
             FROM StudyCategory sc
             WHERE sc.name = :name
             AND sc.color = :color
