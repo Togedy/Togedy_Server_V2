@@ -31,7 +31,7 @@ public class StudyCategoryService {
      */
     @Transactional
     public void generateStudyCategory(PostStudyCategoryRequest request, Long userId) {
-        validateDuplicateStudyCategory(request.getCategoryName(), request.getCategoryColor(), userId);
+        validateDuplicateOnCreate(request.getCategoryName(), request.getCategoryColor(), userId);
 
         Long lastOrder = studyCategoryRepository.findMaxOrderIndex(userId);
         Long nextOrder = lastOrder == null ? 1000L : lastOrder + 1000L;
@@ -77,7 +77,7 @@ public class StudyCategoryService {
             throw new StudyCategoryNotOwnedException();
         }
 
-        validateDuplicateStudyCategory(request.getCategoryName(), request.getCategoryColor(), userId);
+        validateDuplicateOnUpdate(request.getCategoryName(), request.getCategoryColor(), userId, categoryId);
 
         studyCategory.update(request);
     }
@@ -151,16 +151,33 @@ public class StudyCategoryService {
     }
 
     /**
-     * 이름 및 색상이 동일한 스터디 카테고리가 이미 존재하는 지 검증한다.
+     * 생성 시에 이름 및 색상이 동일한 스터디 카테고리가 이미 존재하는 지 검증한다.
      *
      * @param categoryName      카테고리명
      * @param categoryColor     카테고리 색상
      * @param userId            유저ID
      */
-    private void validateDuplicateStudyCategory(String categoryName, String categoryColor, Long userId) {
+    private void validateDuplicateOnCreate(String categoryName, String categoryColor, Long userId) {
         if (studyCategoryRepository.existsByNameAndColorAndUserId(categoryName, categoryColor, userId)) {
             throw new DuplicateStudyCategoryException();
         }
+    }
+
+    /**
+     * 수정 시에 이름 및 색상이 동일한 스터디 카테고리가 이미 존재하는 지 검증한다.
+     *
+     * @param categoryName      카테고리명
+     * @param categoryColor     카테고리 색상
+     * @param userId            유저ID
+     * @param categoryId        비교 카테고리ID
+     */
+    private void validateDuplicateOnUpdate(String categoryName, String categoryColor, Long userId, Long categoryId) {
+        studyCategoryRepository
+                .findByNameAndColorAndUserId(categoryName, categoryColor, userId)
+                .filter(category -> !category.getId().equals(categoryId))
+                .ifPresent(c -> {
+                    throw new DuplicateStudyCategoryException();
+                });
     }
 
     /**

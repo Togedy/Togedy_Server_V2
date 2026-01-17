@@ -42,4 +42,6 @@ public interface StudyCategoryRepository extends JpaRepository<StudyCategory, Lo
             AND sc.status = 'ACTIVE'
             """)
     Long findMaxOrderIndex(Long userId);
+
+    Optional<StudyCategory> findByNameAndColorAndUserId(String name, String color, Long userId);
 }
