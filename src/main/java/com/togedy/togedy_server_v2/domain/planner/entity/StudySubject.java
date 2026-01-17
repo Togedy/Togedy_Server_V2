@@ -1,6 +1,6 @@
 package com.togedy.togedy_server_v2.domain.planner.entity;
 
-import com.togedy.togedy_server_v2.domain.planner.dto.PatchStudyCategoryRequest;
+import com.togedy.togedy_server_v2.domain.planner.dto.PatchStudySubjectRequest;
 import com.togedy.togedy_server_v2.global.enums.BaseStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,13 +15,13 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "study_category")
+@Table(name = "study_subject")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class StudyCategory {
+public class StudySubject {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "study_category_id", nullable = false, updatable = false)
+    @Column(name = "study_subject_id", nullable = false, updatable = false)
     private Long id;
 
     @Column(name = "user_id", nullable = false, updatable = false)
@@ -40,7 +40,7 @@ public class StudyCategory {
     private Long orderIndex;
 
     @Builder
-    public StudyCategory(Long userId, String name, String color, Long orderIndex) {
+    public StudySubject(Long userId, String name, String color, Long orderIndex) {
         this.userId = userId;
         this.name = name;
         this.color = color;
@@ -48,12 +48,12 @@ public class StudyCategory {
         this.orderIndex = orderIndex;
     }
 
-    public void update(PatchStudyCategoryRequest request) {
-        if (request.getCategoryName() != null) {
-            this.name = request.getCategoryName();
+    public void update(PatchStudySubjectRequest request) {
+        if (request.getSubjectName() != null) {
+            this.name = request.getSubjectName();
         }
-        if (request.getCategoryColor() != null) {
-            this.color = request.getCategoryColor();
+        if (request.getSubjectColor() != null) {
+            this.color = request.getSubjectColor();
         }
     }
 

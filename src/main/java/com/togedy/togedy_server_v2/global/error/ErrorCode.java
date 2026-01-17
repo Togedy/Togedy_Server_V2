@@ -74,11 +74,11 @@ public enum ErrorCode {
     KAKAO_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND, "K10002", "카카오 계정 정보를 조회할 수 없습니다."),
     KAKAO_API_ERROR(HttpStatus.BAD_GATEWAY, "K10003", "카카오 인증 서버 통신 오류입니다."),
 
-    // STUDY_CATEGORY(11000)
-    STUDY_CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "SC11000", "해당 카테고리를 찾을 수 없습니다."),
-    STUDY_CATEGORY_NOT_OWNED(HttpStatus.UNAUTHORIZED, "SC11001", "해당 유저의 카테고리가 아닙니다."),
-    DUPLICATE_STUDY_CATEGORY(HttpStatus.BAD_REQUEST, "SC11002", "이름과 색상이 동일한 카테고리가 존재합니다."),
-    INVALID_STUDY_CATEGORY_REORDER(HttpStatus.BAD_REQUEST, "SC11003", "카테고리 순서 변경 요청이 올바르지 않습니다.");
+    // STUDY_SUBJECT(11000)
+    STUDY_SUBJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "SC11000", "해당 과목을 찾을 수 없습니다."),
+    STUDY_SUBJECT_NOT_OWNED(HttpStatus.UNAUTHORIZED, "SC11001", "해당 유저의 과목이 아닙니다."),
+    DUPLICATE_STUDY_SUBJECT(HttpStatus.BAD_REQUEST, "SC11002", "이름과 색상이 동일한 과목이 존재합니다."),
+    INVALID_STUDY_SUBJECT_REORDER(HttpStatus.BAD_REQUEST, "SC11003", "과목 순서 변경 요청이 올바르지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

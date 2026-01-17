@@ -10,11 +10,11 @@ public interface PlanRepository extends JpaRepository<Plan, Long> {
     @Query("""
                 SELECT p
                 FROM Plan p
-                WHERE p.studyCategoryId IN :studyCategoryIds
+                WHERE p.studySubjectId IN :studySubjectIds
                     AND p.createdAt BETWEEN :startOfDay AND :endOfDay
             """)
-    List<Plan> findAllByStudyCategoryIdsAndPeriod(
-            List<Long> studyCategoryIds,
+    List<Plan> findAllByStudySubjectIdsAndPeriod(
+            List<Long> studySubjectIds,
             LocalDateTime startOfDay,
             LocalDateTime endOfDay
     );

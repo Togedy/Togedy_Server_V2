@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PatchStudyCategoryRequest {
-    private String categoryName;
-    private String categoryColor;
+public class PostStudySubjectRequest {
+    private String subjectName;
+    private String subjectColor;
 }
