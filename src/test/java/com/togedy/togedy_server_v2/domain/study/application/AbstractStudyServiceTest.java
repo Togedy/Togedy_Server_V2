@@ -2,7 +2,7 @@ package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.PlanRepository;
-import com.togedy.togedy_server_v2.domain.planner.dao.StudyCategoryRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
@@ -27,7 +27,7 @@ public abstract class AbstractStudyServiceTest {
     protected UserRepository userRepository;
 
     @Mock
-    protected StudyCategoryRepository studyCategoryRepository;
+    protected StudySubjectRepository studySubjectRepository;
 
     @Mock
     protected PlanRepository planRepository;

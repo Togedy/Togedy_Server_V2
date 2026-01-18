@@ -12,7 +12,7 @@ import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
+import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.fixtures.DailyStudySummaryFixture;
 import com.togedy.togedy_server_v2.global.fixtures.UserFixture;
 import com.togedy.togedy_server_v2.global.fixtures.UserStudyFixture;
