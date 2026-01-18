@@ -19,8 +19,8 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedExcep
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.exception.UserAccessDeniedException;
-import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
+import com.togedy.togedy_server_v2.domain.user.exception.user.UserAccessDeniedException;
+import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

@@ -80,3 +80,9 @@ spring:
         bucket: ${BUCKET_NAME}
 #        endpoint: http://127.0.0.1:4566
 #        path-style-access-enabled: true
+
+---
+kakao:
+  api:
+    url:
+      user-info: https://kapi.kakao.com/v2/user/me
