@@ -24,12 +24,12 @@ jobs:
       - name: Setup Gradle (with caching)
         uses: gradle/actions/setup-gradle@v3
         with:
-          cache-read-only: ${{ github.event_name == 'pull_request' }}
+          cache-read-only: true
 
       - name: Permission gradlew
         run: chmod +x gradlew
 
-      - name: Build & Test
+      - name: Run tests
         env:
           SPRING_PROFILES_ACTIVE: test
 
@@ -39,7 +39,7 @@ jobs:
           SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
           SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
           SPRING_CLOUD_AWS_S3_BUCKET: test
-        run: ./gradlew build --build-cache --info
+        run: ./gradlew clean test --no-build-cache
 
       - name: Post result
         uses: EnricoMi/publish-unit-test-result-action@v2
