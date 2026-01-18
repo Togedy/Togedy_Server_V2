@@ -2,10 +2,10 @@ package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.PlanRepository;
-import com.togedy.togedy_server_v2.domain.planner.dao.StudyCategoryRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.entity.Plan;
-import com.togedy.togedy_server_v2.domain.planner.entity.StudyCategory;
+import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyPlannerDto;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
@@ -39,7 +39,7 @@ public class StudyMemberService {
     private final UserStudyRepository userStudyRepository;
     private final UserRepository userRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
-    private final StudyCategoryRepository studyCategoryRepository;
+    private final StudySubjectRepository studySubjectRepository;
     private final PlanRepository planRepository;
 
     private static final int MONTH_RANGE = 6;
@@ -134,22 +134,22 @@ public class StudyMemberService {
         LocalDateTime startOfToday = TimeUtil.startOfToday();
         LocalDateTime startOfTomorrow = TimeUtil.startOfTomorrow();
 
-        List<StudyCategory> studyCategories = studyCategoryRepository.findAllByUserId(memberId);
+        List<StudySubject> studySubjects = studySubjectRepository.findAllByUserId(memberId);
 
-        List<Long> studyCategoryIds = studyCategories.stream()
-                .map(StudyCategory::getId)
+        List<Long> studySubjectIds = studySubjects.stream()
+                .map(StudySubject::getId)
                 .toList();
 
-        List<Plan> todayPlans = planRepository.findAllByStudyCategoryIdsAndPeriod(
-                studyCategoryIds,
+        List<Plan> todayPlans = planRepository.findAllByStudySubjectIdsAndPeriod(
+                studySubjectIds,
                 startOfToday,
                 startOfTomorrow
         );
 
-        Map<Long, List<Plan>> plansByStudyCategoryIds = todayPlans.stream()
-                .collect(Collectors.groupingBy(Plan::getStudyCategoryId));
+        Map<Long, List<Plan>> plansByStudySubjectIds = todayPlans.stream()
+                .collect(Collectors.groupingBy(Plan::getStudySubjectId));
 
-        List<DailyPlannerDto> dailyPlannerDtos = buildDailyPlannerDtos(studyCategories, plansByStudyCategoryIds);
+        List<DailyPlannerDto> dailyPlannerDtos = buildDailyPlannerDtos(studySubjects, plansByStudySubjectIds);
 
         int completedPlanCount = countCompletedPlans(todayPlans);
         int totalPlanCount = todayPlans.size();
@@ -345,32 +345,32 @@ public class StudyMemberService {
     }
 
     /**
-     * 스터디 카테고리별 일일 플래너 DTO 목록을 생성한다.
+     * 스터디 과목별 일일 플래너 DTO 목록을 생성한다.
      * <p>
-     * 각 스터디 카테고리에 대해 해당 카테고리에 속한 플랜 목록을 매핑하여 {@link DailyPlannerDto}를 생성한다.
+     * 각 스터디 과목에 대해 해당 과목에 속한 플랜 목록을 매핑하여 {@link DailyPlannerDto}를 생성한다.
      * </p>
      * <p>
-     * 특정 카테고리에 플랜이 존재하지 않는 경우, 빈 플랜 목록을 포함한 DTO를 생성한다.
+     * 특정 과목에 플랜이 존재하지 않는 경우, 빈 플랜 목록을 포함한 DTO를 생성한다.
      * </p>
      *
-     * @param studyCategories         스터디 카테고리 목록
-     * @param plansByStudyCategoryIds 카테고리 ID 기준으로 그룹화된 플랜 맵
-     * @return 카테고리 순서를 유지한 일일 플래너 DTO 목록
+     * @param studySubjects         스터디 과목 목록
+     * @param plansByStudySubjectIds 과목 ID 기준으로 그룹화된 플랜 맵
+     * @return 과목 순서를 유지한 일일 플래너 DTO 목록
      */
     private List<DailyPlannerDto> buildDailyPlannerDtos(
-            List<StudyCategory> studyCategories,
-            Map<Long, List<Plan>> plansByStudyCategoryIds
+            List<StudySubject> studySubjects,
+            Map<Long, List<Plan>> plansByStudySubjectIds
     ) {
         List<DailyPlannerDto> dailyPlannerDtos = new ArrayList<>();
 
-        for (StudyCategory studyCategory : studyCategories) {
-            List<Plan> plansOfStudyCategory = plansByStudyCategoryIds.getOrDefault(studyCategory.getId(), List.of());
+        for (StudySubject studySubject : studySubjects) {
+            List<Plan> plansOfStudySubject = plansByStudySubjectIds.getOrDefault(studySubject.getId(), List.of());
 
-            List<PlanDto> planDtos = plansOfStudyCategory.stream()
+            List<PlanDto> planDtos = plansOfStudySubject.stream()
                     .map(PlanDto::from)
                     .toList();
 
-            dailyPlannerDtos.add(DailyPlannerDto.of(studyCategory, planDtos));
+            dailyPlannerDtos.add(DailyPlannerDto.of(studySubject, planDtos));
         }
 
         return dailyPlannerDtos;
