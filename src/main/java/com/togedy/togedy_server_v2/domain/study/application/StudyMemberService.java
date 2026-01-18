@@ -1,10 +1,10 @@
 package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
-import com.togedy.togedy_server_v2.domain.planner.dao.PlanRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
-import com.togedy.togedy_server_v2.domain.planner.entity.Plan;
+import com.togedy.togedy_server_v2.domain.planner.entity.StudyTask;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyPlannerDto;
@@ -13,7 +13,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileRespons
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberStudyTimeResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.MonthlyStudyTimeDto;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchPlannerVisibilityRequest;
-import com.togedy.togedy_server_v2.domain.study.dto.PlanDto;
+import com.togedy.togedy_server_v2.domain.study.dto.StudyTaskDto;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
@@ -40,7 +40,7 @@ public class StudyMemberService {
     private final UserRepository userRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final StudySubjectRepository studySubjectRepository;
-    private final PlanRepository planRepository;
+    private final StudyTaskRepository studyTaskRepository;
 
     private static final int MONTH_RANGE = 6;
 
@@ -140,25 +140,25 @@ public class StudyMemberService {
                 .map(StudySubject::getId)
                 .toList();
 
-        List<Plan> todayPlans = planRepository.findAllByStudySubjectIdsAndPeriod(
+        List<StudyTask> todayStudyTasks = studyTaskRepository.findAllByStudySubjectIdsAndPeriod(
                 studySubjectIds,
                 startOfToday,
                 startOfTomorrow
         );
 
-        Map<Long, List<Plan>> plansByStudySubjectIds = todayPlans.stream()
-                .collect(Collectors.groupingBy(Plan::getStudySubjectId));
+        Map<Long, List<StudyTask>> tasksByStudySubjectIds = todayStudyTasks.stream()
+                .collect(Collectors.groupingBy(StudyTask::getStudySubjectId));
 
-        List<DailyPlannerDto> dailyPlannerDtos = buildDailyPlannerDtos(studySubjects, plansByStudySubjectIds);
+        List<DailyPlannerDto> dailyPlannerDtos = buildDailyPlannerDtos(studySubjects, tasksByStudySubjectIds);
 
-        int completedPlanCount = countCompletedPlans(todayPlans);
-        int totalPlanCount = todayPlans.size();
+        int completedTaskCount = countCompletedTasks(todayStudyTasks);
+        int totalTaskCount = todayStudyTasks.size();
 
         return GetStudyMemberPlannerResponse.of(
                 isMyPlanner,
                 true,
-                completedPlanCount,
-                totalPlanCount,
+                completedTaskCount,
+                totalTaskCount,
                 dailyPlannerDtos
         );
     }
@@ -333,44 +333,44 @@ public class StudyMemberService {
     }
 
     /**
-     * 완료된 플랜의 개수를 집계한다.
+     * 완료된 테스크의 개수를 집계한다.
      *
-     * @param planList 플랜 목록
-     * @return 완료 상태인 플랜 수
+     * @param studyTaskList 테스크 목록
+     * @return 완료 상태인 테스크 수
      */
-    private int countCompletedPlans(List<Plan> planList) {
-        return (int) planList.stream()
-                .filter(Plan::isCompleted)
+    private int countCompletedTasks(List<StudyTask> studyTaskList) {
+        return (int) studyTaskList.stream()
+                .filter(StudyTask::isCompleted)
                 .count();
     }
 
     /**
      * 스터디 과목별 일일 플래너 DTO 목록을 생성한다.
      * <p>
-     * 각 스터디 과목에 대해 해당 과목에 속한 플랜 목록을 매핑하여 {@link DailyPlannerDto}를 생성한다.
+     * 각 스터디 과목에 대해 해당 과목에 속한 테스크 목록을 매핑하여 {@link DailyPlannerDto}를 생성한다.
      * </p>
      * <p>
-     * 특정 과목에 플랜이 존재하지 않는 경우, 빈 플랜 목록을 포함한 DTO를 생성한다.
+     * 특정 과목에 테스크가 존재하지 않는 경우, 빈 테스크 목록을 포함한 DTO를 생성한다.
      * </p>
      *
      * @param studySubjects         스터디 과목 목록
-     * @param plansByStudySubjectIds 과목 ID 기준으로 그룹화된 플랜 맵
+     * @param tasksByStudySubjectIds 과목 ID 기준으로 그룹화된 테스크 맵
      * @return 과목 순서를 유지한 일일 플래너 DTO 목록
      */
     private List<DailyPlannerDto> buildDailyPlannerDtos(
             List<StudySubject> studySubjects,
-            Map<Long, List<Plan>> plansByStudySubjectIds
+            Map<Long, List<StudyTask>> tasksByStudySubjectIds
     ) {
         List<DailyPlannerDto> dailyPlannerDtos = new ArrayList<>();
 
         for (StudySubject studySubject : studySubjects) {
-            List<Plan> plansOfStudySubject = plansByStudySubjectIds.getOrDefault(studySubject.getId(), List.of());
+            List<StudyTask> plansOfStudySubject = tasksByStudySubjectIds.getOrDefault(studySubject.getId(), List.of());
 
-            List<PlanDto> planDtos = plansOfStudySubject.stream()
-                    .map(PlanDto::from)
+            List<StudyTaskDto> studyTaskDtos = plansOfStudySubject.stream()
+                    .map(StudyTaskDto::from)
                     .toList();
 
-            dailyPlannerDtos.add(DailyPlannerDto.of(studySubject, planDtos));
+            dailyPlannerDtos.add(DailyPlannerDto.of(studySubject, studyTaskDtos));
         }
 
         return dailyPlannerDtos;

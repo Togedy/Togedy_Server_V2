@@ -1,6 +1,6 @@
 package com.togedy.togedy_server_v2.domain.planner.entity;
 
-import com.togedy.togedy_server_v2.domain.planner.enums.PlanStatus;
+import com.togedy.togedy_server_v2.domain.planner.enums.StudyTaskStatus;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -17,13 +17,13 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "plan")
+@Table(name = "study_task")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Plan extends BaseEntity {
+public class StudyTask extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "plan_id", nullable = false, updatable = false)
+    @Column(name = "task_id", nullable = false, updatable = false)
     private Long id;
 
     @Column(name = "study_subject_id", nullable = false)
@@ -37,9 +37,9 @@ public class Plan extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, columnDefinition = "varchar(20)")
-    private PlanStatus status;
+    private StudyTaskStatus status;
 
     public boolean isCompleted() {
-        return this.status == PlanStatus.SUCCESS;
+        return this.status == StudyTaskStatus.SUCCESS;
     }
 }
