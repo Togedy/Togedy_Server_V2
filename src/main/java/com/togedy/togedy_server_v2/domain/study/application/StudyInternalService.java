@@ -348,7 +348,7 @@ public class StudyInternalService {
         List<StudyMemberRoleDto> membersWithRoles = userRepository.findAllByStudyIdOrderByCreatedAtAsc(studyId);
         List<Long> memberIds = membersWithRoles.stream()
                 .map(studyMemberRoleDto -> studyMemberRoleDto.getUser().getId())
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
 
         Map<Long, DailyStudySummary> dailyStudySummaryMap = findDailyStudySummaryMapByUserIds(memberIds, today);
 
