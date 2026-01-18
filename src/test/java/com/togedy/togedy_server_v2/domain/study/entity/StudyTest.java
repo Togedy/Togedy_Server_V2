@@ -33,7 +33,7 @@ public class StudyTest {
         Study study = StudyFixture.createNormalStudy();
 
         // when
-        study.updateInfo("수정", null, null, null, null);
+        study.updateInformation("수정", null, null, null, null);
 
         // then
         Assertions.assertThat(study.getName()).isEqualTo("수정");
@@ -45,7 +45,7 @@ public class StudyTest {
         Study study = StudyFixture.createNormalStudy();
 
         // when
-        study.updateInfo(null, "수정", null, null, null);
+        study.updateInformation(null, "수정", null, null, null);
 
         // then
         Assertions.assertThat(study.getDescription()).isEqualTo("수정");
@@ -57,7 +57,7 @@ public class StudyTest {
         Study study = StudyFixture.createNormalStudy();
 
         // when
-        study.updateInfo(null, null, StudyTag.FREE.getDescription(), null, null);
+        study.updateInformation(null, null, StudyTag.FREE.getDescription(), null, null);
 
         // then
         Assertions.assertThat(study.getTag()).isEqualTo(StudyTag.FREE);
@@ -69,7 +69,7 @@ public class StudyTest {
         Study study = StudyFixture.createNormalStudy();
 
         // when
-        study.updateInfo(null, null, null, "수정", null);
+        study.updateInformation(null, null, null, "수정", null);
 
         // then
         Assertions.assertThat(study.getPassword()).isEqualTo("수정");
@@ -81,7 +81,7 @@ public class StudyTest {
         Study study = StudyFixture.createNormalStudy();
 
         // when
-        study.updateInfo(null, null, null, null, "수정");
+        study.updateInformation(null, null, null, null, "수정");
 
         // then
         Assertions.assertThat(study.getImageUrl()).isEqualTo("수정");
@@ -93,7 +93,7 @@ public class StudyTest {
         Study study = StudyFixture.createNormalStudy();
 
         // when
-        study.updateInfo("수정", "수정", StudyTag.FREE.getDescription(), "수정", "수정");
+        study.updateInformation("수정", "수정", StudyTag.FREE.getDescription(), "수정", "수정");
 
         // then
         Assertions.assertThat(study.getName()).isEqualTo("수정");
@@ -110,7 +110,7 @@ public class StudyTest {
         String studyName = study.getName();
 
         // when
-        study.updateInfo(null, null, null, null, null);
+        study.updateInformation(null, null, null, null, null);
 
         // then
         Assertions.assertThat(study.getName()).isEqualTo(studyName);

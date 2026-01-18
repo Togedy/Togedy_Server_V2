@@ -95,7 +95,7 @@ public class Study extends BaseEntity {
         this.tier = tier;
     }
 
-    public void updateInfo(
+    public void updateInformation(
             String studyName,
             String studyDescription,
             String studyTag,
@@ -111,12 +111,8 @@ public class Study extends BaseEntity {
         if (studyTag != null) {
             this.tag = StudyTag.fromDescription(studyTag);
         }
-        if (studyPassword != null) {
-            this.password = studyPassword;
-        }
-        if (studyImageUrl != null) {
-            this.imageUrl = studyImageUrl;
-        }
+        this.password = studyPassword;
+        this.imageUrl = studyImageUrl;
     }
 
     public void updateMemberLimit(int memberLimit) {

@@ -15,7 +15,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
-import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInformationRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.StudyMemberRoleDto;
@@ -310,16 +310,17 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
 
         MultipartFile imageFile = mock(MultipartFile.class);
 
-        PatchStudyInfoRequest request = new PatchStudyInfoRequest(
+        PatchStudyInformationRequest request = new PatchStudyInformationRequest(
                 "변경",
                 "변경",
                 StudyTag.FREE.getDescription(),
                 imageFile,
-                "1111"
+                "1111",
+                false
         );
 
         // when & then
-        assertThatThrownBy(() -> studyInternalService.modifyStudyInfo(request, studyId, userId))
+        assertThatThrownBy(() -> studyInternalService.modifyStudyInformation(request, studyId, userId))
                 .isInstanceOf(UserStudyNotFoundException.class);
     }
 
@@ -335,16 +336,17 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
 
         MultipartFile imageFile = mock(MultipartFile.class);
 
-        PatchStudyInfoRequest request = new PatchStudyInfoRequest(
+        PatchStudyInformationRequest request = new PatchStudyInformationRequest(
                 "변경",
                 "변경",
                 StudyTag.FREE.getDescription(),
                 imageFile,
-                "1111"
+                "1111",
+                false
         );
 
         // when & then
-        assertThatThrownBy(() -> studyInternalService.modifyStudyInfo(request, studyId, userId))
+        assertThatThrownBy(() -> studyInternalService.modifyStudyInformation(request, studyId, userId))
                 .isInstanceOf(StudyLeaderRequiredException.class);
     }
 
@@ -363,16 +365,17 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
 
         MultipartFile imageFile = mock(MultipartFile.class);
 
-        PatchStudyInfoRequest request = new PatchStudyInfoRequest(
+        PatchStudyInformationRequest request = new PatchStudyInformationRequest(
                 "변경",
                 "변경",
                 StudyTag.FREE.getDescription(),
                 imageFile,
-                "1111"
+                "1111",
+                false
         );
 
         // when & then
-        assertThatThrownBy(() -> studyInternalService.modifyStudyInfo(request, studyId, userId))
+        assertThatThrownBy(() -> studyInternalService.modifyStudyInformation(request, studyId, userId))
                 .isInstanceOf(StudyNotFoundException.class);
     }
 
@@ -393,12 +396,13 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
 
         MultipartFile imageFile = mock(MultipartFile.class);
 
-        PatchStudyInfoRequest request = new PatchStudyInfoRequest(
+        PatchStudyInformationRequest request = new PatchStudyInformationRequest(
                 "변경된 이름",
                 "변경된 설명",
                 StudyTag.FREE.getDescription(),
                 imageFile,
-                "1111"
+                "1111",
+                false
         );
 
         given(s3Service.uploadFile(any()))
@@ -407,7 +411,7 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
         // when
         assertThatNoException()
                 .isThrownBy(() ->
-                        studyInternalService.modifyStudyInfo(request, studyId, userId)
+                        studyInternalService.modifyStudyInformation(request, studyId, userId)
                 );
 
         // then

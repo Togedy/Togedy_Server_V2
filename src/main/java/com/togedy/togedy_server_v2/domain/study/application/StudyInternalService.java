@@ -11,7 +11,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
-import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInformationRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.StudyMemberRoleDto;
@@ -140,7 +140,7 @@ public class StudyInternalService {
      * @throws StudyNotFoundException     수정 대상 스터디가 존재하지 않는 경우
      */
     @Transactional
-    public void modifyStudyInfo(PatchStudyInfoRequest request, Long studyId, Long leaderId) {
+    public void modifyStudyInformation(PatchStudyInformationRequest request, Long studyId, Long leaderId) {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
@@ -151,13 +151,14 @@ public class StudyInternalService {
 
         String studyImageUrl = replaceStudyImage(request, study);
 
-        study.updateInfo(
+        study.updateInformation(
                 request.getStudyName(),
                 request.getStudyDescription(),
                 request.getStudyTag(),
                 request.getStudyPassword(),
                 studyImageUrl
         );
+
         studyRepository.save(study);
     }
 
@@ -563,26 +564,38 @@ public class StudyInternalService {
     }
 
     /**
-     * 스터디 이미지를 변경하고 새로운 이미지 URL을 반환한다.
+     * 스터디 이미지를 변경하거나 삭제하고, 처리 결과에 따른 이미지 URL을 반환한다.
      * <p>
      * 요청에 이미지 파일이 포함된 경우, 새 이미지를 업로드한 뒤 기존 이미지를 삭제하고 변경된 이미지 URL을 반환한다.
      * </p>
      * <p>
-     * 이미지 변경 요청이 없는 경우 {@code null}을 반환한다.
+     * 이미지 삭제 요청인 경우, 기존 이미지를 삭제하고 {@code null}을 반환한다.
+     * </p>
+     * <p>
+     * 이미지 변경 및 삭제 요청이 모두 없는 경우, 기존 이미지 URL을 그대로 반환한다.
      * </p>
      *
-     * @param request 이미지 변경 요청 DTO
+     * @param request 이미지 변경/삭제 요청 DTO
      * @param study   대상 스터디 엔티티
-     * @return 변경된 이미지 URL, 변경이 없는 경우 {@code null}
+     * @return <ul>
+     * <li>이미지 변경 시: 변경된 이미지 URL</li>
+     * <li>이미지 삭제 시: {@code null}</li>
+     * <li>변경 없음: 기존 이미지 URL</li>
+     * </ul>
      */
-    private String replaceStudyImage(PatchStudyInfoRequest request, Study study) {
+    private String replaceStudyImage(PatchStudyInformationRequest request, Study study) {
+        if (request.isRemoveStudyImage()) {
+            s3Service.deleteFile(study.getImageUrl());
+            return null;
+        }
+
         if (request.getStudyImage() != null) {
             String studyImageUrl = s3Service.uploadFile(request.getStudyImage());
             String oldUrl = study.changeImageUrl(studyImageUrl);
             s3Service.deleteFile(oldUrl);
             return studyImageUrl;
         }
-        return null;
+        return study.getImageUrl();
     }
 
     /**
@@ -591,7 +604,7 @@ public class StudyInternalService {
      * 오늘의 학습 요약 정보가 존재하는 경우 이를 포함하여 DTO를 생성하며, 존재하지 않는 경우 기본 멤버 정보만 포함한다.
      * </p>
      *
-     * @param memberWithRole       사용자 엔티티와 역할 정보가 포함된 조회 결과
+     * @param studyMemberRoleDto   사용자 엔티티와 역할 정보가 포함된 조회 결과
      * @param dailyStudySummaryMap 사용자별 오늘 학습 요약 정보 맵
      * @return 스터디 멤버 조회 응답 DTO
      */

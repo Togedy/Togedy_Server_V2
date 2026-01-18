@@ -14,7 +14,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateRespons
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudySearchResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchPlannerVisibilityRequest;
-import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInformationRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
@@ -189,9 +189,9 @@ public class StudyController {
     @PatchMapping(value = "/studies/{studyId}/information", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ApiResponse<Void> updateStudyInfo(
             @PathVariable Long studyId,
-            @ModelAttribute PatchStudyInfoRequest request,
+            @ModelAttribute PatchStudyInformationRequest request,
             @AuthenticationPrincipal AuthUser user) {
-        studyInternalService.modifyStudyInfo(request, studyId, user.getId());
+        studyInternalService.modifyStudyInformation(request, studyId, user.getId());
         return ApiUtil.successOnly();
     }
 
