@@ -71,7 +71,7 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
                 GROUP BY s.id
                 ORDER BY COUNT(u.id) DESC
             """)
-    List<Study> findMostAcitveStudies(Pageable pageable);
+    List<Study> findMostActiveStudies(Pageable pageable);
 
     @Query("""
                 SELECT s

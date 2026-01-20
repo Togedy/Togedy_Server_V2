@@ -1,8 +1,14 @@
 package com.togedy.togedy_server_v2.domain.study.api.e2e;
 
-import com.togedy.togedy_server_v2.domain.global.fixtures.StudyFixture;
-import com.togedy.togedy_server_v2.domain.global.fixtures.UserFixture;
-import com.togedy.togedy_server_v2.domain.global.support.AbstractE2ETest;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
@@ -13,6 +19,10 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.global.fixtures.StudyFixture;
+import com.togedy.togedy_server_v2.global.fixtures.UserFixture;
+import com.togedy.togedy_server_v2.global.support.AbstractE2ETest;
+import java.util.Optional;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -21,17 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-
-import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @Tag("E2E 테스트")
 public class StudyE2ETest extends AbstractE2ETest {
@@ -362,7 +361,7 @@ public class StudyE2ETest extends AbstractE2ETest {
         Optional<UserStudy> deletedUserStudy = userStudyRepository.findById(userStudy.getId());
         assertThat(deletedUserStudy).isNotPresent();
     }
-    
+
     @DisplayName("스터디 리더를 변경한다.")
     @Test
     public void changeStudyLeader() throws Exception {
@@ -382,7 +381,7 @@ public class StudyE2ETest extends AbstractE2ETest {
         MockHttpServletRequestBuilder requestBuilder =
                 patch("/api/v2/studies/{studyId}/members/{userId}/leader", study.getId(), member.getId())
                         .header("Authorization", accessToken);
-        
+
         //then
         mockMvc.perform(requestBuilder)
                 .andExpect(status().is2xxSuccessful());

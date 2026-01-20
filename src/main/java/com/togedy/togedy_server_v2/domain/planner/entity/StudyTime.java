@@ -26,8 +26,8 @@ public class StudyTime {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    @Column(name = "study_category_id", nullable = false)
-    private Long studyCategoryId;
+    @Column(name = "study_subject_id", nullable = false)
+    private Long studySubjectId;
 
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;

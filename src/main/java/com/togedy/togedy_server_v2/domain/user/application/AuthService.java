@@ -1,9 +1,11 @@
 package com.togedy.togedy_server_v2.domain.user.application;
 
+import com.togedy.togedy_server_v2.domain.user.dao.AuthProviderRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.RefreshTokenRepository;
-import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
+import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.exception.UserNotFoundException;
+import com.togedy.togedy_server_v2.domain.user.enums.ProviderType;
+import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenInfo;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenProvider;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtInvalidException;
@@ -16,18 +18,27 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
 
-    private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
+    private final AuthProviderRepository authProviderRepository;
 
     public JwtTokenInfo signInUser(String email) {
-        User user = userRepository.findByEmail(email)
+        AuthProvider provider = authProviderRepository
+                .findByProviderAndProviderUserId(ProviderType.LOCAL, email)
                 .orElseThrow(UserNotFoundException::new);
+
+        User user = provider.getUser();
 
         JwtTokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(user.getId());
 
         refreshTokenRepository.save(user.getId(), tokenInfo.getRefreshToken());
 
+        return tokenInfo;
+    }
+
+    public JwtTokenInfo issueToken(Long userId) {
+        JwtTokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(userId);
+        refreshTokenRepository.save(userId, tokenInfo.getRefreshToken());
         return tokenInfo;
     }
 
