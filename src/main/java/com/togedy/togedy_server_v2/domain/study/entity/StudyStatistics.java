@@ -40,15 +40,15 @@ public class StudyStatistics {
     @Column(name = "streak_days", nullable = false)
     private int streakDays;
 
-    @Column(name = "last_processed_date", nullable = false)
-    private LocalDate lastProcessedDate;
+    @Column(name = "updated_date", nullable = false)
+    private LocalDate updatedDate;
 
     @Builder
     public StudyStatistics(Long studyId) {
         this.studyId = studyId;
         this.score = 0;
         this.streakDays = 0;
-        this.lastProcessedDate = LocalDate.MIN;
+        this.updatedDate = LocalDate.MIN;
     }
 
     public void applyChallengeSuccess(Study study, int completedMemberCount) {
