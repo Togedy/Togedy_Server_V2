@@ -81,8 +81,7 @@ public class Study extends BaseEntity {
             int memberLimit,
             StudyTag tag,
             String imageUrl,
-            String password,
-            StudyTier tier
+            String password
     ) {
         validateMemberLimitRange(memberLimit);
         this.type = type;
@@ -94,7 +93,7 @@ public class Study extends BaseEntity {
         this.tag = tag;
         this.imageUrl = imageUrl;
         this.password = password;
-        this.tier = tier;
+        this.tier = StudyTier.BRONZE1;
     }
 
     public void updateInfo(

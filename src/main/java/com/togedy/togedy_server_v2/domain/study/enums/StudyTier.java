@@ -20,7 +20,7 @@ public enum StudyTier {
     MASTER("Master", 1050),
     LEGEND("Legend", 1600);
 
-    private final String tier;
+    private final String name;
     private final long minScore;
 
     public static StudyTier fromScore(long score) {
