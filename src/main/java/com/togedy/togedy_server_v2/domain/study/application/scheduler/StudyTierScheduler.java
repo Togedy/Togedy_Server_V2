@@ -5,13 +5,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
-public class StudyStatisticsScheduler {
+public class StudyTierScheduler {
 
     private StudyTierService studyTierService;
 
-    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
-    public void calculateChallengeStudyScores() {
-        studyTierService.calculateChallengeStudyScores();
+    @Scheduled(cron = "0 0 1 * * *", zone = "Asia/Seoul")
+    public void updateStudyTier() {
+        studyTierService.applyStudyTier();
     }
-
 }

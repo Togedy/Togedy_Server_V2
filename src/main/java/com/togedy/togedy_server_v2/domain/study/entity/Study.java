@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
+import com.togedy.togedy_server_v2.domain.study.enums.StudyTier;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberCountExceededException;
@@ -81,7 +82,7 @@ public class Study extends BaseEntity {
             StudyTag tag,
             String imageUrl,
             String password,
-            String tier
+            StudyTier tier
     ) {
         validateMemberLimitRange(memberLimit);
         this.type = type;
@@ -194,6 +195,13 @@ public class Study extends BaseEntity {
         }
 
         throw new RuntimeException();
+    }
+
+    public void updateTier(StudyStatistics studyStatistics) {
+        StudyTier studyTier = StudyTier.fromScore(studyStatistics.getScore());
+        if (!this.tier.equals(studyTier)) {
+            this.tier = studyTier;
+        }
     }
 
     private void validateUpdatableMemberLimit(int memberLimit) {
