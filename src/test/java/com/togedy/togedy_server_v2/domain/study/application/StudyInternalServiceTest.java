@@ -632,7 +632,7 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
         //given
         Long leaderId = 1L;
         Long studyId = 1L;
-        Long memberId = 1L;
+        Long memberId = 2L;
 
         Study study = StudyFixture.createNormalStudy();
         int memberCount = 10;

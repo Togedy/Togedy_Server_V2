@@ -1,10 +1,14 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderCannotRemoveSelfException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
 import com.togedy.togedy_server_v2.global.fixtures.UserStudyFixture;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class UserStudyTest {
@@ -15,7 +19,7 @@ public class UserStudyTest {
         UserStudy leader = UserStudyFixture.createLeaderUserStudy(1L, 1L);
 
         // when & then
-        Assertions.assertThatCode(leader::validateStudyLeader)
+        assertThatCode(leader::validateStudyLeader)
                 .doesNotThrowAnyException();
     }
 
@@ -25,7 +29,7 @@ public class UserStudyTest {
         UserStudy member = UserStudyFixture.createMemberUserStudy(1L, 1L);
 
         // when & then
-        Assertions.assertThatCode(member::validateStudyMember)
+        assertThatCode(member::validateStudyMember)
                 .doesNotThrowAnyException();
     }
 
@@ -39,8 +43,8 @@ public class UserStudyTest {
         leader.delegateLeader(member);
 
         // then
-        Assertions.assertThat(leader.getRole()).isEqualTo(StudyRole.MEMBER);
-        Assertions.assertThat(member.getRole()).isEqualTo(StudyRole.LEADER);
+        assertThat(leader.getRole()).isEqualTo(StudyRole.MEMBER);
+        assertThat(member.getRole()).isEqualTo(StudyRole.LEADER);
     }
 
     @Test
@@ -49,7 +53,7 @@ public class UserStudyTest {
         UserStudy member = UserStudyFixture.createMemberUserStudy(1L, 1L);
 
         // when & then
-        Assertions.assertThatThrownBy(member::validateStudyLeader)
+        assertThatThrownBy(member::validateStudyLeader)
                 .isInstanceOf(StudyLeaderRequiredException.class);
     }
 
@@ -59,7 +63,7 @@ public class UserStudyTest {
         UserStudy leader = UserStudyFixture.createLeaderUserStudy(1L, 1L);
 
         // when & then
-        Assertions.assertThatThrownBy(leader::validateStudyMember)
+        assertThatThrownBy(leader::validateStudyMember)
                 .isInstanceOf(StudyMemberRequiredException.class);
     }
 
@@ -70,7 +74,33 @@ public class UserStudyTest {
         UserStudy member = UserStudyFixture.createMemberUserStudy(2L, 1L);
 
         // when
-        Assertions.assertThatThrownBy(() -> member.delegateLeader(leader))
+        assertThatThrownBy(() -> member.delegateLeader(leader))
                 .isInstanceOf(StudyLeaderRequiredException.class);
+    }
+
+    @Test
+    public void 스터디_리더는_멤버를_추방할_수_있다() {
+        //given
+        UserStudy leader = UserStudyFixture.createLeaderUserStudy(1L, 1L);
+        UserStudy member = UserStudyFixture.createMemberUserStudy(2L, 1L);
+
+        // when
+        leader.validateRemovable(2L);
+
+        // then
+        assertThatCode(() ->
+                leader.validateRemovable(2L))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    public void 스터디_리더를_추방하는_경우_예외가_발생한다() {
+        //given
+        UserStudy leader = UserStudyFixture.createLeaderUserStudy(1L, 1L);
+
+        // when & then
+        assertThatThrownBy(() ->
+                leader.validateRemovable(1L)
+        ).isInstanceOf(StudyLeaderCannotRemoveSelfException.class);
     }
 }

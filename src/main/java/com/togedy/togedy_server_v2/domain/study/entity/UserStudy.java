@@ -79,7 +79,7 @@ public class UserStudy extends BaseEntity {
     }
 
     private void validateRemoveSelf(Long removeUserId) {
-        if (this.id.equals(removeUserId)) {
+        if (this.userId.equals(removeUserId)) {
             throw new StudyLeaderCannotRemoveSelfException();
         }
     }
