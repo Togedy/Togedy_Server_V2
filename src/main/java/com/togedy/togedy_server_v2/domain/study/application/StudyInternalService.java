@@ -289,7 +289,7 @@ public class StudyInternalService {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        userStudy.validateStudyLeader();
+        userStudy.validateRemovable(memberId);
 
         study.decreaseMemberCount();
 

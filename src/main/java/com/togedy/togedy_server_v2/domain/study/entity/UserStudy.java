@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderCannotRemoveSelfException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
@@ -59,6 +60,11 @@ public class UserStudy extends BaseEntity {
         }
     }
 
+    public void validateRemovable(Long removeUserId) {
+        validateStudyLeader();
+        validateRemoveSelf(removeUserId);
+    }
+
     public void delegateLeader(UserStudy member) {
         this.validateStudyLeader();
         this.role = StudyRole.MEMBER;
@@ -70,5 +76,11 @@ public class UserStudy extends BaseEntity {
         LocalDate createdDate = this.getCreatedAt().toLocalDate();
 
         return (int) ChronoUnit.DAYS.between(createdDate, now);
+    }
+
+    private void validateRemoveSelf(Long removeUserId) {
+        if (this.id.equals(removeUserId)) {
+            throw new StudyLeaderCannotRemoveSelfException();
+        }
     }
 }
