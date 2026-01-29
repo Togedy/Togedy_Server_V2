@@ -186,6 +186,7 @@ public class StudyE2ETest extends AbstractE2ETest {
                         .param("studyDescription", "스터디 이름을 변경한다.")
                         .param("studyTag", StudyTag.FREE.getDescription())
                         .param("studyPassword", "1234")
+                        .param("removeStudyImage", String.valueOf(false))
                         .header("Authorization", accessToken)
                         .with(request -> {
                             request.setMethod("PATCH");

@@ -11,9 +11,10 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberManagementResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
-import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInformationRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.StudyMemberRoleDto;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
@@ -26,7 +27,6 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -140,7 +140,7 @@ public class StudyInternalService {
      * @throws StudyNotFoundException     수정 대상 스터디가 존재하지 않는 경우
      */
     @Transactional
-    public void modifyStudyInfo(PatchStudyInfoRequest request, Long studyId, Long leaderId) {
+    public void modifyStudyInformation(PatchStudyInformationRequest request, Long studyId, Long leaderId) {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
@@ -151,13 +151,14 @@ public class StudyInternalService {
 
         String studyImageUrl = replaceStudyImage(request, study);
 
-        study.updateInfo(
+        study.updateInformation(
                 request.getStudyName(),
                 request.getStudyDescription(),
                 request.getStudyTag(),
                 request.getStudyPassword(),
                 studyImageUrl
         );
+
         studyRepository.save(study);
     }
 
@@ -288,7 +289,7 @@ public class StudyInternalService {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, leaderId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        userStudy.validateStudyLeader();
+        userStudy.validateRemovable(memberId);
 
         study.decreaseMemberCount();
 
@@ -342,19 +343,17 @@ public class StudyInternalService {
      * @return 스터디 멤버 목록 DTO
      */
     public List<GetStudyMemberResponse> findStudyMember(Long studyId, Long userId) {
-        LocalDateTime start = TimeUtil.startOfToday();
-        LocalDateTime end = TimeUtil.startOfTomorrow();
+        LocalDate today = LocalDate.now();
 
-        List<Object[]> membersWithRoles = userRepository.findAllByStudyIdOrderByCreatedAtAsc(studyId);
+        List<StudyMemberRoleDto> membersWithRoles = userRepository.findAllByStudyIdOrderByCreatedAtAsc(studyId);
         List<Long> memberIds = membersWithRoles.stream()
-                .map(memberWithRole -> ((User) memberWithRole[0]).getId())
-                .toList();
+                .map(studyMemberRoleDto -> studyMemberRoleDto.getUser().getId())
+                .collect(Collectors.toCollection(ArrayList::new));
 
-        Map<Long, DailyStudySummary> dailyStudySummaryMap = findDailyStudySummaryMapByUserIds(
-                memberIds, start, end);
+        Map<Long, DailyStudySummary> dailyStudySummaryMap = findDailyStudySummaryMapByUserIds(memberIds, today);
 
         List<GetStudyMemberResponse> responses = membersWithRoles.stream()
-                .map(memberWithRole -> buildMemberResponse(memberWithRole, dailyStudySummaryMap))
+                .map(studyMemberRoleDto -> buildMemberResponse(studyMemberRoleDto, dailyStudySummaryMap))
                 .collect(Collectors.toList());
 
         moveCurrentUserToTop(userId, responses, GetStudyMemberResponse::getUserId);
@@ -380,8 +379,8 @@ public class StudyInternalService {
             throw new StudyAccessDeniedException();
         }
 
-        List<GetStudyMemberManagementResponse> responses = userStudyRepository.findStudyMembersByStudyId(
-                studyId);
+        List<GetStudyMemberManagementResponse> responses = new ArrayList<>(
+                userStudyRepository.findStudyMembersByStudyId(studyId));
 
         moveCurrentUserToTop(userId, responses, GetStudyMemberManagementResponse::getUserId);
         return responses;
@@ -411,13 +410,10 @@ public class StudyInternalService {
                 .map(User::getId)
                 .toList();
 
-        LocalDateTime startDateTime = startDate.atStartOfDay();
-        LocalDateTime endDateTime = endDate.plusDays(1).atStartOfDay();
-
         List<DailyStudyTimeDto> dailyStudyTimes = dailyStudySummaryRepository.findDailyStudyTimeByUserIdsAndPeriod(
                 userIds,
-                startDateTime,
-                endDateTime
+                startDate,
+                endDate
         );
 
         Map<Long, Map<LocalDate, Long>> studyTimeMap = new HashMap<>();
@@ -445,7 +441,7 @@ public class StudyInternalService {
     ) {
         for (DailyStudyTimeDto dailyStudyTime : dailyStudyTimes) {
             studyTimeMap.computeIfAbsent(dailyStudyTime.getUserId(), k -> new HashMap<>())
-                    .put(dailyStudyTime.getDate().toLocalDate(), dailyStudyTime.getStudyTime());
+                    .put(dailyStudyTime.getDate(), dailyStudyTime.getStudyTime());
 
             totalStudyTimeMap.merge(dailyStudyTime.getUserId(), dailyStudyTime.getStudyTime(), Long::sum);
         }
@@ -551,8 +547,7 @@ public class StudyInternalService {
      * @return 챌린지 달성 멤버 수
      */
     private int countCompletedChallengeMembers(Study study) {
-        LocalDateTime startOfDay = TimeUtil.startOfToday();
-        LocalDateTime endOfDay = TimeUtil.startOfTomorrow();
+        LocalDate today = LocalDate.now();
 
         List<User> members = userRepository.findAllByStudyId(study.getId());
 
@@ -561,11 +556,7 @@ public class StudyInternalService {
                 .toList();
 
         List<DailyStudySummary> todaySummaries =
-                dailyStudySummaryRepository.findAllByUserIdsAndCreatedAt(
-                        memberIds,
-                        startOfDay,
-                        endOfDay
-                );
+                dailyStudySummaryRepository.findAllByUserIdsAndDate(memberIds, today);
 
         return (int) todaySummaries.stream()
                 .filter(study::isAchieved)
@@ -573,26 +564,38 @@ public class StudyInternalService {
     }
 
     /**
-     * 스터디 이미지를 변경하고 새로운 이미지 URL을 반환한다.
+     * 스터디 이미지를 변경하거나 삭제하고, 처리 결과에 따른 이미지 URL을 반환한다.
      * <p>
      * 요청에 이미지 파일이 포함된 경우, 새 이미지를 업로드한 뒤 기존 이미지를 삭제하고 변경된 이미지 URL을 반환한다.
      * </p>
      * <p>
-     * 이미지 변경 요청이 없는 경우 {@code null}을 반환한다.
+     * 이미지 삭제 요청인 경우, 기존 이미지를 삭제하고 {@code null}을 반환한다.
+     * </p>
+     * <p>
+     * 이미지 변경 및 삭제 요청이 모두 없는 경우, 기존 이미지 URL을 그대로 반환한다.
      * </p>
      *
-     * @param request 이미지 변경 요청 DTO
+     * @param request 이미지 변경/삭제 요청 DTO
      * @param study   대상 스터디 엔티티
-     * @return 변경된 이미지 URL, 변경이 없는 경우 {@code null}
+     * @return <ul>
+     * <li>이미지 변경 시: 변경된 이미지 URL</li>
+     * <li>이미지 삭제 시: {@code null}</li>
+     * <li>변경 없음: 기존 이미지 URL</li>
+     * </ul>
      */
-    private String replaceStudyImage(PatchStudyInfoRequest request, Study study) {
+    private String replaceStudyImage(PatchStudyInformationRequest request, Study study) {
+        if (request.isRemoveStudyImage()) {
+            s3Service.deleteFile(study.getImageUrl());
+            return null;
+        }
+
         if (request.getStudyImage() != null) {
             String studyImageUrl = s3Service.uploadFile(request.getStudyImage());
             String oldUrl = study.changeImageUrl(studyImageUrl);
             s3Service.deleteFile(oldUrl);
             return studyImageUrl;
         }
-        return null;
+        return study.getImageUrl();
     }
 
     /**
@@ -601,40 +604,36 @@ public class StudyInternalService {
      * 오늘의 학습 요약 정보가 존재하는 경우 이를 포함하여 DTO를 생성하며, 존재하지 않는 경우 기본 멤버 정보만 포함한다.
      * </p>
      *
-     * @param memberWithRole       사용자 엔티티와 역할 정보가 포함된 조회 결과
+     * @param studyMemberRoleDto   사용자 엔티티와 역할 정보가 포함된 조회 결과
      * @param dailyStudySummaryMap 사용자별 오늘 학습 요약 정보 맵
      * @return 스터디 멤버 조회 응답 DTO
      */
     private GetStudyMemberResponse buildMemberResponse(
-            Object[] memberWithRole,
+            StudyMemberRoleDto studyMemberRoleDto,
             Map<Long, DailyStudySummary> dailyStudySummaryMap
     ) {
-        User member = (User) memberWithRole[0];
-        StudyRole role = (StudyRole) memberWithRole[1];
-
-        DailyStudySummary todaySummary = dailyStudySummaryMap.get(member.getId());
+        DailyStudySummary todaySummary = dailyStudySummaryMap.get(studyMemberRoleDto.getUser().getId());
 
         if (todaySummary != null) {
-            return GetStudyMemberResponse.of(member, todaySummary, role);
+            return GetStudyMemberResponse.of(studyMemberRoleDto.getUser(), todaySummary,
+                    studyMemberRoleDto.getStudyRole());
         }
-        return GetStudyMemberResponse.of(member, role);
+        return GetStudyMemberResponse.of(studyMemberRoleDto.getUser(), studyMemberRoleDto.getStudyRole());
     }
 
     /**
      * 지정한 기간 내 사용자별 일일 학습 요약 정보를 맵으로 조회한다.
      *
-     * @param memberIds  조회 대상 사용자 ID 목록
-     * @param startOfDay 조회 시작 시각
-     * @param endOfDay   조회 종료 시각
+     * @param memberIds 조회 대상 사용자 ID 목록
+     * @param date      조회 날짜
      * @return 사용자 ID를 키로 하는 일일 학습 요약 정보 맵
      */
     private Map<Long, DailyStudySummary> findDailyStudySummaryMapByUserIds(
             List<Long> memberIds,
-            LocalDateTime startOfDay,
-            LocalDateTime endOfDay
+            LocalDate date
     ) {
         return dailyStudySummaryRepository
-                .findAllByUserIdsAndCreatedAt(memberIds, startOfDay, endOfDay)
+                .findAllByUserIdsAndDate(memberIds, date)
                 .stream()
                 .collect(Collectors.toMap(
                         DailyStudySummary::getUserId,
