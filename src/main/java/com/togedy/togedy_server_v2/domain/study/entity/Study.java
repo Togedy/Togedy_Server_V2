@@ -1,9 +1,14 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
-import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInfoRequest;
-import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
+import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
+import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberCountExceededException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitOutOfRangeException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMinimumMemberRequiredException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -13,6 +18,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -23,6 +29,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Study extends BaseEntity {
+
+    private static final int MAX_MEMBER_LIMIT = 30;
+    private static final int MIN_MEMBER_LIMIT = 2;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -73,6 +82,7 @@ public class Study extends BaseEntity {
             String password,
             String tier
     ) {
+        validateMemberLimitRange(memberLimit);
         this.type = type;
         this.goalTime = goalTime;
         this.name = name;
@@ -85,33 +95,105 @@ public class Study extends BaseEntity {
         this.tier = tier;
     }
 
-    public void updateInfo(PatchStudyInfoRequest request, String studyImageUrl) {
-        if (request.getStudyName() != null) {
-            this.name = request.getStudyName();
+    public void updateInformation(
+            String studyName,
+            String studyDescription,
+            String studyTag,
+            String studyPassword,
+            String studyImageUrl
+    ) {
+        if (studyName != null) {
+            this.name = studyName;
         }
-        if (request.getStudyDescription() != null) {
-            this.description = request.getStudyDescription();
+        if (studyDescription != null) {
+            this.description = studyDescription;
         }
-        if (request.getStudyTag() != null) {
-            this.tag = StudyTag.fromDescription(request.getStudyTag());
+        if (studyTag != null) {
+            this.tag = StudyTag.fromDescription(studyTag);
         }
-        if (request.getStudyPassword() != null) {
-            this.password = request.getStudyPassword();
-        }
-        if (studyImageUrl != null) {
-            this.imageUrl = studyImageUrl;
-        }
+        this.password = studyPassword;
+        this.imageUrl = studyImageUrl;
     }
 
-    public void updateMemberLimit(PatchStudyMemberLimitRequest request) {
-        this.memberLimit = request.getStudyMemberLimit();
+    public void updateMemberLimit(int memberLimit) {
+        validateMemberLimitRange(memberLimit);
+        validateUpdatableMemberLimit(memberLimit);
+        this.memberLimit = memberLimit;
     }
 
     public void increaseMemberCount() {
+        validateAddMember();
         this.memberCount++;
     }
 
     public void decreaseMemberCount() {
+        validateRemoveMember();
         this.memberCount--;
+    }
+
+    public void validatePassword(String password) {
+        validatePasswordRequired(password);
+        validatePasswordMatches(password);
+    }
+
+    public boolean isChallengeStudy() {
+        return this.type.equals(StudyType.CHALLENGE);
+    }
+
+    public String changeImageUrl(String imageUrl) {
+        String oldImageUrl = this.imageUrl;
+        this.imageUrl = imageUrl;
+        return oldImageUrl;
+    }
+
+    public boolean isNewlyCreated() {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime current = now.minusDays(7);
+
+        return this.getCreatedAt().isAfter(current) && this.getCreatedAt().isBefore(now);
+    }
+
+    public boolean hasPassword() {
+        return this.password != null;
+    }
+
+    public boolean isAchieved(DailyStudySummary dailyStudySummary) {
+        return dailyStudySummary.getStudyTime() >= this.goalTime;
+    }
+
+    private void validateMemberLimitRange(int memberLimit) {
+        if (MAX_MEMBER_LIMIT < memberLimit || memberLimit < MIN_MEMBER_LIMIT) {
+            throw new StudyMemberLimitOutOfRangeException();
+        }
+    }
+
+    private void validateUpdatableMemberLimit(int memberLimit) {
+        if (memberLimit < this.memberCount) {
+            throw new InvalidStudyMemberLimitException();
+        }
+    }
+
+    private void validateAddMember() {
+        if (this.memberLimit == this.memberCount) {
+            throw new StudyMemberCountExceededException();
+        }
+    }
+
+    private void validatePasswordRequired(String password) {
+        if (this.password != null && password == null) {
+            throw new StudyPasswordRequiredException();
+        }
+    }
+
+    private void validatePasswordMatches(String password) {
+        if (this.password != null && !password.equals(this.password)) {
+            throw new StudyPasswordMismatchException();
+        }
+    }
+
+    private void validateRemoveMember() {
+        if (this.memberCount <= 1) {
+            throw new StudyMinimumMemberRequiredException();
+        }
     }
 }

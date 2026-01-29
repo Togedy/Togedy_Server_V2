@@ -42,10 +42,8 @@ public class StudySearchDto {
             String studyLeaderImageUrl,
             boolean isNewlyCreated,
             String lastActivatedAt,
-            String challengeGoalTime,
-            boolean hasPassword
-    )
-    {
+            String challengeGoalTime
+    ) {
         return StudySearchDto.builder()
                 .studyId(study.getId())
                 .studyType(study.getType())
@@ -60,7 +58,7 @@ public class StudySearchDto {
                 .isNewlyCreated(isNewlyCreated)
                 .lastActivatedAt(lastActivatedAt)
                 .challengeGoalTime(challengeGoalTime)
-                .hasPassword(hasPassword)
+                .hasPassword(study.hasPassword())
                 .build();
     }
 }

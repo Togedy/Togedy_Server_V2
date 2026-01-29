@@ -10,11 +10,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
 
 @Entity
 @Getter
@@ -27,8 +26,8 @@ public class Plan extends BaseEntity {
     @Column(name = "plan_id", nullable = false, updatable = false)
     private Long id;
 
-    @Column(name = "study_category_id", nullable = false)
-    private Long studyCategoryId;
+    @Column(name = "study_subject_id", nullable = false)
+    private Long studySubjectId;
 
     @Column(name = "name", nullable = false, updatable = true)
     private String name;
@@ -39,4 +38,8 @@ public class Plan extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, columnDefinition = "varchar(20)")
     private PlanStatus status;
+
+    public boolean isCompleted() {
+        return this.status == PlanStatus.SUCCESS;
+    }
 }

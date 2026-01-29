@@ -1,6 +1,9 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderCannotRemoveSelfException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +13,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -43,7 +48,39 @@ public class UserStudy extends BaseEntity {
         this.role = role;
     }
 
-    public void modifyRole(StudyRole studyRole) {
-        this.role = studyRole;
+    public void validateStudyLeader() {
+        if (!this.role.equals(StudyRole.LEADER)) {
+            throw new StudyLeaderRequiredException();
+        }
+    }
+
+    public void validateStudyMember() {
+        if (!this.role.equals(StudyRole.MEMBER)) {
+            throw new StudyMemberRequiredException();
+        }
+    }
+
+    public void validateRemovable(Long removeUserId) {
+        validateStudyLeader();
+        validateRemoveSelf(removeUserId);
+    }
+
+    public void delegateLeader(UserStudy member) {
+        this.validateStudyLeader();
+        this.role = StudyRole.MEMBER;
+        member.role = StudyRole.LEADER;
+    }
+
+    public int calculateElapsedDays() {
+        LocalDate now = LocalDate.now();
+        LocalDate createdDate = this.getCreatedAt().toLocalDate();
+
+        return (int) ChronoUnit.DAYS.between(createdDate, now);
+    }
+
+    private void validateRemoveSelf(Long removeUserId) {
+        if (this.userId.equals(removeUserId)) {
+            throw new StudyLeaderCannotRemoveSelfException();
+        }
     }
 }

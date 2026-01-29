@@ -3,10 +3,9 @@ package com.togedy.togedy_server_v2.domain.study.dto;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.util.List;
 
 @Getter
 @Builder
@@ -33,12 +32,11 @@ public class StudyDto {
             int challengeAchievement,
             int completedMemberCount,
             List<ActiveMemberDto> activeMemberList
-    )
-    {
+    ) {
         return StudyDto.builder()
                 .studyId(study.getId())
                 .studyType(study.getType())
-                .challengeGoalTime(TimeUtil.toTimeFormat(study.getGoalTime()))
+                .challengeGoalTime(TimeUtil.formatSecondsToHms(study.getGoalTime()))
                 .challengeAchievement(challengeAchievement)
                 .studyName(study.getName())
                 .completedMemberCount(completedMemberCount)
@@ -50,8 +48,7 @@ public class StudyDto {
     public static StudyDto of(
             Study study,
             List<ActiveMemberDto> activeMemberList
-    )
-    {
+    ) {
         return StudyDto.builder()
                 .studyId(study.getId())
                 .studyType(study.getType())

@@ -1,13 +1,13 @@
 package com.togedy.togedy_server_v2.domain.planner.dao;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
 
 public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySummary, Long> {
 
@@ -15,26 +15,22 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
             SELECT dss
             FROM DailyStudySummary dss
             WHERE dss.userId IN :userIds
-                AND dss.createdAt >= :startOfDay
-                AND dss.createdAt < :endOfDay
+                AND dss.date = :date
             """)
-    List<DailyStudySummary> findAllByUserIdsAndCreatedAt(
+    List<DailyStudySummary> findAllByUserIdsAndDate(
             @Param("userIds") List<Long> userIds,
-            @Param("startOfDay") LocalDateTime startOfDay,
-            @Param("endOfDay") LocalDateTime endOfDay
+            @Param("date") LocalDate date
     );
 
     @Query("""
             SELECT dss
             FROM DailyStudySummary dss
             WHERE dss.userId = :userId
-                AND dss.createdAt >= :startOfDay
-                AND dss.createdAt < :endOfDay
+                AND dss.date = :date
             """)
-    Optional<DailyStudySummary> findByUserIdAndCreatedAt(
+    Optional<DailyStudySummary> findByUserIdAndDate(
             @Param("userId") Long userId,
-            @Param("startOfDay") LocalDateTime startOfDay,
-            @Param("endOfDay") LocalDateTime endOfDay
+            @Param("date") LocalDate date
     );
 
     @Query("""
@@ -48,36 +44,30 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
             SELECT dss
             FROM DailyStudySummary dss
             WHERE dss.userId = :userId
-                AND dss.createdAt BETWEEN :startDateTime AND :endDateTime
+                AND dss.date >= :startDate
+                AND dss.date <= :endDate
             """)
     List<DailyStudySummary> findAllByUserIdAndPeriod(
             @Param("userId") Long userId,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 
     @Query("""
-            SELECT dss
-            FROM DailyStudySummary dss
-            WHERE dss.userId IN :userIds
-                AND dss.createdAt BETWEEN :startDateTime AND :endDateTime
+            SELECT new com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto(
+                d.userId as userId,
+                d.date as date,
+                SUM(d.studyTime) as studyTime
+            )
+            FROM DailyStudySummary d
+            WHERE d.userId IN :userIds
+                AND d.date >= :startDate
+                AND d.date <= :endDate
+            GROUP BY d.userId, d.date
             """)
-    List<DailyStudySummary> findAllByUserIdsAndPeriod(
+    List<DailyStudyTimeDto> findDailyStudyTimeByUserIdsAndPeriod(
             @Param("userIds") List<Long> userIds,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime
-    );
-
-    @Query("""
-                SELECT dss.userId, SUM(dss.studyTime)
-                FROM DailyStudySummary dss
-                WHERE dss.userId IN :userIds
-                    AND dss.createdAt BETWEEN :startDateTime AND :endDateTime
-                GROUP BY dss.userId
-            """)
-    List<Object[]> findTotalStudyTimeByUserIdsAndPeriod(
-            @Param("userIds") List<Long> userIds,
-            @Param("startDateTime") LocalDateTime startDateTime,
-            @Param("endDateTime") LocalDateTime endDateTime
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate
     );
 }
