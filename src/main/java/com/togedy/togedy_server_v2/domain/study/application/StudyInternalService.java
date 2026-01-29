@@ -663,11 +663,10 @@ public class StudyInternalService {
      * @param imageUrl 삭제 대상 이미지 URL
      */
     private void publishImageRemovedEvent(String imageUrl) {
-        if (imageUrl == null) {
+        if (imageUrl == null || imageUrl.isBlank()) {
             return;
         }
-        applicationEventPublisher.publishEvent(
-                new StudyImageRemovedEvent(imageUrl)
-        );
+
+        applicationEventPublisher.publishEvent(new StudyImageRemovedEvent(imageUrl));
     }
 }
