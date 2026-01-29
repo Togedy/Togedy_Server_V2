@@ -95,17 +95,19 @@ public class StudyInternalService {
 
     /**
      * 스터디를 삭제한다.
+     *
      * <p>
      * 해당 스터디의 리더만 수행할 수 있으며, 리더 여부는 {@code UserStudy} 정보를 통해 검증한다.
      * </p>
+     *
      * <p>
-     * 스터디 삭제 시 다음 작업이 함께 수행된다.
-     * <ul>
-     *     <li>스터디 이미지(S3) 삭제</li>
-     *     <li>해당 스터디에 속한 모든 유저-스터디 연관 관계 삭제</li>
-     *     <li>스터디 엔티티 삭제</li>
-     * </ul>
+     * 스터디 삭제 시 다음 작업이 수행된다.
      * </p>
+     * <ul>
+     *   <li>스터디 이미지 제거 이벤트 발행 (실제 파일 삭제는 트랜잭션 커밋 이후 처리)</li>
+     *   <li>해당 스터디에 속한 모든 유저-스터디 연관 관계 삭제</li>
+     *   <li>스터디 엔티티 삭제</li>
+     * </ul>
      *
      * @param studyId  삭제할 스터디 ID
      * @param leaderId 삭제를 요청한 리더 사용자 ID
@@ -122,7 +124,7 @@ public class StudyInternalService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        s3Service.deleteFile(study.getImageUrl());
+        publishImageRemovedEvent(study.getImageUrl());
 
         userStudyRepository.deleteAllByStudyId(studyId);
         studyRepository.delete(study);
