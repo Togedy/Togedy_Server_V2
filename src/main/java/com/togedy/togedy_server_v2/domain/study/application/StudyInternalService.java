@@ -18,6 +18,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.StudyMemberRoleDto;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
+import com.togedy.togedy_server_v2.domain.study.event.StudyImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyAlreadyJoinedException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
@@ -37,6 +38,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +53,7 @@ public class StudyInternalService {
     private final S3Service s3Service;
     private final UserStudyRepository userStudyRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * 스터디 단건 정보를 조회한다.
@@ -567,36 +570,28 @@ public class StudyInternalService {
 
     /**
      * 스터디 이미지를 변경하거나 삭제하고, 처리 결과에 따른 이미지 URL을 반환한다.
+     *
      * <p>
-     * 요청에 이미지 파일이 포함된 경우, 새 이미지를 업로드한 뒤 기존 이미지를 삭제하고 변경된 이미지 URL을 반환한다.
-     * </p>
-     * <p>
-     * 이미지 삭제 요청인 경우, 기존 이미지를 삭제하고 {@code null}을 반환한다.
-     * </p>
-     * <p>
-     * 이미지 변경 및 삭제 요청이 모두 없는 경우, 기존 이미지 URL을 그대로 반환한다.
+     * 이미지 변경 또는 삭제 시 {@link StudyImageRemovedEvent}를 발행하며, 실제 이미지 파일 삭제는 트랜잭션 커밋 이후 처리된다.
      * </p>
      *
      * @param request 이미지 변경/삭제 요청 DTO
      * @param study   대상 스터디 엔티티
-     * @return <ul>
-     * <li>이미지 변경 시: 변경된 이미지 URL</li>
-     * <li>이미지 삭제 시: {@code null}</li>
-     * <li>변경 없음: 기존 이미지 URL</li>
-     * </ul>
+     * @return 변경된 이미지 URL, 삭제 시 {@code null}, 변경 없을 경우 기존 이미지 URL
      */
     private String replaceStudyImage(PatchStudyInformationRequest request, Study study) {
         if (request.isRemoveStudyImage()) {
-            s3Service.deleteFile(study.getImageUrl());
+            publishImageRemovedEvent(study.getImageUrl());
             return null;
         }
 
         if (request.getStudyImage() != null) {
-            String studyImageUrl = s3Service.uploadFile(request.getStudyImage());
-            String oldUrl = study.changeImageUrl(studyImageUrl);
-            s3Service.deleteFile(oldUrl);
-            return studyImageUrl;
+            String newImageUrl = s3Service.uploadFile(request.getStudyImage());
+            String oldImageUrl = study.changeImageUrl(newImageUrl);
+            publishImageRemovedEvent(oldImageUrl);
+            return newImageUrl;
         }
+
         return study.getImageUrl();
     }
 
@@ -654,5 +649,23 @@ public class StudyInternalService {
         if (userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
             throw new StudyAlreadyJoinedException();
         }
+    }
+
+    /**
+     * 스터디 이미지 제거 이벤트를 발행한다.
+     *
+     * <p>
+     * 이미지 URL이 {@code null}이 아닌 경우에만 이벤트를 발행하며, 실제 삭제는 트랜잭션 커밋 이후 처리된다.
+     * </p>
+     *
+     * @param imageUrl 삭제 대상 이미지 URL
+     */
+    private void publishImageRemovedEvent(String imageUrl) {
+        if (imageUrl == null) {
+            return;
+        }
+        applicationEventPublisher.publishEvent(
+                new StudyImageRemovedEvent(imageUrl)
+        );
     }
 }
