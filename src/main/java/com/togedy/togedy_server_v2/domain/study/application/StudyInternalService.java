@@ -19,6 +19,7 @@ import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyAlreadyJoinedException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
@@ -210,13 +211,14 @@ public class StudyInternalService {
      * @param userId  참여를 요청한 사용자 ID
      * @throws StudyNotFoundException 참여 대상 스터디가 존재하지 않는 경우
      */
-
     @Transactional
     public void registerStudyMember(PostStudyMemberRequest request, Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
         study.validatePassword(request.getStudyPassword());
+        validateJoined(studyId, userId);
+
         study.increaseMemberCount();
         studyRepository.save(study);
 
@@ -639,5 +641,18 @@ public class StudyInternalService {
                         DailyStudySummary::getUserId,
                         dailyStudySummary -> dailyStudySummary
                 ));
+    }
+
+    /**
+     * 유저가 해당 스터디에 이미 가입되어 있는지 검증한다. 이미 가입된 경우 예외를 발생시킨다.
+     *
+     * @param studyId 스터디 ID
+     * @param userId  유저 ID
+     * @throws StudyAlreadyJoinedException 이미 가입된 경우
+     */
+    private void validateJoined(Long studyId, Long userId) {
+        if (userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
+            throw new StudyAlreadyJoinedException();
+        }
     }
 }

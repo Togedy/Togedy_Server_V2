@@ -65,6 +65,7 @@ public enum ErrorCode {
     STUDY_MEMBER_LIMIT_OUT_OF_RANGE(HttpStatus.CONFLICT, "S8011", "스터디 최대 인원은 1명 이상 30명 이하로 설정해야 합니다."),
     STUDY_MINIMUM_MEMBER_REQUIRED(HttpStatus.CONFLICT, "S9012", "스터디는 최소 한 명의 멤버가 존재해야 합니다."),
     STUDY_LEADER_CANNOT_REMOVE_SELF(HttpStatus.CONFLICT, "S9013", "스터디 리더는 방출할 수 없습니다."),
+    STUDY_ALREADY_JOINED(HttpStatus.CONFLICT, "S9014", "이미 가입한 스터디입니다."),
 
     // USER_STUDY(9000)
     USER_STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "US9000", "해당 유저가 가입한 스터디를 찾을 수 없습니다."),
