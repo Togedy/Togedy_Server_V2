@@ -18,7 +18,9 @@ import com.togedy.togedy_server_v2.domain.study.dto.StudyMemberRoleDto;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
+import com.togedy.togedy_server_v2.domain.study.event.StudyImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyAlreadyJoinedException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
@@ -36,6 +38,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -50,6 +53,7 @@ public class StudyInternalService {
     private final S3Service s3Service;
     private final UserStudyRepository userStudyRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     /**
      * 스터디 단건 정보를 조회한다.
@@ -91,17 +95,19 @@ public class StudyInternalService {
 
     /**
      * 스터디를 삭제한다.
+     *
      * <p>
      * 해당 스터디의 리더만 수행할 수 있으며, 리더 여부는 {@code UserStudy} 정보를 통해 검증한다.
      * </p>
+     *
      * <p>
-     * 스터디 삭제 시 다음 작업이 함께 수행된다.
-     * <ul>
-     *     <li>스터디 이미지(S3) 삭제</li>
-     *     <li>해당 스터디에 속한 모든 유저-스터디 연관 관계 삭제</li>
-     *     <li>스터디 엔티티 삭제</li>
-     * </ul>
+     * 스터디 삭제 시 다음 작업이 수행된다.
      * </p>
+     * <ul>
+     *   <li>스터디 이미지 제거 이벤트 발행 (실제 파일 삭제는 트랜잭션 커밋 이후 처리)</li>
+     *   <li>해당 스터디에 속한 모든 유저-스터디 연관 관계 삭제</li>
+     *   <li>스터디 엔티티 삭제</li>
+     * </ul>
      *
      * @param studyId  삭제할 스터디 ID
      * @param leaderId 삭제를 요청한 리더 사용자 ID
@@ -118,7 +124,7 @@ public class StudyInternalService {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
-        s3Service.deleteFile(study.getImageUrl());
+        publishImageRemovedEvent(study.getImageUrl());
 
         userStudyRepository.deleteAllByStudyId(studyId);
         studyRepository.delete(study);
@@ -210,13 +216,14 @@ public class StudyInternalService {
      * @param userId  참여를 요청한 사용자 ID
      * @throws StudyNotFoundException 참여 대상 스터디가 존재하지 않는 경우
      */
-
     @Transactional
     public void registerStudyMember(PostStudyMemberRequest request, Long studyId, Long userId) {
         Study study = studyRepository.findById(studyId)
                 .orElseThrow(StudyNotFoundException::new);
 
         study.validatePassword(request.getStudyPassword());
+        validateJoined(studyId, userId);
+
         study.increaseMemberCount();
         studyRepository.save(study);
 
@@ -565,36 +572,28 @@ public class StudyInternalService {
 
     /**
      * 스터디 이미지를 변경하거나 삭제하고, 처리 결과에 따른 이미지 URL을 반환한다.
+     *
      * <p>
-     * 요청에 이미지 파일이 포함된 경우, 새 이미지를 업로드한 뒤 기존 이미지를 삭제하고 변경된 이미지 URL을 반환한다.
-     * </p>
-     * <p>
-     * 이미지 삭제 요청인 경우, 기존 이미지를 삭제하고 {@code null}을 반환한다.
-     * </p>
-     * <p>
-     * 이미지 변경 및 삭제 요청이 모두 없는 경우, 기존 이미지 URL을 그대로 반환한다.
+     * 이미지 변경 또는 삭제 시 {@link StudyImageRemovedEvent}를 발행하며, 실제 이미지 파일 삭제는 트랜잭션 커밋 이후 처리된다.
      * </p>
      *
      * @param request 이미지 변경/삭제 요청 DTO
      * @param study   대상 스터디 엔티티
-     * @return <ul>
-     * <li>이미지 변경 시: 변경된 이미지 URL</li>
-     * <li>이미지 삭제 시: {@code null}</li>
-     * <li>변경 없음: 기존 이미지 URL</li>
-     * </ul>
+     * @return 변경된 이미지 URL, 삭제 시 {@code null}, 변경 없을 경우 기존 이미지 URL
      */
     private String replaceStudyImage(PatchStudyInformationRequest request, Study study) {
         if (request.isRemoveStudyImage()) {
-            s3Service.deleteFile(study.getImageUrl());
+            publishImageRemovedEvent(study.getImageUrl());
             return null;
         }
 
         if (request.getStudyImage() != null) {
-            String studyImageUrl = s3Service.uploadFile(request.getStudyImage());
-            String oldUrl = study.changeImageUrl(studyImageUrl);
-            s3Service.deleteFile(oldUrl);
-            return studyImageUrl;
+            String newImageUrl = s3Service.uploadFile(request.getStudyImage());
+            String oldImageUrl = study.changeImageUrl(newImageUrl);
+            publishImageRemovedEvent(oldImageUrl);
+            return newImageUrl;
         }
+
         return study.getImageUrl();
     }
 
@@ -639,5 +638,35 @@ public class StudyInternalService {
                         DailyStudySummary::getUserId,
                         dailyStudySummary -> dailyStudySummary
                 ));
+    }
+
+    /**
+     * 유저가 해당 스터디에 이미 가입되어 있는지 검증한다. 이미 가입된 경우 예외를 발생시킨다.
+     *
+     * @param studyId 스터디 ID
+     * @param userId  유저 ID
+     * @throws StudyAlreadyJoinedException 이미 가입된 경우
+     */
+    private void validateJoined(Long studyId, Long userId) {
+        if (userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
+            throw new StudyAlreadyJoinedException();
+        }
+    }
+
+    /**
+     * 스터디 이미지 제거 이벤트를 발행한다.
+     *
+     * <p>
+     * 이미지 URL이 {@code null}이 아닌 경우에만 이벤트를 발행하며, 실제 삭제는 트랜잭션 커밋 이후 처리된다.
+     * </p>
+     *
+     * @param imageUrl 삭제 대상 이미지 URL
+     */
+    private void publishImageRemovedEvent(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return;
+        }
+
+        applicationEventPublisher.publishEvent(new StudyImageRemovedEvent(imageUrl));
     }
 }
