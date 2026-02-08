@@ -132,8 +132,7 @@ public class StudyMemberService {
             return GetStudyMemberPlannerResponse.of(isMyPlanner, false);
         }
 
-        LocalDateTime startOfToday = TimeUtil.startOfToday();
-        LocalDateTime startOfTomorrow = TimeUtil.startOfTomorrow();
+        LocalDate today = LocalDate.now();
 
         List<StudySubject> studySubjects = studySubjectRepository.findAllByUserId(memberId);
 
@@ -141,10 +140,9 @@ public class StudyMemberService {
                 .map(StudySubject::getId)
                 .toList();
 
-        List<StudyTask> todayStudyTasks = studyTaskRepository.findAllByStudySubjectIdsAndPeriod(
+        List<StudyTask> todayStudyTasks = studyTaskRepository.findAllByStudySubjectIdsAndDate(
                 studySubjectIds,
-                startOfToday,
-                startOfTomorrow
+                today
         );
 
         Map<Long, List<StudyTask>> tasksByStudySubjectIds = todayStudyTasks.stream()

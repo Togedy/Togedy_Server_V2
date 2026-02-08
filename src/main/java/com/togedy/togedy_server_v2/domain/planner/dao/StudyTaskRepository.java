@@ -1,7 +1,8 @@
 package com.togedy.togedy_server_v2.domain.planner.dao;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTask;
-import java.time.LocalDateTime;
+
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -11,11 +12,10 @@ public interface StudyTaskRepository extends JpaRepository<StudyTask, Long> {
                 SELECT st
                 FROM StudyTask st
                 WHERE st.studySubjectId IN :studySubjectIds
-                    AND st.createdAt BETWEEN :startOfDay AND :endOfDay
+                    AND st.date = :date
             """)
-    List<StudyTask> findAllByStudySubjectIdsAndPeriod(
+    List<StudyTask> findAllByStudySubjectIdsAndDate(
             List<Long> studySubjectIds,
-            LocalDateTime startOfDay,
-            LocalDateTime endOfDay
+            LocalDate date
     );
 }
