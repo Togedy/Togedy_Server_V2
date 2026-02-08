@@ -340,7 +340,7 @@ public class StudyMemberService {
      */
     private int countCompletedTasks(List<StudyTask> studyTaskList) {
         return (int) studyTaskList.stream()
-                .filter(StudyTask::isCompleted)
+                .filter(StudyTask::isChecked)
                 .count();
     }
 
