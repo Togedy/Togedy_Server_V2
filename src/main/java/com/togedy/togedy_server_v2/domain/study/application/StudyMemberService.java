@@ -22,6 +22,7 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
@@ -87,14 +88,14 @@ public class StudyMemberService {
     public GetStudyMemberStudyTimeResponse findStudyMemberStudyTime(Long studyId, Long memberId, Long userId) {
         validateUserInStudy(studyId, userId);
 
-        LocalDateTime start = TimeUtil.startOfMonthsAgo(5);
-        LocalDateTime end = TimeUtil.startOfNextMonth();
+        LocalDate start = TimeUtil.startOfMonthsAgo(5);
+        LocalDate end = TimeUtil.startOfNextMonth();
 
         List<DailyStudySummary> dailyStudySummaries =
                 dailyStudySummaryRepository.findAllByUserIdAndPeriod(memberId, start, end);
 
         Map<YearMonth, List<DailyStudySummary>> summariesByMonth = dailyStudySummaries.stream()
-                .collect(Collectors.groupingBy(dss -> YearMonth.from(dss.getCreatedAt())));
+                .collect(Collectors.groupingBy(dss -> YearMonth.from(dss.getDate())));
 
         List<MonthlyStudyTimeDto> monthlyStudyTimeDtoList = new ArrayList<>();
 
@@ -289,7 +290,7 @@ public class StudyMemberService {
     private Map<Integer, DailyStudySummary> groupByDayOfMonth(List<DailyStudySummary> dailyStudySummaries) {
         return dailyStudySummaries.stream()
                 .collect(Collectors.toMap(
-                        dailyStudySummary -> dailyStudySummary.getCreatedAt().getDayOfMonth(),
+                        dailyStudySummary -> dailyStudySummary.getDate().getDayOfMonth(),
                         dailyStudySummary -> dailyStudySummary
                 ));
     }

@@ -9,6 +9,7 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitOutOfR
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMinimumMemberRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
+import com.togedy.togedy_server_v2.global.fixtures.DailyStudySummaryFixture;
 import com.togedy.togedy_server_v2.global.fixtures.StudyFixture;
 import java.time.LocalDateTime;
 import org.assertj.core.api.Assertions;
@@ -32,7 +33,7 @@ public class StudyTest {
         Study study = StudyFixture.createNormalStudy();
 
         // when
-        study.updateInfo("수정", null, null, null, null);
+        study.updateInformation("수정", null, null, null, null);
 
         // then
         Assertions.assertThat(study.getName()).isEqualTo("수정");
@@ -44,7 +45,7 @@ public class StudyTest {
         Study study = StudyFixture.createNormalStudy();
 
         // when
-        study.updateInfo(null, "수정", null, null, null);
+        study.updateInformation(null, "수정", null, null, null);
 
         // then
         Assertions.assertThat(study.getDescription()).isEqualTo("수정");
@@ -56,7 +57,7 @@ public class StudyTest {
         Study study = StudyFixture.createNormalStudy();
 
         // when
-        study.updateInfo(null, null, StudyTag.FREE.getDescription(), null, null);
+        study.updateInformation(null, null, StudyTag.FREE.getDescription(), null, null);
 
         // then
         Assertions.assertThat(study.getTag()).isEqualTo(StudyTag.FREE);
@@ -68,7 +69,7 @@ public class StudyTest {
         Study study = StudyFixture.createNormalStudy();
 
         // when
-        study.updateInfo(null, null, null, "수정", null);
+        study.updateInformation(null, null, null, "수정", null);
 
         // then
         Assertions.assertThat(study.getPassword()).isEqualTo("수정");
@@ -80,7 +81,7 @@ public class StudyTest {
         Study study = StudyFixture.createNormalStudy();
 
         // when
-        study.updateInfo(null, null, null, null, "수정");
+        study.updateInformation(null, null, null, null, "수정");
 
         // then
         Assertions.assertThat(study.getImageUrl()).isEqualTo("수정");
@@ -92,7 +93,7 @@ public class StudyTest {
         Study study = StudyFixture.createNormalStudy();
 
         // when
-        study.updateInfo("수정", "수정", StudyTag.FREE.getDescription(), "수정", "수정");
+        study.updateInformation("수정", "수정", StudyTag.FREE.getDescription(), "수정", "수정");
 
         // then
         Assertions.assertThat(study.getName()).isEqualTo("수정");
@@ -109,7 +110,7 @@ public class StudyTest {
         String studyName = study.getName();
 
         // when
-        study.updateInfo(null, null, null, null, null);
+        study.updateInformation(null, null, null, null, null);
 
         // then
         Assertions.assertThat(study.getName()).isEqualTo(studyName);
@@ -264,10 +265,10 @@ public class StudyTest {
     }
 
     @Test
-    public void 스터디의_목표_시간보다_일일_공부량이_많은_경우_true를_반환한다() {
+    public void 스터디의_목표_시간보다_일일_공부량이_많거나_같은_경우_true를_반환한다() {
         //given
         Study study = StudyFixture.createChallengeStudy();
-        DailyStudySummary dailyStudySummary = new DailyStudySummary(1L, 5 * 3600L);
+        DailyStudySummary dailyStudySummary = DailyStudySummaryFixture.createDailyStudySummary();
 
         // when & then
         Assertions.assertThat(study.isAchieved(dailyStudySummary)).isTrue();
@@ -277,7 +278,7 @@ public class StudyTest {
     public void 스터디의_목표_시간이_일일_공부량보다_많은_경우_false를_반환한다() {
         //given
         Study study = StudyFixture.createChallengeStudy();
-        DailyStudySummary dailyStudySummary = new DailyStudySummary(1L, 1 * 3600L);
+        DailyStudySummary dailyStudySummary = DailyStudySummaryFixture.createDailyStudySummaryWithStudyTime(1L * 3600L);
 
         // when & then
         Assertions.assertThat(study.isAchieved(dailyStudySummary)).isFalse();

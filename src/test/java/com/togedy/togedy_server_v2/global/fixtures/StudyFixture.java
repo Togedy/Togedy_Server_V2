@@ -3,6 +3,8 @@ package com.togedy.togedy_server_v2.global.fixtures;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
+import java.util.ArrayList;
+import java.util.List;
 
 public class StudyFixture {
 
@@ -94,5 +96,15 @@ public class StudyFixture {
                 .goalTime(18000L)
                 .type(StudyType.CHALLENGE)
                 .build();
+    }
+
+    public static List<Study> createChallengeStudies(int count) {
+        List<Study> studies = new ArrayList<>();
+
+        for (int i = 0; i < count; i++) {
+            studies.add(createChallengeStudy());
+        }
+
+        return studies;
     }
 }

@@ -1,9 +1,8 @@
 package com.togedy.togedy_server_v2.domain.study.dto;
 
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
-
-import java.util.List;
 
 @Getter
 @Builder
@@ -24,8 +23,7 @@ public class GetMyStudyInfoResponse {
             String studyTime,
             int achievement,
             List<StudyDto> studyList
-    )
-    {
+    ) {
         return GetMyStudyInfoResponse.builder()
                 .hasChallenge(true)
                 .goalTime(goalTime)
@@ -35,9 +33,10 @@ public class GetMyStudyInfoResponse {
                 .build();
     }
 
-    public static GetMyStudyInfoResponse from(List<StudyDto> studyList) {
+    public static GetMyStudyInfoResponse from(String studyTime, List<StudyDto> studyList) {
         return GetMyStudyInfoResponse.builder()
                 .hasChallenge(false)
+                .studyTime(studyTime)
                 .studyList(studyList)
                 .build();
     }
