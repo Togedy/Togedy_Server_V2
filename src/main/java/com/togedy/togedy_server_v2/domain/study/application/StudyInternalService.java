@@ -1,7 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
-import com.togedy.togedy_server_v2.domain.planner.dao.PlanRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
@@ -49,7 +49,7 @@ public class StudyInternalService {
     private final StudyRepository studyRepository;
     private final UserRepository userRepository;
     private final StudySubjectRepository studySubjectRepository;
-    private final PlanRepository planRepository;
+    private final StudyTaskRepository studyTaskRepository;
     private final S3Service s3Service;
     private final UserStudyRepository userStudyRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
