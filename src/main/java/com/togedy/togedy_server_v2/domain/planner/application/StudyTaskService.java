@@ -51,4 +51,17 @@ public class StudyTaskService {
         task.update(request.getName());
         return task.getId();
     }
+
+    @Transactional
+    public void deleteStudyTask(Long taskId, Long userId) {
+
+        StudyTask task = studyTaskRepository.findById(taskId)
+                .orElseThrow(StudyTaskNotFoundException::new);
+
+        if (!task.getUserId().equals(userId)) {
+            throw new StudyTaskNotOwnedException();
+        }
+
+        studyTaskRepository.delete(task);
+    }
 }

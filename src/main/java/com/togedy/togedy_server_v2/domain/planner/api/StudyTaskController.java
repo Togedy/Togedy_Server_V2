@@ -26,5 +26,12 @@ public class StudyTaskController {
         return ApiUtil.success(taskId);
     }
 
+    @Operation(summary = "스터디 테스크 삭제", description = "해당 스터디 테스크를 삭제한다.")
+    @DeleteMapping("/{taskId}")
+    public ApiResponse<Void> deleteTask(@PathVariable Long taskId, @AuthenticationPrincipal AuthUser user) {
+        studyTaskService.deleteStudyTask(taskId, user.getId());
+        return ApiUtil.successOnly();
+    }
+
 
 }
