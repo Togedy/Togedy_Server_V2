@@ -8,10 +8,10 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface StudyTaskRepository extends JpaRepository<StudyTask, Long> {
     @Query("""
-                SELECT p
-                FROM StudyTask p
-                WHERE p.studySubjectId IN :studySubjectIds
-                    AND p.createdAt BETWEEN :startOfDay AND :endOfDay
+                SELECT st
+                FROM StudyTask st
+                WHERE st.studySubjectId IN :studySubjectIds
+                    AND st.createdAt BETWEEN :startOfDay AND :endOfDay
             """)
     List<StudyTask> findAllByStudySubjectIdsAndPeriod(
             List<Long> studySubjectIds,

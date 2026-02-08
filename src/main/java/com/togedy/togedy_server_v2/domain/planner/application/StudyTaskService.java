@@ -48,7 +48,7 @@ public class StudyTaskService {
     @Transactional
     public void checkStudyTask(Long taskId, boolean isChecked, Long userId) {
         StudyTask task = validateTask(taskId, userId);
-        task.toggleChecked(isChecked);
+        task.setChecked(isChecked);
     }
 
     private StudyTask validateTask(Long taskId, Long userId) {
