@@ -52,7 +52,7 @@ public class StudyTask extends BaseEntity {
         this.name = name;
     }
 
-    public void toggleChecked(boolean checked) {
-        this.isChecked = checked;
+    public void toggleChecked(boolean isChecked) {
+        this.isChecked = isChecked;
     }
 }

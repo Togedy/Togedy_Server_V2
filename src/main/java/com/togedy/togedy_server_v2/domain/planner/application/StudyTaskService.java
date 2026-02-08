@@ -64,4 +64,16 @@ public class StudyTaskService {
 
         studyTaskRepository.delete(task);
     }
+
+    @Transactional
+    public void checkStudyTask(Long taskId, boolean isChecked, Long userId) {
+        StudyTask task = studyTaskRepository.findById(taskId)
+                .orElseThrow(StudyTaskNotFoundException::new);
+
+        if (!task.getUserId().equals(userId)) {
+            throw new StudyTaskNotOwnedException();
+        }
+
+        task.toggleChecked(isChecked);
+    }
 }
