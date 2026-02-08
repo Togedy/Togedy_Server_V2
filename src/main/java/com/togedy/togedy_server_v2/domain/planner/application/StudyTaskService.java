@@ -20,16 +20,9 @@ public class StudyTaskService {
 
     @Transactional
     public Long upsertStudyTask(PutStudyTaskRequest request, Long userId) {
-        if (request.getName() == null || request.getName().isBlank()) {
-            throw new InvalidStudyTaskNameException();
-        }
+        validateTaskName(request.getName());
 
-        StudySubject subject = studySubjectRepository.findById(request.getStudySubjectId())
-                .orElseThrow(StudySubjectNotFoundException::new);
-
-        if (!subject.getUserId().equals(userId)) {
-            throw new StudySubjectNotOwnedException();
-        }
+        StudySubject subject = validateSubject(request.getStudySubjectId(), userId);
 
         if (request.getTaskId() == null) {
             StudyTask task = StudyTask.builder()
@@ -41,39 +34,46 @@ public class StudyTaskService {
             return studyTaskRepository.save(task).getId();
         }
 
-        StudyTask task = studyTaskRepository.findById(request.getTaskId())
-                .orElseThrow(StudyTaskNotFoundException::new);
-
-        if (!task.getUserId().equals(userId)) {
-            throw new StudyTaskNotOwnedException();
-        }
-
+        StudyTask task = validateTask(request.getTaskId(), userId);
         task.update(request.getName());
         return task.getId();
     }
 
     @Transactional
     public void deleteStudyTask(Long taskId, Long userId) {
-
-        StudyTask task = studyTaskRepository.findById(taskId)
-                .orElseThrow(StudyTaskNotFoundException::new);
-
-        if (!task.getUserId().equals(userId)) {
-            throw new StudyTaskNotOwnedException();
-        }
-
+        StudyTask task = validateTask(taskId, userId);
         studyTaskRepository.delete(task);
     }
 
     @Transactional
     public void checkStudyTask(Long taskId, boolean isChecked, Long userId) {
+        StudyTask task = validateTask(taskId, userId);
+        task.toggleChecked(isChecked);
+    }
+
+    private StudyTask validateTask(Long taskId, Long userId) {
         StudyTask task = studyTaskRepository.findById(taskId)
                 .orElseThrow(StudyTaskNotFoundException::new);
 
         if (!task.getUserId().equals(userId)) {
             throw new StudyTaskNotOwnedException();
         }
+        return task;
+    }
 
-        task.toggleChecked(isChecked);
+    private StudySubject validateSubject(Long subjectId, Long userId) {
+        StudySubject subject = studySubjectRepository.findById(subjectId)
+                .orElseThrow(StudySubjectNotFoundException::new);
+
+        if (!subject.getUserId().equals(userId)) {
+            throw new StudySubjectNotOwnedException();
+        }
+        return subject;
+    }
+
+    private void validateTaskName(String name) {
+        if (name == null || name.isBlank()) {
+            throw new InvalidStudyTaskNameException();
+        }
     }
 }
