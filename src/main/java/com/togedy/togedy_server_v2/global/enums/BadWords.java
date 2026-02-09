@@ -5,10 +5,10 @@ import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public enum BadWord {
+public enum BadWords {
 
     // 욕설
-    SIBAL("씨발"),
+    SSIBAL("씨발"),
     SSHIBHAL("씹할"),
     SHORT_SIBAL("ㅅㅂ"),
     DOUBLE_SIBAL("ㅆㅂ"),
@@ -128,6 +128,14 @@ public enum BadWord {
     OLD_GUY("개저씨"),
     MOM_CHUNG("맘충");
 
-    private final String word;
-    
+    private final String text;
+
+    public static boolean containsBadWord(String string) {
+        for (BadWords badWord : BadWords.values()) {
+            if (string.contains(badWord.getText())) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
