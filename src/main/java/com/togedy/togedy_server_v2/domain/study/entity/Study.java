@@ -108,9 +108,11 @@ public class Study extends BaseEntity {
             String studyImageUrl
     ) {
         if (studyName != null) {
+            validateStudyName(studyName);
             this.name = studyName;
         }
         if (studyDescription != null) {
+            validateStudyDescription(studyDescription);
             this.description = studyDescription;
         }
         if (studyTag != null) {
