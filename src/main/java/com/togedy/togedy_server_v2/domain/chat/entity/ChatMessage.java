@@ -14,16 +14,19 @@ public class ChatMessage extends BaseDocument {
     @Id
     private String id;
 
-    private Long chatSessionId;
+    private Long userId;
 
     private String content;
 
     private Sender sender;
 
+    private NerKeyword nerKeyword;
+
     @Builder
-    public ChatMessage(Long chatSessionId, String content, Sender sender) {
-        this.chatSessionId = chatSessionId;
+    public ChatMessage(Long userId, String content, Sender sender, NerKeyword nerKeyword) {
+        this.userId = userId;
         this.content = content;
         this.sender = sender;
+        this.nerKeyword = nerKeyword;
     }
 }
