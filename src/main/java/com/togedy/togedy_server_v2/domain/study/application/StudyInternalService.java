@@ -26,6 +26,7 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.global.enums.ImageCategory;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
@@ -588,7 +589,7 @@ public class StudyInternalService {
         }
 
         if (request.getStudyImage() != null) {
-            String newImageUrl = s3Service.uploadFile(request.getStudyImage());
+            String newImageUrl = s3Service.uploadFile(request.getStudyImage(), ImageCategory.STUDY);
             String oldImageUrl = study.changeImageUrl(newImageUrl);
             publishImageRemovedEvent(oldImageUrl);
             return newImageUrl;

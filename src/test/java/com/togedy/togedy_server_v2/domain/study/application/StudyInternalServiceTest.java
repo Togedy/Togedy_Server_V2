@@ -29,6 +29,7 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredExc
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.global.enums.ImageCategory;
 import com.togedy.togedy_server_v2.global.fixtures.DailyStudySummaryFixture;
 import com.togedy.togedy_server_v2.global.fixtures.StudyFixture;
 import com.togedy.togedy_server_v2.global.fixtures.UserFixture;
@@ -411,7 +412,7 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
                 false
         );
 
-        given(s3Service.uploadFile(any()))
+        given(s3Service.uploadFile(any(), any(ImageCategory.class)))
                 .willReturn("변경된 이미지 URL");
 
         // when
