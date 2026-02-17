@@ -2,10 +2,23 @@ package com.togedy.togedy_server_v2.domain.planner.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
+import com.togedy.togedy_server_v2.domain.planner.dto.DailyPlannerTaskDto;
+import com.togedy.togedy_server_v2.domain.planner.dto.DailyPlannerTaskItemDto;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerTaskResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PutStudyTaskRequest;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTask;
+import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
 import com.togedy.togedy_server_v2.domain.planner.exception.*;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +30,54 @@ public class StudyTaskService {
 
     private final StudyTaskRepository studyTaskRepository;
     private final StudySubjectRepository studySubjectRepository;
+    private final StudyTimeRepository studyTimeRepository;
+
+    @Transactional(readOnly = true)
+    public GetDailyPlannerTaskResponse findDailyPlannerTasks(LocalDate date, Long userId) {
+        List<StudySubject> studySubjects = studySubjectRepository.findAllByUserId(userId);
+        List<Long> studySubjectIds = studySubjects.stream()
+                .map(StudySubject::getId)
+                .toList();
+
+        if (studySubjectIds.isEmpty()) {
+            return GetDailyPlannerTaskResponse.of(List.of());
+        }
+
+        List<StudyTask> dailyStudyTasks = studyTaskRepository.findAllByStudySubjectIdsAndDate(studySubjectIds, date);
+        Map<Long, List<StudyTask>> tasksByStudySubjectId = dailyStudyTasks.stream()
+                .collect(Collectors.groupingBy(StudyTask::getStudySubjectId));
+
+        LocalDateTime startOfDate = date.atStartOfDay();
+        LocalDateTime startOfNextDate = date.plusDays(1).atStartOfDay();
+
+        List<StudyTime> studyTimes = studyTimeRepository.findDailyStudyTimesBySubjectIds(
+                studySubjectIds, startOfDate, startOfNextDate
+        );
+
+        Map<Long, Long> studyTimeBySubjectId = studyTimes.stream()
+                .collect(Collectors.groupingBy(
+                        StudyTime::getStudySubjectId,
+                        Collectors.summingLong(studyTime ->
+                                Math.max(0L, Duration.between(studyTime.getStartTime(), studyTime.getEndTime()).getSeconds()))
+                ));
+
+        List<DailyPlannerTaskDto> dailyPlanner = new ArrayList<>();
+        for (StudySubject studySubject : studySubjects) {
+            List<DailyPlannerTaskItemDto> taskList = tasksByStudySubjectId
+                    .getOrDefault(studySubject.getId(), List.of())
+                    .stream()
+                    .map(DailyPlannerTaskItemDto::from)
+                    .toList();
+
+            String subjectStudyTime = TimeUtil.formatSecondsToHms(
+                    studyTimeBySubjectId.getOrDefault(studySubject.getId(), 0L)
+            );
+
+            dailyPlanner.add(DailyPlannerTaskDto.of(studySubject, subjectStudyTime, taskList));
+        }
+
+        return GetDailyPlannerTaskResponse.of(dailyPlanner);
+    }
 
     @Transactional
     public Long upsertStudyTask(PutStudyTaskRequest request, Long userId) {
