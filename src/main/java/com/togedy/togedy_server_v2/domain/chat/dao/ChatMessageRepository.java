@@ -7,6 +7,9 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
 
-    Optional<ChatMessage> findTopByUserIdAndSenderOrderByCreatedAtDesc(Long userId, Sender sender);
+    Optional<ChatMessage> findTopByUserIdAndSenderOrderByCreatedAtDesc(
+            Long userId,
+            Sender sender
+    );
 
 }

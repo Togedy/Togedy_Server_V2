@@ -31,7 +31,6 @@ public class ChatService {
         NerKeyword nerKeyword;
         AiQuestionRequest aiQuestionRequest;
 
-        // NER 조회 후 요청 생성
         if (isFirst) {
             sendMessage = ChatMessage.builder()
                     .userId(userId)
@@ -43,7 +42,7 @@ public class ChatService {
         } else {
             ChatMessage previousChatMessage = chatMessageRepository.findTopByUserIdAndSenderOrderByCreatedAtDesc(
                     userId,
-                    Sender.USER
+                    Sender.AI
             ).orElseThrow(RuntimeException::new);
 
             nerKeyword = previousChatMessage.getNerKeyword();
@@ -60,7 +59,6 @@ public class ChatService {
 
         chatMessageRepository.save(sendMessage);
 
-        // WebClient 요청 전송
         AiAnswerResponse aiAnswer = aiChatClient.requestQuestion(aiQuestionRequest)
                 .block();
 
