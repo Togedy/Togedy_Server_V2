@@ -1,7 +1,6 @@
 package com.togedy.togedy_server_v2.domain.chat.application;
 
 import com.togedy.togedy_server_v2.domain.chat.dao.ChatMessageRepository;
-import com.togedy.togedy_server_v2.domain.chat.dao.ChatSessionRepository;
 import com.togedy.togedy_server_v2.domain.chat.dto.ai.AiAnswerResponse;
 import com.togedy.togedy_server_v2.domain.chat.dto.ai.AiQuestionRequest;
 import com.togedy.togedy_server_v2.domain.chat.dto.client.PostQuestionRequest;
@@ -18,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class ChatService {
 
     private final AiChatClient aiChatClient;
-    private final ChatSessionRepository chatSessionRepository;
     private final ChatMessageRepository chatMessageRepository;
 
     @Transactional
