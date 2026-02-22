@@ -33,7 +33,9 @@ jobs:
             export ACCESS_KEY='${{ secrets.ACCESS_KEY }}'
             export SECRET_KEY='${{ secrets.SECRET_KEY }}'
             export BUCKET_NAME='${{ secrets.BUCKET_NAME }}'
-
+            export MONGODB_URI='${{ secrets.MONGODB_URI }}'
+            export AI_SERVER_URL='${{ secrets.AI_SERVER_URL }}'
+            
             cd ${{ secrets.PROJECT_PATH }}infra/script
             chmod +x deploy.sh
             ./deploy.sh

@@ -39,6 +39,9 @@ jobs:
           SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
           SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
           SPRING_CLOUD_AWS_S3_BUCKET: test
+
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          AI_SERVER_URL: ${{ secrets.AI_SERVER_URL }}
         run: ./gradlew clean test --no-build-cache
 
       - name: Post result
