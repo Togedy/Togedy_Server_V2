@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.chat.dto.client;
 
+import com.togedy.togedy_server_v2.domain.chat.dto.ai.AiAnswerResponse;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -11,10 +12,10 @@ public class PostQuestionResponse {
 
     private Boolean isFollowUpRequired;
 
-    public PostQuestionResponse of(String answer, boolean isFollowUpRequired) {
+    public static PostQuestionResponse of(AiAnswerResponse aiAnswerResponse) {
         return PostQuestionResponse.builder()
-                .answer(answer)
-                .isFollowUpRequired(isFollowUpRequired)
+                .answer(aiAnswerResponse.getAnswer())
+                .isFollowUpRequired(aiAnswerResponse.isReply())
                 .build();
     }
 }

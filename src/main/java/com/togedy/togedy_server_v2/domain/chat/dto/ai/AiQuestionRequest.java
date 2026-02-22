@@ -11,10 +11,13 @@ import lombok.Getter;
 @AllArgsConstructor
 public class AiQuestionRequest {
 
+    @JsonProperty("question_1")
     private String question1;
 
+    @JsonProperty("question_2")
     private String question2;
 
+    @JsonProperty("first")
     private Boolean isFirst;
 
     @JsonProperty("NER_Keyword")

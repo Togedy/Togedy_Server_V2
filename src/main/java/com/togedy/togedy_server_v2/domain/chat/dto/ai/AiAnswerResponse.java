@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.chat.dto.ai;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.togedy.togedy_server_v2.domain.chat.entity.NerKeyword;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,6 +16,9 @@ public class AiAnswerResponse {
     private boolean reply;
 
     private String location;
+
+    @JsonProperty("NER")
+    private NerKeyword nerKeyword;
 
     @JsonProperty("NER_Page_1")
     private String nerPage1;
