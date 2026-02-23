@@ -23,6 +23,7 @@ import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
+import com.togedy.togedy_server_v2.domain.study.event.StudyImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
@@ -37,6 +38,8 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -44,6 +47,9 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
 
     @InjectMocks
     StudyInternalService studyInternalService;
+
+    @Mock
+    ApplicationEventPublisher applicationEventPublisher;
 
     @Test
     public void 스터디_조회_시_스터디에_참여한_사용자는_joined값으로_true를_반환한다() {
@@ -247,7 +253,7 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
                 .isThrownBy(() -> studyInternalService.removeStudy(studyId, userId));
 
         // then
-        verify(s3Service).deleteFile("test");
+        verify(applicationEventPublisher).publishEvent(any(StudyImageRemovedEvent.class));
         verify(userStudyRepository).deleteAllByStudyId(studyId);
         verify(studyRepository).delete(study);
     }

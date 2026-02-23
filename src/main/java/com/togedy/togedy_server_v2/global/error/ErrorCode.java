@@ -65,6 +65,9 @@ public enum ErrorCode {
     STUDY_MEMBER_LIMIT_OUT_OF_RANGE(HttpStatus.CONFLICT, "S8011", "스터디 최대 인원은 1명 이상 30명 이하로 설정해야 합니다."),
     STUDY_MINIMUM_MEMBER_REQUIRED(HttpStatus.CONFLICT, "S9012", "스터디는 최소 한 명의 멤버가 존재해야 합니다."),
     STUDY_LEADER_CANNOT_REMOVE_SELF(HttpStatus.CONFLICT, "S9013", "스터디 리더는 방출할 수 없습니다."),
+    STUDY_ALREADY_JOINED(HttpStatus.CONFLICT, "S9014", "이미 가입한 스터디입니다."),
+    STUDY_NAME_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "S9015", "스터디 이름에 비속어가 포함되어 있습니다."),
+    STUDY_DESCRIPTION_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "S9016", "스터디 소개에 비속어가 포함되어 있습니다."),
 
     // USER_STUDY(9000)
     USER_STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "US9000", "해당 유저가 가입한 스터디를 찾을 수 없습니다."),
@@ -79,7 +82,12 @@ public enum ErrorCode {
     STUDY_SUBJECT_NOT_FOUND(HttpStatus.NOT_FOUND, "SC11000", "해당 과목을 찾을 수 없습니다."),
     STUDY_SUBJECT_NOT_OWNED(HttpStatus.UNAUTHORIZED, "SC11001", "해당 유저의 과목이 아닙니다."),
     DUPLICATE_STUDY_SUBJECT(HttpStatus.BAD_REQUEST, "SC11002", "이름과 색상이 동일한 과목이 존재합니다."),
-    INVALID_STUDY_SUBJECT_REORDER(HttpStatus.BAD_REQUEST, "SC11003", "과목 순서 변경 요청이 올바르지 않습니다.");
+    INVALID_STUDY_SUBJECT_REORDER(HttpStatus.BAD_REQUEST, "SC11003", "과목 순서 변경 요청이 올바르지 않습니다."),
+
+    // STUDY_TASK(12000)
+    STUDY_TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "ST12000", "해당 테스크를 찾을 수 없습니다."),
+    STUDY_TASK_NOT_OWNED(HttpStatus.UNAUTHORIZED, "ST12001", "해당 유저의 테스크가 아닙니다."),
+    INVALID_STUDY_TASK_NAME(HttpStatus.BAD_REQUEST, "ST12002", "테스크 이름은 비어 있을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

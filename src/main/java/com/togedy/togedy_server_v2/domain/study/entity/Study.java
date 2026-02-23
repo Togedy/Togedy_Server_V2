@@ -4,12 +4,15 @@ import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyDescriptionContainsBadWordException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberCountExceededException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitOutOfRangeException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMinimumMemberRequiredException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyNameContainsBadWordException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
+import com.togedy.togedy_server_v2.global.enums.BadWords;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -82,6 +85,8 @@ public class Study extends BaseEntity {
             String password,
             String tier
     ) {
+        validateStudyName(name);
+        validateStudyDescription(description);
         validateMemberLimitRange(memberLimit);
         this.type = type;
         this.goalTime = goalTime;
@@ -103,9 +108,11 @@ public class Study extends BaseEntity {
             String studyImageUrl
     ) {
         if (studyName != null) {
+            validateStudyName(studyName);
             this.name = studyName;
         }
         if (studyDescription != null) {
+            validateStudyDescription(studyDescription);
             this.description = studyDescription;
         }
         if (studyTag != null) {
@@ -196,4 +203,17 @@ public class Study extends BaseEntity {
             throw new StudyMinimumMemberRequiredException();
         }
     }
+
+    private void validateStudyName(String name) {
+        if (BadWords.containsBadWord(name)) {
+            throw new StudyNameContainsBadWordException();
+        }
+    }
+
+    private void validateStudyDescription(String description) {
+        if (BadWords.containsBadWord(description)) {
+            throw new StudyDescriptionContainsBadWordException();
+        }
+    }
+
 }
