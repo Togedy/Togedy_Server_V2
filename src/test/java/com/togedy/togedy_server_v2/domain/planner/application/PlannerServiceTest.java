@@ -5,10 +5,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.PlannerDailyImageRepository;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerTopResponse;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
+import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -26,6 +28,12 @@ class PlannerServiceTest {
 
     @Mock
     private DailyStudySummaryRepository dailyStudySummaryRepository;
+
+    @Mock
+    private PlannerDailyImageRepository plannerDailyImageRepository;
+
+    @Mock
+    private S3Service s3Service;
 
     @InjectMocks
     private PlannerService plannerService;
@@ -52,6 +60,8 @@ class PlannerServiceTest {
                 .willReturn(Optional.of(schedule));
         given(dailyStudySummaryRepository.findByUserIdAndDate(any(), any()))
                 .willReturn(Optional.of(summary));
+        given(plannerDailyImageRepository.findTopByUserIdAndDateLessThanEqualOrderByDateDesc(any(), any()))
+                .willReturn(Optional.empty());
 
         GetDailyPlannerTopResponse response = plannerService.findDailyPlannerTop(queryDate, userId);
 
@@ -71,6 +81,8 @@ class PlannerServiceTest {
         given(userScheduleRepository.findByUserIdAndDDayTrue(any()))
                 .willReturn(Optional.empty());
         given(dailyStudySummaryRepository.findByUserIdAndDate(any(), any()))
+                .willReturn(Optional.empty());
+        given(plannerDailyImageRepository.findTopByUserIdAndDateLessThanEqualOrderByDateDesc(any(), any()))
                 .willReturn(Optional.empty());
 
         GetDailyPlannerTopResponse response = plannerService.findDailyPlannerTop(queryDate, userId);
