@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -53,5 +54,14 @@ public class UserController {
     public ApiResponse<GetMySettingsResponse> readMySettings(@AuthenticationPrincipal AuthUser user) {
         GetMySettingsResponse response = userService.findMySettings(user.getId());
         return ApiUtil.success(response);
+    }
+
+    @PatchMapping("/me/settings/push")
+    public ApiResponse<Void> updatePushNotificationSetting(
+            @RequestBody PatchPushNotificationSettingRequest request,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        userService.modifyPushNotificationSetting(request, user.getId());
+        return ApiUtil.successOnly();
     }
 }
