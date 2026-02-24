@@ -65,18 +65,13 @@ public class PlannerService {
     @Transactional
     public void upsertDailyPlannerImage(LocalDate date, PutDailyPlannerImageRequest request, Long userId) {
         String plannerImageUrl = resolvePlannerImageUrl(request);
-        Optional<PlannerDailyImage> existing = plannerDailyImageRepository.findByUserIdAndDate(userId, date);
+        PlannerDailyImage dailyImage = plannerDailyImageRepository.findByUserIdAndDate(userId, date)
+                .orElseGet(() -> PlannerDailyImage.builder()
+                        .userId(userId)
+                        .date(date)
+                        .build());
 
-        if (existing.isPresent()) {
-            existing.get().updateImageUrl(plannerImageUrl);
-            return;
-        }
-
-        PlannerDailyImage dailyImage = PlannerDailyImage.builder()
-                .userId(userId)
-                .date(date)
-                .imageUrl(plannerImageUrl)
-                .build();
+        dailyImage.updateImageUrl(plannerImageUrl);
         plannerDailyImageRepository.save(dailyImage);
     }
 

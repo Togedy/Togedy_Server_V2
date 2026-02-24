@@ -15,7 +15,6 @@ import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -61,20 +60,21 @@ public class StudyTaskService {
                                 Math.max(0L, Duration.between(studyTime.getStartTime(), studyTime.getEndTime()).getSeconds()))
                 ));
 
-        List<DailyPlannerTaskDto> dailyPlanner = new ArrayList<>();
-        for (StudySubject studySubject : studySubjects) {
-            List<DailyPlannerTaskItemDto> taskList = tasksByStudySubjectId
-                    .getOrDefault(studySubject.getId(), List.of())
-                    .stream()
-                    .map(DailyPlannerTaskItemDto::from)
-                    .toList();
+        List<DailyPlannerTaskDto> dailyPlanner = studySubjects.stream()
+                .map(studySubject -> {
+                    List<DailyPlannerTaskItemDto> taskList = tasksByStudySubjectId
+                            .getOrDefault(studySubject.getId(), List.of())
+                            .stream()
+                            .map(DailyPlannerTaskItemDto::from)
+                            .toList();
 
-            String subjectStudyTime = TimeUtil.formatSecondsToHms(
-                    studyTimeBySubjectId.getOrDefault(studySubject.getId(), 0L)
-            );
+                    String subjectStudyTime = TimeUtil.formatSecondsToHms(
+                            studyTimeBySubjectId.getOrDefault(studySubject.getId(), 0L)
+                    );
 
-            dailyPlanner.add(DailyPlannerTaskDto.of(studySubject, subjectStudyTime, taskList));
-        }
+                    return DailyPlannerTaskDto.of(studySubject, subjectStudyTime, taskList);
+                })
+                .toList();
 
         return GetDailyPlannerTaskResponse.of(dailyPlanner);
     }
