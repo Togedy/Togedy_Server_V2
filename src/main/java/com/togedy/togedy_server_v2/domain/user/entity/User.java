@@ -2,13 +2,19 @@ package com.togedy.togedy_server_v2.domain.user.entity;
 
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -50,6 +56,7 @@ public class User extends BaseEntity {
         this.nickname = nickname;
         this.email = email;
         this.status = UserStatus.ACTIVE;
+        this.studyStreak = 0;
     }
 
     public static User create(String nickname, String email) {
@@ -65,6 +72,6 @@ public class User extends BaseEntity {
     }
 
     public static User createTemp(String email) {
-        return new User("tmp" + UUID.randomUUID().toString().substring(0,7), email);
+        return new User("tmp" + UUID.randomUUID().toString().substring(0, 7), email);
     }
 }
