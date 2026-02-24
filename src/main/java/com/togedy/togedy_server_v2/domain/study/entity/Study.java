@@ -165,6 +165,10 @@ public class Study extends BaseEntity {
     }
 
     public boolean isAchieved(DailyStudySummary dailyStudySummary) {
+        if (dailyStudySummary == null) {
+            return false;
+        }
+
         return dailyStudySummary.getStudyTime() >= this.goalTime;
     }
 
