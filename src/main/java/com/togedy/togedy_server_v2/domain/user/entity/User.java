@@ -84,4 +84,8 @@ public class User extends BaseEntity {
     public void changePushNotificationEnabled(boolean pushNotificationEnabled) {
         this.pushNotificationEnabled = pushNotificationEnabled;
     }
+
+    public void changeMarketingConsented(boolean marketingConsented) {
+        this.marketingConsented = marketingConsented;
+    }
 }

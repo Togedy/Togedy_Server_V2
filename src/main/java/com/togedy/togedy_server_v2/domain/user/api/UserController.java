@@ -64,4 +64,13 @@ public class UserController {
         userService.modifyPushNotificationSetting(request, user.getId());
         return ApiUtil.successOnly();
     }
+
+    @PatchMapping("/me/settings/marketing")
+    public ApiResponse<Void> updateMarketingConsentedSetting(
+            @RequestBody PatchMarketingConsentedSettingRequest request,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        userService.modifyMarketingConsentedSetting(request, user.getId());
+        return ApiUtil.successOnly();
+    }
 }

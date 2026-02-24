@@ -6,6 +6,7 @@ import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
+import com.togedy.togedy_server_v2.domain.user.api.PatchMarketingConsentedSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.api.PatchPushNotificationSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.dao.AuthProviderRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
@@ -142,5 +143,13 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
 
         user.changePushNotificationEnabled(request.getPushNotificationEnabled());
+    }
+
+    @Transactional
+    public void modifyMarketingConsentedSetting(PatchMarketingConsentedSettingRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.changeMarketingConsented(request.getMarketingConsented());
     }
 }
