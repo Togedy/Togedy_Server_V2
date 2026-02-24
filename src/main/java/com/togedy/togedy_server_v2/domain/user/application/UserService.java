@@ -10,6 +10,7 @@ import com.togedy.togedy_server_v2.domain.user.dao.AuthProviderRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.MyPageStudyDto;
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
@@ -125,5 +126,12 @@ public class UserService {
         }
 
         return MyPageStudyDto.from(study);
+    }
+
+    public GetMySettingsResponse findMySettings(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        return GetMySettingsResponse.from(user);
     }
 }

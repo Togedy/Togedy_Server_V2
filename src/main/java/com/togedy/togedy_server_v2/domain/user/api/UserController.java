@@ -3,6 +3,7 @@ package com.togedy.togedy_server_v2.domain.user.api;
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
@@ -45,6 +46,12 @@ public class UserController {
     @GetMapping("/me")
     public ApiResponse<GetMyPageResponse> readMyPage(@AuthenticationPrincipal AuthUser user) {
         GetMyPageResponse response = userService.findMyPage(user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @GetMapping("/me/settings")
+    public ApiResponse<GetMySettingsResponse> readMySettings(@AuthenticationPrincipal AuthUser user) {
+        GetMySettingsResponse response = userService.findMySettings(user.getId());
         return ApiUtil.success(response);
     }
 }
