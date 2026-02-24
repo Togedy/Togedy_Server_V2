@@ -73,4 +73,13 @@ public class UserController {
         userService.modifyMarketingConsentedSetting(request, user.getId());
         return ApiUtil.successOnly();
     }
+
+    @PatchMapping("/me/nickname")
+    public ApiResponse<Void> updateNickname(
+            @RequestBody PatchNicknameRequest request,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        userService.modifyNickname(request, user.getId());
+        return ApiUtil.successOnly();
+    }
 }

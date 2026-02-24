@@ -88,4 +88,8 @@ public class User extends BaseEntity {
     public void changeMarketingConsented(boolean marketingConsented) {
         this.marketingConsented = marketingConsented;
     }
+
+    public void changeNickname(String userName) {
+        this.nickname = userName;
+    }
 }
