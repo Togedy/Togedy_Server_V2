@@ -48,6 +48,12 @@ public class User extends BaseEntity {
     @Column(name = "last_activated_at", nullable = true)
     private LocalDateTime lastActivatedAt;
 
+    @Column(name = "push_notification_enabled", nullable = false)
+    private boolean pushNotificationEnabled;
+
+    @Column(name = "marketing_consented", nullable = false)
+    private boolean marketingConsented;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, columnDefinition = "varchar(20)")
     private UserStatus status;
