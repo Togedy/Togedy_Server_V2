@@ -87,7 +87,10 @@ public enum ErrorCode {
     // STUDY_TASK(12000)
     STUDY_TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "ST12000", "해당 테스크를 찾을 수 없습니다."),
     STUDY_TASK_NOT_OWNED(HttpStatus.UNAUTHORIZED, "ST12001", "해당 유저의 테스크가 아닙니다."),
-    INVALID_STUDY_TASK_NAME(HttpStatus.BAD_REQUEST, "ST12002", "테스크 이름은 비어 있을 수 없습니다.");
+    INVALID_STUDY_TASK_NAME(HttpStatus.BAD_REQUEST, "ST12002", "테스크 이름은 비어 있을 수 없습니다."),
+
+    // NOTICE(13000)
+    NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "N13000", "해당 공지사항을 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
