@@ -92,4 +92,10 @@ public class User extends BaseEntity {
     public void changeNickname(String userName) {
         this.nickname = userName;
     }
+
+    public String changeProfileImageUrl(String newImageUrl) {
+        String oldImageUrl = this.profileImageUrl;
+        this.profileImageUrl = newImageUrl;
+        return oldImageUrl;
+    }
 }

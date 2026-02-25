@@ -4,6 +4,10 @@ import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchNicknameRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileImageRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
@@ -15,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -80,6 +85,15 @@ public class UserController {
             @AuthenticationPrincipal AuthUser user
     ) {
         userService.modifyNickname(request, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @PatchMapping("/me/profile-image")
+    public ApiResponse<Void> updateProfileImage(
+            @ModelAttribute PatchProfileImageRequest request,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        userService.modifyProfileImage(request, user.getId());
         return ApiUtil.successOnly();
     }
 }

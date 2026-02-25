@@ -6,26 +6,31 @@ import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
-import com.togedy.togedy_server_v2.domain.user.api.PatchMarketingConsentedSettingRequest;
-import com.togedy.togedy_server_v2.domain.user.api.PatchNicknameRequest;
-import com.togedy.togedy_server_v2.domain.user.api.PatchPushNotificationSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.dao.AuthProviderRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.MyPageStudyDto;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchNicknameRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileImageRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateNicknameException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
+import com.togedy.togedy_server_v2.global.enums.ImageCategory;
+import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,11 +40,13 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
 
+    private final S3Service s3Service;
     private final UserRepository userRepository;
     private final StudyRepository studyRepository;
     private final UserStudyRepository userStudyRepository;
     private final AuthProviderRepository authProviderRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private final static int FIND_STUDY_COUNT = 2;
 
@@ -160,5 +167,35 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
 
         user.changeNickname(request.getUserName());
+    }
+
+    @Transactional
+    public void modifyProfileImage(PatchProfileImageRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        replaceUserProfileImage(request, user);
+    }
+
+    private void replaceUserProfileImage(PatchProfileImageRequest request, User user) {
+        String newImageUrl = resolveNewProfileImageUrl(request);
+        String oldImageUrl = user.changeProfileImageUrl(newImageUrl);
+        publishImageRemovedEvent(oldImageUrl);
+    }
+
+    private String resolveNewProfileImageUrl(PatchProfileImageRequest request) {
+        if (request.getRemoveUserProfileImage()) {
+            return null;
+        }
+
+        return s3Service.uploadFile(request.getUserProfileImage(), ImageCategory.PROFILE);
+    }
+
+    private void publishImageRemovedEvent(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return;
+        }
+
+        applicationEventPublisher.publishEvent(new UserProfileImageRemovedEvent(imageUrl));
     }
 }
