@@ -8,7 +8,6 @@ import com.togedy.togedy_server_v2.domain.support.dto.PostNoticeRequest;
 import com.togedy.togedy_server_v2.domain.support.entity.Notice;
 import com.togedy.togedy_server_v2.domain.support.exception.NoticeNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
-import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -38,10 +37,6 @@ public class NoticeService {
 
     @Transactional
     public void generateNotice(PostNoticeRequest request, Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException();
-        }
-
         Notice notice = Notice.builder()
                 .userId(userId)
                 .title(request.getNoticeTitle())
@@ -52,11 +47,7 @@ public class NoticeService {
     }
 
     @Transactional
-    public void modifyNotice(PatchNoticeRequest request, Long noticeId, Long userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new UserNotFoundException();
-        }
-
+    public void modifyNotice(PatchNoticeRequest request, Long noticeId) {
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(NoticeNotFoundException::new);
 
@@ -64,7 +55,7 @@ public class NoticeService {
     }
 
     @Transactional
-    public void removeNotice(Long noticeId, Long userId) {
+    public void removeNotice(Long noticeId) {
         Notice notice = noticeRepository.findById(noticeId)
                 .orElseThrow(NoticeNotFoundException::new);
 

@@ -35,19 +35,15 @@ public class AdminNoticeController {
     @PatchMapping("/{noticeId}")
     public ApiResponse<Void> updateNotice(
             @RequestBody PatchNoticeRequest request,
-            @PathVariable Long noticeId,
-            @AuthenticationPrincipal AuthUser user
+            @PathVariable Long noticeId
     ) {
-        noticeService.modifyNotice(request, noticeId, user.getId());
+        noticeService.modifyNotice(request, noticeId);
         return ApiUtil.successOnly();
     }
 
     @DeleteMapping("/{noticeId}")
-    public ApiResponse<Void> deleteNotice(
-            @PathVariable Long noticeId,
-            @AuthenticationPrincipal AuthUser user
-    ) {
-        noticeService.removeNotice(noticeId, user.getId());
+    public ApiResponse<Void> deleteNotice(@PathVariable Long noticeId) {
+        noticeService.removeNotice(noticeId);
         return ApiUtil.successOnly();
     }
 }
