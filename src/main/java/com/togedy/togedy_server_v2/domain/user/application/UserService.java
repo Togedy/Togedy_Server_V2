@@ -62,9 +62,7 @@ public class UserService {
         User user = User.create(request.getNickname(), request.getEmail());
         userRepository.save(user);
 
-        authProviderRepository.save(
-                AuthProvider.local(user, request.getEmail())
-        );
+        authProviderRepository.save(AuthProvider.local(user));
 
         return user.getId();
     }

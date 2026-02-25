@@ -54,6 +54,9 @@ public class User extends BaseEntity {
     @Column(name = "marketing_consented", nullable = false)
     private boolean marketingConsented;
 
+    @Column(name = "profile_completed", nullable = false)
+    private boolean profileCompleted;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, columnDefinition = "varchar(20)")
     private UserStatus status;
@@ -63,6 +66,7 @@ public class User extends BaseEntity {
         this.email = email;
         this.status = UserStatus.ACTIVE;
         this.studyStreak = 0;
+        this.profileCompleted = false;
     }
 
     public static User create(String nickname, String email) {
@@ -97,5 +101,9 @@ public class User extends BaseEntity {
         String oldImageUrl = this.profileImageUrl;
         this.profileImageUrl = newImageUrl;
         return oldImageUrl;
+    }
+
+    public void completeProfile() {
+        this.profileCompleted = true;
     }
 }
