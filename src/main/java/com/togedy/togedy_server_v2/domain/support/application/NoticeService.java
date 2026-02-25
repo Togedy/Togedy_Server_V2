@@ -3,6 +3,7 @@ package com.togedy.togedy_server_v2.domain.support.application;
 import com.togedy.togedy_server_v2.domain.support.dao.NoticeRepository;
 import com.togedy.togedy_server_v2.domain.support.dto.GetNoticeResponse;
 import com.togedy.togedy_server_v2.domain.support.dto.GetNoticesResponse;
+import com.togedy.togedy_server_v2.domain.support.dto.PatchNoticeRequest;
 import com.togedy.togedy_server_v2.domain.support.dto.PostNoticeRequest;
 import com.togedy.togedy_server_v2.domain.support.entity.Notice;
 import com.togedy.togedy_server_v2.domain.support.exception.NoticeNotFoundException;
@@ -48,5 +49,17 @@ public class NoticeService {
                 .build();
 
         noticeRepository.save(notice);
+    }
+
+    @Transactional
+    public void modifyNotice(PatchNoticeRequest request, Long noticeId, Long userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException();
+        }
+
+        Notice notice = noticeRepository.findById(noticeId)
+                .orElseThrow(NoticeNotFoundException::new);
+
+        notice.update(request.getNoticeTitle(), request.getNoticeContent());
     }
 }
