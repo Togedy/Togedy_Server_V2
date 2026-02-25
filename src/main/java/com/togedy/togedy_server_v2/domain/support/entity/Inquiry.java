@@ -5,6 +5,8 @@ import com.togedy.togedy_server_v2.domain.support.enums.InquiryType;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -28,6 +30,7 @@ public class Inquiry extends BaseEntity {
     @Column(name = "user_id", nullable = false)
     private Long userId;
 
+    @Enumerated(value = EnumType.STRING)
     @Column(name = "type", columnDefinition = "varchar(20)", nullable = false)
     private InquiryType type;
 
@@ -37,6 +40,7 @@ public class Inquiry extends BaseEntity {
     @Column(name = "reply_email", nullable = false)
     private String replyEmail;
 
+    @Enumerated(value = EnumType.STRING)
     @Column(name = "status", columnDefinition = "varchar(20)", nullable = false)
     private InquiryStatus status;
 
