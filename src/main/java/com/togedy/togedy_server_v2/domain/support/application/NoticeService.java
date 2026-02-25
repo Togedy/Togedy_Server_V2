@@ -62,4 +62,12 @@ public class NoticeService {
 
         notice.update(request.getNoticeTitle(), request.getNoticeContent());
     }
+
+    @Transactional
+    public void removeNotice(Long noticeId, Long userId) {
+        Notice notice = noticeRepository.findById(noticeId)
+                .orElseThrow(NoticeNotFoundException::new);
+
+        noticeRepository.delete(notice);
+    }
 }

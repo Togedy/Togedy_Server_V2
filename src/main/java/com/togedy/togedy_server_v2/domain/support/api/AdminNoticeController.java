@@ -8,6 +8,7 @@ import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,6 +39,15 @@ public class AdminNoticeController {
             @AuthenticationPrincipal AuthUser user
     ) {
         noticeService.modifyNotice(request, noticeId, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @DeleteMapping("/{noticeId}")
+    public ApiResponse<Void> deleteNotice(
+            @PathVariable Long noticeId,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        noticeService.removeNotice(noticeId, user.getId());
         return ApiUtil.successOnly();
     }
 }
