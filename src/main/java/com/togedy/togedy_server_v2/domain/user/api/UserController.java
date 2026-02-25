@@ -49,18 +49,21 @@ public class UserController {
         return ApiUtil.success(response);
     }
 
+    @Operation(summary = "마이페이지 조회", description = "본인의 마이페이지를 조회한다.")
     @GetMapping("/me")
     public ApiResponse<GetMyPageResponse> readMyPage(@AuthenticationPrincipal AuthUser user) {
         GetMyPageResponse response = userService.findMyPage(user.getId());
         return ApiUtil.success(response);
     }
 
+    @Operation(summary = "유저 설정 조회", description = "본인의 알림 설정 및 이메일을 조회한다.")
     @GetMapping("/me/settings")
     public ApiResponse<GetMySettingsResponse> readMySettings(@AuthenticationPrincipal AuthUser user) {
         GetMySettingsResponse response = userService.findMySettings(user.getId());
         return ApiUtil.success(response);
     }
 
+    @Operation(summary = "유저 푸시알림 여부 변경", description = "본인의 푸시알림 여부를 변경한다.")
     @PatchMapping("/me/settings/push")
     public ApiResponse<Void> updatePushNotificationSetting(
             @RequestBody PatchPushNotificationSettingRequest request,
@@ -70,6 +73,7 @@ public class UserController {
         return ApiUtil.successOnly();
     }
 
+    @Operation(summary = "유저 마케팅 수신 동의 여부 변경", description = "본인의 마케팅 수신 동의 여부를 변경한다.")
     @PatchMapping("/me/settings/marketing")
     public ApiResponse<Void> updateMarketingConsentedSetting(
             @RequestBody PatchMarketingConsentedSettingRequest request,
@@ -79,6 +83,7 @@ public class UserController {
         return ApiUtil.successOnly();
     }
 
+    @Operation(summary = "유저 닉네임 변경", description = "본인의 닉네임을 변경한다.")
     @PatchMapping("/me/nickname")
     public ApiResponse<Void> updateNickname(
             @RequestBody PatchNicknameRequest request,
@@ -88,6 +93,7 @@ public class UserController {
         return ApiUtil.successOnly();
     }
 
+    @Operation(summary = "유저 프로필 이미지 변경", description = "본인의 프로필 이미지를 변경한다.")
     @PatchMapping("/me/profile-image")
     public ApiResponse<Void> updateProfileImage(
             @ModelAttribute PatchProfileImageRequest request,
