@@ -72,4 +72,13 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
                 ORDER BY COUNT(u.id) DESC
             """)
     List<Study> findMostActiveStudies(Pageable pageable);
+
+    @Query("""
+                SELECT s
+                FROM Study s
+                JOIN UserStudy us ON us.studyId = s.id
+                WHERE us.userId = :userId
+                ORDER BY s.createdAt DESC
+            """)
+    List<Study> findRecentStudiesByUserId(@Param("userId") Long userId, Pageable pageable);
 }

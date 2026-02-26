@@ -2,13 +2,19 @@ package com.togedy.togedy_server_v2.domain.user.entity;
 
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "users")
@@ -42,6 +48,15 @@ public class User extends BaseEntity {
     @Column(name = "last_activated_at", nullable = true)
     private LocalDateTime lastActivatedAt;
 
+    @Column(name = "push_notification_enabled", nullable = false)
+    private boolean pushNotificationEnabled;
+
+    @Column(name = "marketing_consented", nullable = false)
+    private boolean marketingConsented;
+
+    @Column(name = "profile_completed", nullable = false)
+    private boolean profileCompleted;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, columnDefinition = "varchar(20)")
     private UserStatus status;
@@ -50,6 +65,8 @@ public class User extends BaseEntity {
         this.nickname = nickname;
         this.email = email;
         this.status = UserStatus.ACTIVE;
+        this.studyStreak = 0;
+        this.profileCompleted = false;
     }
 
     public static User create(String nickname, String email) {
@@ -65,6 +82,28 @@ public class User extends BaseEntity {
     }
 
     public static User createTemp(String email) {
-        return new User("tmp" + UUID.randomUUID().toString().substring(0,7), email);
+        return new User("tmp" + UUID.randomUUID().toString().substring(0, 7), email);
+    }
+
+    public void changePushNotificationEnabled(boolean pushNotificationEnabled) {
+        this.pushNotificationEnabled = pushNotificationEnabled;
+    }
+
+    public void changeMarketingConsented(boolean marketingConsented) {
+        this.marketingConsented = marketingConsented;
+    }
+
+    public void changeNickname(String userName) {
+        this.nickname = userName;
+    }
+
+    public String changeProfileImageUrl(String newImageUrl) {
+        String oldImageUrl = this.profileImageUrl;
+        this.profileImageUrl = newImageUrl;
+        return oldImageUrl;
+    }
+
+    public void completeProfile() {
+        this.profileCompleted = true;
     }
 }
