@@ -1,14 +1,38 @@
 package com.togedy.togedy_server_v2.domain.user.application;
 
+import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
+import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
+import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
+import com.togedy.togedy_server_v2.domain.study.entity.Study;
+import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.user.dao.AuthProviderRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.MyPageStudyDto;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchNicknameRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileImageRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateNicknameException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
+import com.togedy.togedy_server_v2.global.enums.ImageCategory;
+import com.togedy.togedy_server_v2.global.service.S3Service;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,8 +40,15 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class UserService {
 
+    private final S3Service s3Service;
     private final UserRepository userRepository;
+    private final StudyRepository studyRepository;
+    private final UserStudyRepository userStudyRepository;
     private final AuthProviderRepository authProviderRepository;
+    private final DailyStudySummaryRepository dailyStudySummaryRepository;
+    private final ApplicationEventPublisher applicationEventPublisher;
+
+    private final static int FIND_STUDY_COUNT = 2;
 
     @Transactional
     public Long generateUser(CreateUserRequest request) {
@@ -31,9 +62,7 @@ public class UserService {
         User user = User.create(request.getNickname(), request.getEmail());
         userRepository.save(user);
 
-        authProviderRepository.save(
-                AuthProvider.local(user, request.getEmail())
-        );
+        authProviderRepository.save(AuthProvider.local(user));
 
         return user.getId();
     }
@@ -42,5 +71,140 @@ public class UserService {
     public User loadUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
+    }
+
+    public GetMyPageResponse findMyPage(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        Long totalStudyTime = dailyStudySummaryRepository.findTotalStudyTimeByUserId(userId).orElse(0L);
+
+        Pageable pageable = PageRequest.of(0, FIND_STUDY_COUNT);
+
+        List<Study> studies = studyRepository.findRecentStudiesByUserId(userId, pageable);
+
+        List<Long> studyIds = studies.stream()
+                .map(Study::getId)
+                .toList();
+
+        List<UserStudy> userStudies = userStudyRepository.findAllByStudyIds(studyIds);
+
+        Map<Long, List<UserStudy>> userStudyMap = userStudies.stream()
+                .collect(Collectors.groupingBy(UserStudy::getStudyId));
+
+        List<Long> challengeUserIds = studies.stream()
+                .filter(Study::isChallengeStudy)
+                .flatMap(study -> userStudyMap.getOrDefault(study.getId(), List.of()).stream())
+                .map(UserStudy::getUserId)
+                .distinct()
+                .toList();
+
+        Map<Long, Long> studySummaryMap = dailyStudySummaryRepository
+                .findAllByUserIdsAndDate(challengeUserIds, LocalDate.now())
+                .stream()
+                .collect(Collectors.toMap(
+                        DailyStudySummary::getUserId,
+                        DailyStudySummary::getStudyTime
+                ));
+
+        List<MyPageStudyDto> studyDtos = studies.stream()
+                .map(study -> buildMyPageStudyDto(study, userStudyMap, studySummaryMap))
+                .toList();
+
+        return GetMyPageResponse.from(user, TimeUtil.formatSecondsToHms(totalStudyTime), studyDtos);
+    }
+
+    public GetMySettingsResponse findMySettings(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        return GetMySettingsResponse.from(user);
+    }
+
+    @Transactional
+    public void modifyPushNotificationSetting(PatchPushNotificationSettingRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.changePushNotificationEnabled(request.getPushNotificationEnabled());
+    }
+
+    @Transactional
+    public void modifyMarketingConsentedSetting(PatchMarketingConsentedSettingRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.changeMarketingConsented(request.getMarketingConsented());
+    }
+
+    @Transactional
+    public void modifyNickname(PatchNicknameRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.changeNickname(request.getNickname());
+    }
+
+    @Transactional
+    public void modifyProfileImage(PatchProfileImageRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        replaceUserProfileImage(request, user);
+    }
+
+    private MyPageStudyDto buildMyPageStudyDto(
+            Study study,
+            Map<Long, List<UserStudy>> userStudyMap,
+            Map<Long, Long> studySummaryMap
+    ) {
+        if (study.isChallengeStudy()) {
+            List<UserStudy> userStudies =
+                    userStudyMap.getOrDefault(study.getId(), List.of());
+
+            int completedMemberCount = 0;
+
+            for (UserStudy userStudy : userStudies) {
+                Long studyTime =
+                        studySummaryMap.getOrDefault(userStudy.getUserId(), 0L);
+
+                if (studyTime >= study.getGoalTime()) {
+                    completedMemberCount++;
+                }
+            }
+
+            boolean isCompleted =
+                    study.getMemberCount() == completedMemberCount;
+
+            return MyPageStudyDto.from(
+                    study,
+                    isCompleted,
+                    completedMemberCount
+            );
+        }
+
+        return MyPageStudyDto.from(study);
+    }
+
+    private void replaceUserProfileImage(PatchProfileImageRequest request, User user) {
+        String newImageUrl = resolveNewProfileImageUrl(request);
+        String oldImageUrl = user.changeProfileImageUrl(newImageUrl);
+        publishImageRemovedEvent(oldImageUrl);
+    }
+
+    private String resolveNewProfileImageUrl(PatchProfileImageRequest request) {
+        if (Boolean.TRUE.equals(request.getRemoveUserProfileImage())) {
+            return null;
+        }
+
+        return s3Service.uploadFile(request.getUserProfileImage(), ImageCategory.PROFILE);
+    }
+
+    private void publishImageRemovedEvent(String imageUrl) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return;
+        }
+
+        applicationEventPublisher.publishEvent(new UserProfileImageRemovedEvent(imageUrl));
     }
 }

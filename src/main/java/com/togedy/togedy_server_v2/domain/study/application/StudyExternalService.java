@@ -19,6 +19,7 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.global.enums.ImageCategory;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
@@ -331,7 +332,7 @@ public class StudyExternalService {
      */
     private String uploadStudyImage(MultipartFile image) {
         if (image != null) {
-            return s3Service.uploadFile(image);
+            return s3Service.uploadFile(image, ImageCategory.STUDY);
         }
         return null;
     }
