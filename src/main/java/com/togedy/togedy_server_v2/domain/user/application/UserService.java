@@ -92,8 +92,23 @@ public class UserService {
         Map<Long, List<UserStudy>> userStudyMap = userStudies.stream()
                 .collect(Collectors.groupingBy(UserStudy::getStudyId));
 
+        List<Long> challengeUserIds = studies.stream()
+                .filter(Study::isChallengeStudy)
+                .flatMap(study -> userStudyMap.getOrDefault(study.getId(), List.of()).stream())
+                .map(UserStudy::getUserId)
+                .distinct()
+                .toList();
+
+        Map<Long, Long> studySummaryMap = dailyStudySummaryRepository
+                .findAllByUserIdsAndDate(challengeUserIds, LocalDate.now())
+                .stream()
+                .collect(Collectors.toMap(
+                        DailyStudySummary::getUserId,
+                        DailyStudySummary::getStudyTime
+                ));
+
         List<MyPageStudyDto> studyDtos = studies.stream()
-                .map(study -> buildMyPageStudyDto(study, userStudyMap))
+                .map(study -> buildMyPageStudyDto(study, userStudyMap, studySummaryMap))
                 .toList();
 
         return GetMyPageResponse.from(user, TimeUtil.formatSecondsToHms(totalStudyTime), studyDtos);
@@ -127,7 +142,7 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        user.changeNickname(request.getUserName());
+        user.changeNickname(request.getNickname());
     }
 
     @Transactional
@@ -138,38 +153,34 @@ public class UserService {
         replaceUserProfileImage(request, user);
     }
 
-    private MyPageStudyDto buildMyPageStudyDto(Study study, Map<Long, List<UserStudy>> userStudyMap) {
+    private MyPageStudyDto buildMyPageStudyDto(
+            Study study,
+            Map<Long, List<UserStudy>> userStudyMap,
+            Map<Long, Long> studySummaryMap
+    ) {
         if (study.isChallengeStudy()) {
+            List<UserStudy> userStudies =
+                    userStudyMap.getOrDefault(study.getId(), List.of());
+
             int completedMemberCount = 0;
 
-            List<UserStudy> userStudies = userStudyMap.get(study.getId());
-
-            List<Long> userIds = userStudies.stream()
-                    .map(UserStudy::getUserId)
-                    .toList();
-
-            List<DailyStudySummary> dailyStudySummaries = dailyStudySummaryRepository.findAllByUserIdsAndDate(
-                    userIds,
-                    LocalDate.now()
-            );
-
-            Map<Long, Long> studySummaryMap = dailyStudySummaries.stream()
-                    .collect(Collectors.toMap(
-                            DailyStudySummary::getUserId,
-                            DailyStudySummary::getStudyTime
-                    ));
-
-            for (Long userId : userIds) {
-                Long studyTime = studySummaryMap.getOrDefault(userId, 0L);
+            for (UserStudy userStudy : userStudies) {
+                Long studyTime =
+                        studySummaryMap.getOrDefault(userStudy.getUserId(), 0L);
 
                 if (studyTime >= study.getGoalTime()) {
                     completedMemberCount++;
                 }
             }
 
-            boolean isCompleted = study.getMemberCount() == completedMemberCount;
+            boolean isCompleted =
+                    study.getMemberCount() == completedMemberCount;
 
-            return MyPageStudyDto.from(study, isCompleted, completedMemberCount);
+            return MyPageStudyDto.from(
+                    study,
+                    isCompleted,
+                    completedMemberCount
+            );
         }
 
         return MyPageStudyDto.from(study);
@@ -182,7 +193,7 @@ public class UserService {
     }
 
     private String resolveNewProfileImageUrl(PatchProfileImageRequest request) {
-        if (request.getRemoveUserProfileImage()) {
+        if (Boolean.TRUE.equals(request.getRemoveUserProfileImage())) {
             return null;
         }
 

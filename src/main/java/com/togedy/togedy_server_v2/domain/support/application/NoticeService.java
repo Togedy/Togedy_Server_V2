@@ -7,9 +7,10 @@ import com.togedy.togedy_server_v2.domain.support.dto.PatchNoticeRequest;
 import com.togedy.togedy_server_v2.domain.support.dto.PostNoticeRequest;
 import com.togedy.togedy_server_v2.domain.support.entity.Notice;
 import com.togedy.togedy_server_v2.domain.support.exception.NoticeNotFoundException;
-import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,11 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class NoticeService {
 
-    private final UserRepository userRepository;
     private final NoticeRepository noticeRepository;
 
     public List<GetNoticesResponse> findNotices() {
-        List<Notice> notices = noticeRepository.findAll();
+        List<Notice> notices = noticeRepository.findAll(Sort.by(Direction.DESC, "createdAt"));
 
         return notices.stream()
                 .map(GetNoticesResponse::from)

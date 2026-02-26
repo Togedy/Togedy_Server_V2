@@ -7,6 +7,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PatchNicknameRequest {
 
-    private String userName;
+    private String nickname;
 
 }

@@ -5,7 +5,6 @@ import com.togedy.togedy_server_v2.domain.support.dto.GetInquiryResponse;
 import com.togedy.togedy_server_v2.domain.support.dto.InquiryDto;
 import com.togedy.togedy_server_v2.domain.support.dto.PostInquiryRequest;
 import com.togedy.togedy_server_v2.domain.support.entity.Inquiry;
-import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -18,7 +17,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class InquiryService {
 
-    private final UserRepository userRepository;
     private final InquiryRepository inquiryRepository;
 
     @Transactional
