@@ -90,7 +90,10 @@ public enum ErrorCode {
     INVALID_STUDY_TASK_NAME(HttpStatus.BAD_REQUEST, "ST12002", "테스크 이름은 비어 있을 수 없습니다."),
 
     // NOTICE(13000)
-    NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "N13000", "해당 공지사항을 찾을 수 없습니다.");
+    NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "N13000", "해당 공지사항을 찾을 수 없습니다."),
+
+    // TIMER(14000)
+    TIMER_ALREADY_RUNNING(HttpStatus.CONFLICT, "T14000", "이미 진행 중인 타이머가 존재합니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
