@@ -72,7 +72,7 @@ class PlannerServiceTest {
         assertThat(response.getDate()).isEqualTo(queryDate);
         assertThat(response.getUserScheduleName()).isEqualTo("수능");
         assertThat(response.getRemainingDays()).isEqualTo(TimeUtil.calculateDaysUntil(ddayDate));
-        assertThat(response.getTotalStudyTime()).isEqualTo("12:00:04");
+        assertThat(response.getTotalStudyTime()).isEqualTo(43204L);
         assertThat(response.getPlannerImage()).isNull();
     }
 
@@ -94,7 +94,7 @@ class PlannerServiceTest {
         assertThat(response.getDate()).isEqualTo(queryDate);
         assertThat(response.getUserScheduleName()).isNull();
         assertThat(response.getRemainingDays()).isNull();
-        assertThat(response.getTotalStudyTime()).isEqualTo("00:00:00");
+        assertThat(response.getTotalStudyTime()).isEqualTo(0L);
         assertThat(response.getPlannerImage()).isNull();
     }
 

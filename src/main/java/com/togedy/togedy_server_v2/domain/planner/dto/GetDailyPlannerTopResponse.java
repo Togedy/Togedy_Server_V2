@@ -12,7 +12,7 @@ public class GetDailyPlannerTopResponse {
     private boolean hasDday;
     private String userScheduleName;
     private Integer remainingDays;
-    private String totalStudyTime;
+    private Long totalStudyTime;
     private String plannerImage;
 
     public static GetDailyPlannerTopResponse of(
@@ -20,7 +20,7 @@ public class GetDailyPlannerTopResponse {
             boolean hasDday,
             String userScheduleName,
             Integer remainingDays,
-            String totalStudyTime,
+            Long totalStudyTime,
             String plannerImage
     ) {
         return GetDailyPlannerTopResponse.builder()

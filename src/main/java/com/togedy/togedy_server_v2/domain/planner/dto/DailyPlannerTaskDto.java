@@ -12,12 +12,12 @@ public class DailyPlannerTaskDto {
     private Long subjectId;
     private String subjectName;
     private String subjectColor;
-    private String subjectStudyTime;
+    private Long subjectStudyTime;
     private List<DailyPlannerTaskItemDto> taskList;
 
     public static DailyPlannerTaskDto of(
             StudySubject studySubject,
-            String subjectStudyTime,
+            Long subjectStudyTime,
             List<DailyPlannerTaskItemDto> taskList
     ) {
         return DailyPlannerTaskDto.builder()

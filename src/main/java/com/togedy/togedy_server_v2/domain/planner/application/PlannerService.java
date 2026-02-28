@@ -46,7 +46,7 @@ public class PlannerService {
                     true,
                     schedule.getName(),
                     remainingDays,
-                    TimeUtil.formatSecondsToHms(dailyStudyTime),
+                    dailyStudyTime,
                     plannerImage
             );
         }
@@ -56,7 +56,7 @@ public class PlannerService {
                 false,
                 null,
                 null,
-                TimeUtil.formatSecondsToHms(dailyStudyTime),
+                dailyStudyTime,
                 plannerImage
         );
     }
