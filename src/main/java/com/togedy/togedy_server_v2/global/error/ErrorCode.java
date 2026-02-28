@@ -95,6 +95,9 @@ public enum ErrorCode {
 
     // TIMER(14000)
     TIMER_ALREADY_RUNNING(HttpStatus.CONFLICT, "T14000", "이미 진행 중인 타이머가 존재합니다."),
+    TIMER_NOT_FOUND(HttpStatus.NOT_FOUND, "T14001", "해당 타이머를 찾을 수 없습니다."),
+    TIMER_NOT_OWNED(HttpStatus.FORBIDDEN, "T14002", "해당 유저의 타이머가 아닙니다."),
+    TIMER_ALREADY_STOPPED(HttpStatus.CONFLICT, "T14003", "이미 종료된 타이머입니다."),
 
     // PLANNER(15000)
     INVALID_PLANNER_IMAGE(HttpStatus.BAD_REQUEST, "PL15000", "플래너 이미지 요청이 올바르지 않습니다.");
