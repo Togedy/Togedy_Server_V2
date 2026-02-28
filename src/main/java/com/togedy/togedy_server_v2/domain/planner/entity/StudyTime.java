@@ -6,11 +6,11 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -32,6 +32,14 @@ public class StudyTime {
     @Column(name = "start_time", nullable = false)
     private LocalDateTime startTime;
 
-    @Column(name = "end_time", nullable = false)
+    @Column(name = "end_time", nullable = true)
     private LocalDateTime endTime;
+
+    @Builder
+    public StudyTime(Long userId, Long studySubjectId, LocalDateTime startTime, LocalDateTime endTime) {
+        this.userId = userId;
+        this.studySubjectId = studySubjectId;
+        this.startTime = startTime;
+        this.endTime = endTime;
+    }
 }
