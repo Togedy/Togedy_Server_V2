@@ -12,7 +12,6 @@ import com.togedy.togedy_server_v2.domain.planner.entity.StudyTask;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
 import com.togedy.togedy_server_v2.domain.planner.exception.*;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -57,7 +56,7 @@ public class StudyTaskService {
                 .collect(Collectors.groupingBy(
                         StudyTime::getStudySubjectId,
                         Collectors.summingLong(studyTime ->
-                                Math.max(0L, Duration.between(studyTime.getStartTime(), studyTime.getEndTime()).getSeconds()))
+                                TimeUtil.calculateStudySeconds(studyTime.getStartTime(), studyTime.getEndTime()))
                 ));
 
         List<DailyPlannerTaskDto> dailyPlanner = studySubjects.stream()
@@ -68,9 +67,7 @@ public class StudyTaskService {
                             .map(DailyPlannerTaskItemDto::from)
                             .toList();
 
-                    String subjectStudyTime = TimeUtil.formatSecondsToHms(
-                            studyTimeBySubjectId.getOrDefault(studySubject.getId(), 0L)
-                    );
+                    Long subjectStudyTime = studyTimeBySubjectId.getOrDefault(studySubject.getId(), 0L);
 
                     return DailyPlannerTaskDto.of(studySubject, subjectStudyTime, taskList);
                 })
