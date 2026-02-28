@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.planner.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetRunningTimerResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopRequest;
@@ -72,6 +73,17 @@ public class TimerService {
         LocalDateTime endTime = LocalDateTime.now();
         studyTime.stop(endTime);
         return PostTimerStopResponse.of(studyTime.getId(), studyTime.getStartTime(), endTime);
+    }
+
+    @Transactional(readOnly = true)
+    public GetRunningTimerResponse findRunningTimer(Long userId) {
+        return studyTimeRepository.findByUserIdAndEndTimeIsNull(userId)
+                .map(studyTime -> GetRunningTimerResponse.of(
+                        studyTime.getId(),
+                        studyTime.getStudySubjectId(),
+                        studyTime.getStartTime()
+                ))
+                .orElse(null);
     }
 
     private void validateStartRequest(PostTimerStartRequest request) {
