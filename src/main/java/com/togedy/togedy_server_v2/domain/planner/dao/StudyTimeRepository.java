@@ -23,4 +23,18 @@ public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
     );
 
     Optional<StudyTime> findByUserIdAndEndTimeIsNull(Long userId);
+
+    @Query("""
+            SELECT st
+            FROM StudyTime st
+            WHERE st.userId = :userId
+                AND st.startTime >= :startTime
+                AND st.startTime < :endTime
+                AND st.endTime IS NOT NULL
+            """)
+    List<StudyTime> findDailyStudyTimesByUserId(
+            Long userId,
+            LocalDateTime startTime,
+            LocalDateTime endTime
+    );
 }

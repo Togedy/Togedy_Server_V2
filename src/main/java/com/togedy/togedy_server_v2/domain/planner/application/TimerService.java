@@ -7,6 +7,7 @@ import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.SubjectStudyTimeItemResponse;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
 import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudySubjectException;
@@ -16,7 +17,11 @@ import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyRunningE
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyStoppedException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotFoundException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotOwnedException;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,6 +89,36 @@ public class TimerService {
                         studyTime.getStartTime()
                 ))
                 .orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<SubjectStudyTimeItemResponse> findTodaySubjectStudyTimes(Long userId) {
+        List<StudySubject> studySubjects = studySubjectRepository.findAllByUserId(userId);
+        if (studySubjects.isEmpty()) {
+            return List.of();
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime dayStart = TimeUtil.startOfStudyDay(now);
+        LocalDateTime dayEnd = TimeUtil.endOfStudyDay(now);
+
+        List<StudyTime> studyTimes = studyTimeRepository.findDailyStudyTimesByUserId(userId, dayStart, dayEnd);
+        Map<Long, Long> studyTimeBySubjectId = studyTimes.stream()
+                .collect(Collectors.groupingBy(
+                        StudyTime::getStudySubjectId,
+                        Collectors.summingLong(studyTime ->
+                                TimeUtil.calculateStudySeconds(studyTime.getStartTime(), studyTime.getEndTime()))
+                ));
+
+        List<SubjectStudyTimeItemResponse> response = studySubjects.stream()
+                .map(subject -> SubjectStudyTimeItemResponse.of(
+                        subject.getId(),
+                        subject.getName(),
+                        studyTimeBySubjectId.getOrDefault(subject.getId(), 0L)
+                ))
+                .toList();
+
+        return response;
     }
 
     private void validateStartRequest(PostTimerStartRequest request) {

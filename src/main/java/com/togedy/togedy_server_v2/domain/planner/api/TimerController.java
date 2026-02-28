@@ -6,10 +6,12 @@ import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.SubjectStudyTimeItemResponse;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -49,6 +51,15 @@ public class TimerController {
     @GetMapping("/running")
     public ApiResponse<GetRunningTimerResponse> readRunningTimer(@AuthenticationPrincipal AuthUser user) {
         GetRunningTimerResponse response = timerService.findRunningTimer(user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "누적 공부시간 조회", description = "현재 스터디 데이 기준 과목별 누적 공부시간(초)을 조회한다.")
+    @GetMapping("/summary")
+    public ApiResponse<List<SubjectStudyTimeItemResponse>> readTimerSummary(
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        List<SubjectStudyTimeItemResponse> response = timerService.findTodaySubjectStudyTimes(user.getId());
         return ApiUtil.success(response);
     }
 }
