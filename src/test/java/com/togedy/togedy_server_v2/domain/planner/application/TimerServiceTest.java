@@ -12,12 +12,15 @@ import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.SubjectStudyTimeItemResponse;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
 import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudySubjectException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyRunningException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyStoppedException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotOwnedException;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -189,4 +192,41 @@ class TimerServiceTest {
 
         assertThat(response).isNull();
     }
+
+    @Test
+    void 오늘_과목별_누적_공부시간을_조회한다() {
+        Long userId = 1L;
+        StudySubject subject = StudySubject.builder()
+                .userId(userId)
+                .name("수학")
+                .color("파란색")
+                .orderIndex(1L)
+                .build();
+        ReflectionTestUtils.setField(subject, "id", 10L);
+
+        StudyTime first = StudyTime.builder()
+                .userId(userId)
+                .studySubjectId(10L)
+                .startTime(LocalDateTime.of(2026, 2, 28, 10, 0, 0))
+                .endTime(LocalDateTime.of(2026, 2, 28, 10, 30, 0))
+                .build();
+        StudyTime second = StudyTime.builder()
+                .userId(userId)
+                .studySubjectId(10L)
+                .startTime(LocalDateTime.of(2026, 2, 28, 11, 0, 0))
+                .endTime(LocalDateTime.of(2026, 2, 28, 11, 10, 0))
+                .build();
+
+        given(studySubjectRepository.findAllByUserId(userId)).willReturn(List.of(subject));
+        given(studyTimeRepository.findDailyStudyTimesByUserId(org.mockito.ArgumentMatchers.eq(userId), any(), any()))
+                .willReturn(List.of(first, second));
+
+        List<SubjectStudyTimeItemResponse> response = timerService.findTodaySubjectStudyTimes(userId);
+
+        assertThat(response).hasSize(1);
+        assertThat(response.get(0).getSubjectId()).isEqualTo(10L);
+        assertThat(response.get(0).getSubjectName()).isEqualTo("수학");
+        assertThat(response.get(0).getStudyTime()).isEqualTo(2400L);
+    }
+
 }
