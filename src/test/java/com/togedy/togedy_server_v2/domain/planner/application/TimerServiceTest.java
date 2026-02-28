@@ -11,6 +11,7 @@ import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartResponse;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
+import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudySubjectException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyRunningException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -80,5 +81,14 @@ class TimerServiceTest {
 
         assertThatThrownBy(() -> timerService.startTimer(request, userId))
                 .isInstanceOf(TimerAlreadyRunningException.class);
+    }
+
+    @Test
+    void 과목_id가_없거나_유효하지_않으면_예외가_발생한다() {
+        Long userId = 1L;
+        PostTimerStartRequest request = new PostTimerStartRequest();
+
+        assertThatThrownBy(() -> timerService.startTimer(request, userId))
+                .isInstanceOf(InvalidStudySubjectException.class);
     }
 }

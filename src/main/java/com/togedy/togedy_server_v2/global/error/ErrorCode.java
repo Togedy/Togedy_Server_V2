@@ -83,6 +83,7 @@ public enum ErrorCode {
     STUDY_SUBJECT_NOT_OWNED(HttpStatus.UNAUTHORIZED, "SC11001", "해당 유저의 과목이 아닙니다."),
     DUPLICATE_STUDY_SUBJECT(HttpStatus.BAD_REQUEST, "SC11002", "이름과 색상이 동일한 과목이 존재합니다."),
     INVALID_STUDY_SUBJECT_REORDER(HttpStatus.BAD_REQUEST, "SC11003", "과목 순서 변경 요청이 올바르지 않습니다."),
+    INVALID_STUDY_SUBJECT(HttpStatus.BAD_REQUEST, "SC11004", "유효하지 않은 과목 요청입니다."),
 
     // STUDY_TASK(12000)
     STUDY_TASK_NOT_FOUND(HttpStatus.NOT_FOUND, "ST12000", "해당 테스크를 찾을 수 없습니다."),
@@ -93,7 +94,10 @@ public enum ErrorCode {
     NOTICE_NOT_FOUND(HttpStatus.NOT_FOUND, "N13000", "해당 공지사항을 찾을 수 없습니다."),
 
     // TIMER(14000)
-    TIMER_ALREADY_RUNNING(HttpStatus.CONFLICT, "T14000", "이미 진행 중인 타이머가 존재합니다.");
+    TIMER_ALREADY_RUNNING(HttpStatus.CONFLICT, "T14000", "이미 진행 중인 타이머가 존재합니다."),
+
+    // PLANNER(15000)
+    INVALID_PLANNER_IMAGE(HttpStatus.BAD_REQUEST, "PL15000", "플래너 이미지 요청이 올바르지 않습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

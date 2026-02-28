@@ -6,11 +6,10 @@ import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartResponse;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
+import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudySubjectException;
 import com.togedy.togedy_server_v2.domain.planner.exception.StudySubjectNotFoundException;
 import com.togedy.togedy_server_v2.domain.planner.exception.StudySubjectNotOwnedException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyRunningException;
-import com.togedy.togedy_server_v2.global.error.CustomException;
-import com.togedy.togedy_server_v2.global.error.ErrorCode;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -52,8 +51,8 @@ public class TimerService {
     }
 
     private void validateStartRequest(PostTimerStartRequest request) {
-        if (request == null || request.getStudySubjectId() == null) {
-            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "studySubjectId는 필수입니다.");
+        if (request == null || request.getStudySubjectId() == null || request.getStudySubjectId() <= 0) {
+            throw new InvalidStudySubjectException();
         }
     }
 }
