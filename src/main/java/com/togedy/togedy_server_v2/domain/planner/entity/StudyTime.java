@@ -42,4 +42,8 @@ public class StudyTime {
         this.startTime = startTime;
         this.endTime = endTime;
     }
+
+    public void stop(LocalDateTime endTime) {
+        this.endTime = endTime;
+    }
 }

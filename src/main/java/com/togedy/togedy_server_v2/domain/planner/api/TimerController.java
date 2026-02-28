@@ -3,6 +3,8 @@ package com.togedy.togedy_server_v2.domain.planner.api;
 import com.togedy.togedy_server_v2.domain.planner.application.TimerService;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopRequest;
+import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopResponse;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
@@ -28,6 +30,16 @@ public class TimerController {
             @AuthenticationPrincipal AuthUser user
     ) {
         PostTimerStartResponse response = timerService.startTimer(request, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "타이머 종료", description = "해당 타이머를 종료한다.")
+    @PostMapping("/stop")
+    public ApiResponse<PostTimerStopResponse> stopTimer(
+            @RequestBody PostTimerStopRequest request,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        PostTimerStopResponse response = timerService.stopTimer(request, user.getId());
         return ApiUtil.success(response);
     }
 }
