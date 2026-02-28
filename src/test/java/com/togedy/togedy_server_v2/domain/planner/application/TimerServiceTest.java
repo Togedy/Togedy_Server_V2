@@ -7,6 +7,7 @@ import static org.mockito.BDDMockito.given;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetRunningTimerResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopRequest;
@@ -157,5 +158,35 @@ class TimerServiceTest {
 
         assertThatThrownBy(() -> timerService.stopTimer(request, 1L))
                 .isInstanceOf(TimerAlreadyStoppedException.class);
+    }
+
+    @Test
+    void 실행_중인_타이머를_조회한다() {
+        Long userId = 1L;
+        StudyTime running = StudyTime.builder()
+                .userId(userId)
+                .studySubjectId(10L)
+                .startTime(java.time.LocalDateTime.of(2026, 2, 28, 10, 0, 0))
+                .endTime(null)
+                .build();
+        ReflectionTestUtils.setField(running, "id", 100L);
+
+        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(userId)).willReturn(Optional.of(running));
+
+        GetRunningTimerResponse response = timerService.findRunningTimer(userId);
+
+        assertThat(response).isNotNull();
+        assertThat(response.getTimerId()).isEqualTo(100L);
+        assertThat(response.getSubjectId()).isEqualTo(10L);
+        assertThat(response.getStartTime()).isEqualTo(java.time.LocalDateTime.of(2026, 2, 28, 10, 0, 0));
+    }
+
+    @Test
+    void 실행_중인_타이머가_없으면_null을_반환한다() {
+        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(1L)).willReturn(Optional.empty());
+
+        GetRunningTimerResponse response = timerService.findRunningTimer(1L);
+
+        assertThat(response).isNull();
     }
 }
