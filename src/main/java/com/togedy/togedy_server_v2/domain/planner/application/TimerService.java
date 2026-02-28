@@ -3,6 +3,7 @@ package com.togedy.togedy_server_v2.domain.planner.application;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetRunningTimerResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetTimerTotalResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopRequest;
@@ -119,6 +120,19 @@ public class TimerService {
                 .toList();
 
         return response;
+    }
+
+    @Transactional(readOnly = true)
+    public GetTimerTotalResponse findTodayTotalStudyTime(Long userId) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime dayStart = TimeUtil.startOfStudyDay(now);
+        LocalDateTime dayEnd = TimeUtil.endOfStudyDay(now);
+
+        long totalStudyTime = studyTimeRepository.findDailyStudyTimesByUserId(userId, dayStart, dayEnd).stream()
+                .mapToLong(studyTime -> TimeUtil.calculateStudySeconds(studyTime.getStartTime(), studyTime.getEndTime()))
+                .sum();
+
+        return GetTimerTotalResponse.of(totalStudyTime);
     }
 
     private void validateStartRequest(PostTimerStartRequest request) {

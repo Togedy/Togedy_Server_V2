@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.planner.api;
 
 import com.togedy.togedy_server_v2.domain.planner.application.TimerService;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetRunningTimerResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetTimerTotalResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopRequest;
@@ -60,6 +61,13 @@ public class TimerController {
             @AuthenticationPrincipal AuthUser user
     ) {
         List<SubjectStudyTimeItemResponse> response = timerService.findTodaySubjectStudyTimes(user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "총 공부시간 조회", description = "현재 스터디 데이 기준 총 공부시간(초)을 조회한다.")
+    @GetMapping("/total")
+    public ApiResponse<GetTimerTotalResponse> readTimerTotal(@AuthenticationPrincipal AuthUser user) {
+        GetTimerTotalResponse response = timerService.findTodayTotalStudyTime(user.getId());
         return ApiUtil.success(response);
     }
 }
