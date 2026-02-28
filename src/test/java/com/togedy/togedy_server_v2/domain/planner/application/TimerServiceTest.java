@@ -205,22 +205,9 @@ class TimerServiceTest {
                 .build();
         ReflectionTestUtils.setField(subject, "id", 10L);
 
-        StudyTime first = StudyTime.builder()
-                .userId(userId)
-                .studySubjectId(10L)
-                .startTime(LocalDateTime.of(2026, 2, 28, 10, 0, 0))
-                .endTime(LocalDateTime.of(2026, 2, 28, 10, 30, 0))
-                .build();
-        StudyTime second = StudyTime.builder()
-                .userId(userId)
-                .studySubjectId(10L)
-                .startTime(LocalDateTime.of(2026, 2, 28, 11, 0, 0))
-                .endTime(LocalDateTime.of(2026, 2, 28, 11, 10, 0))
-                .build();
-
         given(studySubjectRepository.findAllByUserId(userId)).willReturn(List.of(subject));
-        given(studyTimeRepository.findDailyStudyTimesByUserId(org.mockito.ArgumentMatchers.eq(userId), any(), any()))
-                .willReturn(List.of(first, second));
+        given(studyTimeRepository.findDailyStudyTimeBySubject(org.mockito.ArgumentMatchers.eq(userId), any(), any()))
+                .willReturn(java.util.Collections.singletonList(new Object[]{10L, 2400L}));
 
         List<SubjectStudyTimeItemResponse> response = timerService.findTodaySubjectStudyTimes(userId);
 
@@ -233,21 +220,8 @@ class TimerServiceTest {
     @Test
     void 오늘_총_공부시간을_조회한다() {
         Long userId = 1L;
-        StudyTime first = StudyTime.builder()
-                .userId(userId)
-                .studySubjectId(10L)
-                .startTime(LocalDateTime.of(2026, 2, 28, 10, 0, 0))
-                .endTime(LocalDateTime.of(2026, 2, 28, 10, 30, 0))
-                .build();
-        StudyTime second = StudyTime.builder()
-                .userId(userId)
-                .studySubjectId(11L)
-                .startTime(LocalDateTime.of(2026, 2, 28, 11, 0, 0))
-                .endTime(LocalDateTime.of(2026, 2, 28, 11, 10, 0))
-                .build();
-
-        given(studyTimeRepository.findDailyStudyTimesByUserId(org.mockito.ArgumentMatchers.eq(userId), any(), any()))
-                .willReturn(List.of(first, second));
+        given(studyTimeRepository.sumDailyStudyTimeByUserId(org.mockito.ArgumentMatchers.eq(userId), any(), any()))
+                .willReturn(2400L);
 
         GetTimerTotalResponse response = timerService.findTodayTotalStudyTime(userId);
 

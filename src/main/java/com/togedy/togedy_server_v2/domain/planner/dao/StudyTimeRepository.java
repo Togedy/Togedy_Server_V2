@@ -37,4 +37,33 @@ public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
             LocalDateTime startTime,
             LocalDateTime endTime
     );
+
+    @Query(value = """
+            SELECT st.study_subject_id, COALESCE(SUM(TIMESTAMPDIFF(SECOND, st.start_time, st.end_time)), 0)
+            FROM study_time st
+            WHERE st.user_id = :userId
+              AND st.start_time >= :startTime
+              AND st.start_time < :endTime
+              AND st.end_time IS NOT NULL
+            GROUP BY st.study_subject_id
+            """, nativeQuery = true)
+    List<Object[]> findDailyStudyTimeBySubject(
+            Long userId,
+            LocalDateTime startTime,
+            LocalDateTime endTime
+    );
+
+    @Query(value = """
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(SECOND, st.start_time, st.end_time)), 0)
+            FROM study_time st
+            WHERE st.user_id = :userId
+              AND st.start_time >= :startTime
+              AND st.start_time < :endTime
+              AND st.end_time IS NOT NULL
+            """, nativeQuery = true)
+    Long sumDailyStudyTimeByUserId(
+            Long userId,
+            LocalDateTime startTime,
+            LocalDateTime endTime
+    );
 }

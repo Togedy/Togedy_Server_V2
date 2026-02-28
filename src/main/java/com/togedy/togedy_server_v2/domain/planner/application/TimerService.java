@@ -20,9 +20,9 @@ import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotFoundExcepti
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotOwnedException;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -103,13 +103,13 @@ public class TimerService {
         LocalDateTime dayStart = TimeUtil.startOfStudyDay(now);
         LocalDateTime dayEnd = TimeUtil.endOfStudyDay(now);
 
-        List<StudyTime> studyTimes = studyTimeRepository.findDailyStudyTimesByUserId(userId, dayStart, dayEnd);
-        Map<Long, Long> studyTimeBySubjectId = studyTimes.stream()
-                .collect(Collectors.groupingBy(
-                        StudyTime::getStudySubjectId,
-                        Collectors.summingLong(studyTime ->
-                                TimeUtil.calculateStudySeconds(studyTime.getStartTime(), studyTime.getEndTime()))
-                ));
+        Map<Long, Long> studyTimeBySubjectId = new HashMap<>();
+        List<Object[]> rows = studyTimeRepository.findDailyStudyTimeBySubject(userId, dayStart, dayEnd);
+        for (Object[] row : rows) {
+            Long subjectId = ((Number) row[0]).longValue();
+            Long studyTime = ((Number) row[1]).longValue();
+            studyTimeBySubjectId.put(subjectId, studyTime);
+        }
 
         List<SubjectStudyTimeItemResponse> response = studySubjects.stream()
                 .map(subject -> SubjectStudyTimeItemResponse.of(
@@ -128,9 +128,7 @@ public class TimerService {
         LocalDateTime dayStart = TimeUtil.startOfStudyDay(now);
         LocalDateTime dayEnd = TimeUtil.endOfStudyDay(now);
 
-        long totalStudyTime = studyTimeRepository.findDailyStudyTimesByUserId(userId, dayStart, dayEnd).stream()
-                .mapToLong(studyTime -> TimeUtil.calculateStudySeconds(studyTime.getStartTime(), studyTime.getEndTime()))
-                .sum();
+        Long totalStudyTime = studyTimeRepository.sumDailyStudyTimeByUserId(userId, dayStart, dayEnd);
 
         return GetTimerTotalResponse.of(totalStudyTime);
     }
