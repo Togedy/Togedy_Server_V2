@@ -8,6 +8,7 @@ import static org.mockito.BDDMockito.given;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetRunningTimerResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetTimerTotalResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopRequest;
@@ -227,6 +228,30 @@ class TimerServiceTest {
         assertThat(response.get(0).getSubjectId()).isEqualTo(10L);
         assertThat(response.get(0).getSubjectName()).isEqualTo("수학");
         assertThat(response.get(0).getStudyTime()).isEqualTo(2400L);
+    }
+
+    @Test
+    void 오늘_총_공부시간을_조회한다() {
+        Long userId = 1L;
+        StudyTime first = StudyTime.builder()
+                .userId(userId)
+                .studySubjectId(10L)
+                .startTime(LocalDateTime.of(2026, 2, 28, 10, 0, 0))
+                .endTime(LocalDateTime.of(2026, 2, 28, 10, 30, 0))
+                .build();
+        StudyTime second = StudyTime.builder()
+                .userId(userId)
+                .studySubjectId(11L)
+                .startTime(LocalDateTime.of(2026, 2, 28, 11, 0, 0))
+                .endTime(LocalDateTime.of(2026, 2, 28, 11, 10, 0))
+                .build();
+
+        given(studyTimeRepository.findDailyStudyTimesByUserId(org.mockito.ArgumentMatchers.eq(userId), any(), any()))
+                .willReturn(List.of(first, second));
+
+        GetTimerTotalResponse response = timerService.findTodayTotalStudyTime(userId);
+
+        assertThat(response.getStudyTime()).isEqualTo(2400L);
     }
 
 }
