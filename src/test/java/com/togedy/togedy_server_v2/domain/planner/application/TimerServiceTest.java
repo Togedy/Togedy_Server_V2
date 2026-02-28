@@ -66,7 +66,7 @@ class TimerServiceTest {
 
         given(studyTimeRepository.findByUserIdAndEndTimeIsNull(userId)).willReturn(Optional.empty());
         given(studySubjectRepository.findActiveById(studySubjectId)).willReturn(Optional.of(studySubject));
-        given(studyTimeRepository.save(any(StudyTime.class))).willReturn(saved);
+        given(studyTimeRepository.saveAndFlush(any(StudyTime.class))).willReturn(saved);
 
         PostTimerStartResponse response = timerService.startTimer(request, userId);
 

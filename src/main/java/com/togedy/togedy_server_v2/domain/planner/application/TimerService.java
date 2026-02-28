@@ -24,6 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,9 +57,15 @@ public class TimerService {
                 .studySubjectId(studySubject.getId())
                 .startTime(startTime)
                 .endTime(null)
+                .isRunning(true)
                 .build();
 
-        Long timerId = studyTimeRepository.save(studyTime).getId();
+        Long timerId;
+        try {
+            timerId = studyTimeRepository.saveAndFlush(studyTime).getId();
+        } catch (DataIntegrityViolationException e) {
+            throw new TimerAlreadyRunningException();
+        }
         return PostTimerStartResponse.of(timerId, startTime);
     }
 
