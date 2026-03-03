@@ -78,39 +78,7 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
 
         Long totalStudyTime = dailyStudySummaryRepository.findTotalStudyTimeByUserId(userId).orElse(0L);
-
-        Pageable pageable = PageRequest.of(0, FIND_STUDY_COUNT);
-
-        List<Study> studies = studyRepository.findRecentStudiesByUserId(userId, pageable);
-
-        List<Long> studyIds = studies.stream()
-                .map(Study::getId)
-                .toList();
-
-        List<UserStudy> userStudies = userStudyRepository.findAllByStudyIds(studyIds);
-
-        Map<Long, List<UserStudy>> userStudyMap = userStudies.stream()
-                .collect(Collectors.groupingBy(UserStudy::getStudyId));
-
-        List<Long> challengeUserIds = studies.stream()
-                .filter(Study::isChallengeStudy)
-                .flatMap(study -> userStudyMap.getOrDefault(study.getId(), List.of()).stream())
-                .map(UserStudy::getUserId)
-                .distinct()
-                .toList();
-
-        Map<Long, Long> studySummaryMap = dailyStudySummaryRepository
-                .findAllByUserIdsAndDate(challengeUserIds, LocalDate.now())
-                .stream()
-                .collect(Collectors.toMap(
-                        DailyStudySummary::getUserId,
-                        DailyStudySummary::getStudyTime
-                ));
-
-        List<MyPageStudyDto> studyDtos = studies.stream()
-                .map(study -> buildMyPageStudyDto(study, userStudyMap, studySummaryMap))
-                .toList();
-
+        List<MyPageStudyDto> studyDtos = findMyPageStudyDtos(userId);
         return GetMyPageResponse.from(user, TimeUtil.formatSecondsToHms(totalStudyTime), studyDtos);
     }
 
@@ -159,31 +127,32 @@ public class UserService {
             Map<Long, Long> studySummaryMap
     ) {
         if (study.isChallengeStudy()) {
-            List<UserStudy> userStudies =
-                    userStudyMap.getOrDefault(study.getId(), List.of());
+            List<UserStudy> userStudies = userStudyMap.getOrDefault(study.getId(), List.of());
 
-            int completedMemberCount = 0;
-
-            for (UserStudy userStudy : userStudies) {
-                Long studyTime =
-                        studySummaryMap.getOrDefault(userStudy.getUserId(), 0L);
-
-                if (studyTime >= study.getGoalTime()) {
-                    completedMemberCount++;
-                }
-            }
-
-            boolean isCompleted =
-                    study.getMemberCount() == completedMemberCount;
+            int completedMemberCount = calculateCompletedMember(study, studySummaryMap, userStudies);
 
             return MyPageStudyDto.from(
                     study,
-                    isCompleted,
+                    study.isChallengeSuccess(completedMemberCount),
                     completedMemberCount
             );
         }
 
         return MyPageStudyDto.from(study);
+    }
+
+    private int calculateCompletedMember(Study study, Map<Long, Long> studySummaryMap, List<UserStudy> userStudies) {
+        int completedMemberCount = 0;
+
+        for (UserStudy userStudy : userStudies) {
+            Long studyTime = studySummaryMap.getOrDefault(userStudy.getUserId(), 0L);
+
+            if (study.isAchieved(studyTime)) {
+                completedMemberCount++;
+            }
+        }
+
+        return completedMemberCount;
     }
 
     private void replaceUserProfileImage(PatchProfileImageRequest request, User user) {
@@ -206,5 +175,48 @@ public class UserService {
         }
 
         applicationEventPublisher.publishEvent(new UserProfileImageRemovedEvent(imageUrl));
+    }
+
+    private List<MyPageStudyDto> findMyPageStudyDtos(Long userId) {
+        Pageable pageable = PageRequest.of(0, FIND_STUDY_COUNT);
+        List<Study> studies = studyRepository.findRecentStudiesByUserId(userId, pageable);
+        Map<Long, List<UserStudy>> userStudyMap = groupUserStudiesByStudyId(studies);
+        Map<Long, Long> studySummaryMap = findTodayStudyTimeByUserIds(studies, userStudyMap);
+
+        return studies.stream()
+                .map(study -> buildMyPageStudyDto(study, userStudyMap, studySummaryMap))
+                .toList();
+    }
+
+    private Map<Long, List<UserStudy>> groupUserStudiesByStudyId(List<Study> studies) {
+        List<Long> studyIds = studies.stream()
+                .map(Study::getId)
+                .toList();
+
+        List<UserStudy> userStudies = userStudyRepository.findAllByStudyIds(studyIds);
+
+        return userStudies.stream()
+                .collect(Collectors.groupingBy(UserStudy::getStudyId));
+    }
+
+    private Map<Long, Long> findTodayStudyTimeByUserIds(List<Study> studies, Map<Long, List<UserStudy>> userStudyMap) {
+        List<Long> challengeUserIds = findChallengeUserIds(studies, userStudyMap);
+
+        return dailyStudySummaryRepository
+                .findAllByUserIdsAndDate(challengeUserIds, LocalDate.now())
+                .stream()
+                .collect(Collectors.toMap(
+                        DailyStudySummary::getUserId,
+                        DailyStudySummary::getStudyTime
+                ));
+    }
+
+    private List<Long> findChallengeUserIds(List<Study> studies, Map<Long, List<UserStudy>> userStudyMap) {
+        return studies.stream()
+                .filter(Study::isChallengeStudy)
+                .flatMap(study -> userStudyMap.getOrDefault(study.getId(), List.of()).stream())
+                .map(UserStudy::getUserId)
+                .distinct()
+                .toList();
     }
 }
