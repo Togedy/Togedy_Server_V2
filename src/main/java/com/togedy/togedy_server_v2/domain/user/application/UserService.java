@@ -48,7 +48,7 @@ public class UserService {
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
-    private final static int FIND_STUDY_COUNT = 2;
+    private final static int MY_PAGE_STUDY_COUNT = 2;
 
     @Transactional
     public Long generateUser(CreateUserRequest request) {
@@ -178,7 +178,7 @@ public class UserService {
     }
 
     private List<MyPageStudyDto> findMyPageStudyDtos(Long userId) {
-        Pageable pageable = PageRequest.of(0, FIND_STUDY_COUNT);
+        Pageable pageable = PageRequest.of(0, MY_PAGE_STUDY_COUNT);
         List<Study> studies = studyRepository.findRecentStudiesByUserId(userId, pageable);
         Map<Long, List<UserStudy>> userStudyMap = groupUserStudiesByStudyId(studies);
         Map<Long, Long> studySummaryMap = findTodayStudyTimeByUserIds(studies, userStudyMap);
