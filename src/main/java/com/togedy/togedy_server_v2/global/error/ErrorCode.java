@@ -68,6 +68,7 @@ public enum ErrorCode {
     STUDY_ALREADY_JOINED(HttpStatus.CONFLICT, "S9014", "이미 가입한 스터디입니다."),
     STUDY_NAME_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "S9015", "스터디 이름에 비속어가 포함되어 있습니다."),
     STUDY_DESCRIPTION_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "S9016", "스터디 소개에 비속어가 포함되어 있습니다."),
+    NOT_CHALLENGE_STUDY(HttpStatus.BAD_REQUEST, "S9017", "챌린지 스터디에서만 수행할 수 있는 요청입니다."),
 
     // USER_STUDY(9000)
     USER_STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "US9000", "해당 유저가 가입한 스터디를 찾을 수 없습니다."),

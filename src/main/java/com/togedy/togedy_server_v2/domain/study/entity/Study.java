@@ -4,6 +4,7 @@ import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
+import com.togedy.togedy_server_v2.domain.study.exception.NotChallengeStudyException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyDescriptionContainsBadWordException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberCountExceededException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitOutOfRangeException;
@@ -165,6 +166,7 @@ public class Study extends BaseEntity {
     }
 
     public boolean isAchieved(DailyStudySummary dailyStudySummary) {
+        validateChallengeStudy();
         if (dailyStudySummary == null) {
             return false;
         }
@@ -173,6 +175,7 @@ public class Study extends BaseEntity {
     }
 
     public boolean isAchieved(Long studyTime) {
+        validateChallengeStudy();
         return studyTime >= this.goalTime;
     }
 
@@ -225,6 +228,12 @@ public class Study extends BaseEntity {
     private void validateStudyDescription(String description) {
         if (BadWords.containsBadWord(description)) {
             throw new StudyDescriptionContainsBadWordException();
+        }
+    }
+
+    private void validateChallengeStudy() {
+        if (!isChallengeStudy()) {
+            throw new NotChallengeStudyException();
         }
     }
 

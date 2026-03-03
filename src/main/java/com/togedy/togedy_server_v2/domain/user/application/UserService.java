@@ -199,7 +199,6 @@ public class UserService {
     ) {
         if (study.isChallengeStudy()) {
             List<UserStudy> userStudies = userStudyMap.getOrDefault(study.getId(), List.of());
-
             int completedMemberCount = calculateCompletedMember(study, studySummaryMap, userStudies);
 
             return MyPageStudyDto.from(
@@ -224,17 +223,9 @@ public class UserService {
      * @return 목표 달성 멤버 수
      */
     private int calculateCompletedMember(Study study, Map<Long, Long> studySummaryMap, List<UserStudy> userStudies) {
-        int completedMemberCount = 0;
-
-        for (UserStudy userStudy : userStudies) {
-            Long studyTime = studySummaryMap.getOrDefault(userStudy.getUserId(), 0L);
-
-            if (study.isAchieved(studyTime)) {
-                completedMemberCount++;
-            }
-        }
-
-        return completedMemberCount;
+        return (int) userStudies.stream()
+                .filter(userStudy -> study.isAchieved(studySummaryMap.getOrDefault(userStudy.getUserId(), 0L)))
+                .count();
     }
 
     /**
