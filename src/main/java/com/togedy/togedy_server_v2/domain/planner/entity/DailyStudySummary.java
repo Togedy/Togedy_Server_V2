@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,7 +15,15 @@ import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
-@Table(name = "daily_study_summary")
+@Table(
+        name = "daily_study_summary",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_daily_study_summary_user_id_date",
+                        columnNames = {"user_id", "date"}
+                )
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DailyStudySummary {
 
