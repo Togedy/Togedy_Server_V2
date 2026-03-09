@@ -3,8 +3,10 @@ package com.togedy.togedy_server_v2.domain.planner.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 
+import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetRunningTimerResponse;
@@ -14,6 +16,7 @@ import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStartResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopRequest;
 import com.togedy.togedy_server_v2.domain.planner.dto.PostTimerStopResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.SubjectStudyTimeItemResponse;
+import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
 import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudySubjectException;
@@ -32,6 +35,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
 class TimerServiceTest {
+
+    @Mock
+    private DailyStudySummaryRepository dailyStudySummaryRepository;
 
     @Mock
     private StudySubjectRepository studySubjectRepository;
@@ -105,6 +111,7 @@ class TimerServiceTest {
     void 타이머를_종료한다() {
         Long userId = 1L;
         Long timerId = 100L;
+        LocalDateTime startTime = LocalDateTime.now().minusMinutes(30);
 
         PostTimerStopRequest request = new PostTimerStopRequest();
         ReflectionTestUtils.setField(request, "timerId", timerId);
@@ -112,17 +119,20 @@ class TimerServiceTest {
         StudyTime running = StudyTime.builder()
                 .userId(userId)
                 .studySubjectId(10L)
-                .startTime(java.time.LocalDateTime.of(2026, 2, 28, 10, 0, 0))
+                .startTime(startTime)
                 .endTime(null)
                 .build();
         ReflectionTestUtils.setField(running, "id", timerId);
 
         given(studyTimeRepository.findById(timerId)).willReturn(Optional.of(running));
+        given(dailyStudySummaryRepository.findByUserIdAndDate(eq(userId), any())).willReturn(Optional.empty());
+        given(dailyStudySummaryRepository.save(any(DailyStudySummary.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
 
         PostTimerStopResponse response = timerService.stopTimer(request, userId);
 
         assertThat(response.getTimerId()).isEqualTo(timerId);
-        assertThat(response.getStartTime()).isEqualTo(java.time.LocalDateTime.of(2026, 2, 28, 10, 0, 0));
+        assertThat(response.getStartTime()).isEqualTo(startTime);
         assertThat(response.getEndTime()).isNotNull();
     }
 
