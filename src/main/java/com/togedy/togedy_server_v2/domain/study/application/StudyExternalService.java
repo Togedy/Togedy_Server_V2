@@ -127,7 +127,7 @@ public class StudyExternalService {
      * @return 당일 공부 기록 및 참여 스터디 정보를 포함한 응답 DTO
      */
     public GetMyStudyInfoResponse findMyStudyInfo(Long userId) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = TimeUtil.currentStudyDate();
         List<Study> studies = studyRepository.findAllByUserIdOrderByCreatedAtAsc(userId);
 
         Long studyTime = dailyStudySummaryRepository

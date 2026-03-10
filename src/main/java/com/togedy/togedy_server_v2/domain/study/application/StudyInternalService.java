@@ -351,7 +351,7 @@ public class StudyInternalService {
      * @return 스터디 멤버 목록 DTO
      */
     public List<GetStudyMemberResponse> findStudyMember(Long studyId, Long userId) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = TimeUtil.currentStudyDate();
 
         List<StudyMemberRoleDto> membersWithRoles = userRepository.findAllByStudyIdOrderByCreatedAtAsc(studyId);
         List<Long> memberIds = membersWithRoles.stream()
@@ -555,7 +555,7 @@ public class StudyInternalService {
      * @return 챌린지 달성 멤버 수
      */
     private int countCompletedChallengeMembers(Study study) {
-        LocalDate today = LocalDate.now();
+        LocalDate today = TimeUtil.currentStudyDate();
 
         List<User> members = userRepository.findAllByStudyId(study.getId());
 

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -181,12 +182,11 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
     public void 본인_스터디_조회_시_오늘의_공부_기록이_존재하지_않는_경우_공부_시간은_00시_00분_00초를_반환한다() {
         //given
         Long userId = 1L;
-        LocalDate today = LocalDate.now();
 
         given(studyRepository.findAllByUserIdOrderByCreatedAtAsc(userId))
                 .willReturn(List.of());
 
-        given(dailyStudySummaryRepository.findByUserIdAndDate(userId, today))
+        given(dailyStudySummaryRepository.findByUserIdAndDate(eq(userId), any(LocalDate.class)))
                 .willReturn(Optional.empty());
 
         // when
@@ -201,12 +201,11 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
     public void 본인_스터디_조회_시_오늘의_공부_기록이_존재하는_경우_hh_mm_ss_형식으로_반환한다() {
         //given
         Long userId = 1L;
-        LocalDate today = LocalDate.now();
 
         given(studyRepository.findAllByUserIdOrderByCreatedAtAsc(userId))
                 .willReturn(List.of());
 
-        given(dailyStudySummaryRepository.findByUserIdAndDate(1L, today))
+        given(dailyStudySummaryRepository.findByUserIdAndDate(eq(1L), any(LocalDate.class)))
                 .willReturn(Optional.of(DailyStudySummaryFixture.createDailyStudySummaryWithStudyTime(3 * 3600L)));
 
         // when
@@ -220,7 +219,6 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
     public void 본인_스터디_조회_시_입장한_스터디가_없는_경우_빈_리스트를_반환한다() {
         //given
         Long userId = 1L;
-        LocalDate today = LocalDate.now();
 
         given(studyRepository.findAllByUserIdOrderByCreatedAtAsc(userId))
                 .willReturn(List.of());
@@ -238,7 +236,6 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         // given
         Long userId = 1L;
         Long studyId = 1L;
-        LocalDate today = LocalDate.now();
 
         Study study = StudyFixture.createNormalStudy();
         ReflectionTestUtils.setField(study, "id", studyId);
@@ -247,7 +244,7 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         given(studyRepository.findAllByUserIdOrderByCreatedAtAsc(userId))
                 .willReturn(List.of(study));
 
-        given(dailyStudySummaryRepository.findByUserIdAndDate(userId, today))
+        given(dailyStudySummaryRepository.findByUserIdAndDate(eq(userId), any(LocalDate.class)))
                 .willReturn(Optional.empty());
 
         UserStudy userStudy = UserStudyFixture.createLeaderUserStudy(userId, studyId);
@@ -261,7 +258,7 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         given(userRepository.findAllById(List.of(userId)))
                 .willReturn(List.of(user));
 
-        given(dailyStudySummaryRepository.findAllByUserIdsAndDate(List.of(userId), today))
+        given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
                 .willReturn(List.of());
 
         // when
@@ -283,7 +280,6 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         // given
         Long userId = 1L;
         Long studyId = 1L;
-        LocalDate today = LocalDate.now();
 
         Study study = StudyFixture.createChallengeStudy();
         ReflectionTestUtils.setField(study, "id", studyId);
@@ -292,7 +288,7 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         given(studyRepository.findAllByUserIdOrderByCreatedAtAsc(userId))
                 .willReturn(List.of(study));
 
-        given(dailyStudySummaryRepository.findByUserIdAndDate(userId, today))
+        given(dailyStudySummaryRepository.findByUserIdAndDate(eq(userId), any(LocalDate.class)))
                 .willReturn(Optional.empty());
 
         UserStudy userStudy = UserStudyFixture.createLeaderUserStudy(userId, studyId);
@@ -306,7 +302,7 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         given(userRepository.findAllById(List.of(userId)))
                 .willReturn(List.of(user));
 
-        given(dailyStudySummaryRepository.findAllByUserIdsAndDate(List.of(userId), today))
+        given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
                 .willReturn(List.of());
 
         // when
@@ -329,7 +325,6 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         Long userId = 1L;
         Long studyId = 1L;
         Long dailyStudySummaryId = 1L;
-        LocalDate today = LocalDate.now();
 
         Study study = StudyFixture.createChallengeStudy();
         ReflectionTestUtils.setField(study, "id", studyId);
@@ -341,7 +336,7 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         DailyStudySummary dailyStudySummary = DailyStudySummaryFixture.createDailyStudySummaryWithStudyTime(3 * 3600L);
         ReflectionTestUtils.setField(dailyStudySummary, "id", dailyStudySummaryId);
 
-        given(dailyStudySummaryRepository.findByUserIdAndDate(userId, today))
+        given(dailyStudySummaryRepository.findByUserIdAndDate(eq(userId), any(LocalDate.class)))
                 .willReturn(Optional.of(dailyStudySummary));
 
         UserStudy userStudy = UserStudyFixture.createLeaderUserStudy(userId, studyId);
@@ -355,7 +350,7 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         given(userRepository.findAllById(List.of(userId)))
                 .willReturn(List.of(user));
 
-        given(dailyStudySummaryRepository.findAllByUserIdsAndDate(List.of(userId), today))
+        given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
                 .willReturn(List.of(dailyStudySummary));
 
         // when
@@ -372,7 +367,6 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         Long userId = 1L;
         Long studyId = 1L;
         Long dailyStudySummaryId = 1L;
-        LocalDate today = LocalDate.now();
 
         Study study = StudyFixture.createChallengeStudy();
         ReflectionTestUtils.setField(study, "id", studyId);
@@ -384,7 +378,7 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         DailyStudySummary dailyStudySummary = DailyStudySummaryFixture.createDailyStudySummaryWithStudyTime(3 * 3600L);
         ReflectionTestUtils.setField(dailyStudySummary, "id", dailyStudySummaryId);
 
-        given(dailyStudySummaryRepository.findByUserIdAndDate(userId, today))
+        given(dailyStudySummaryRepository.findByUserIdAndDate(eq(userId), any(LocalDate.class)))
                 .willReturn(Optional.of(dailyStudySummary));
 
         UserStudy userStudy = UserStudyFixture.createLeaderUserStudy(userId, studyId);
@@ -398,7 +392,7 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         given(userRepository.findAllById(List.of(userId)))
                 .willReturn(List.of(user));
 
-        given(dailyStudySummaryRepository.findAllByUserIdsAndDate(List.of(userId), today))
+        given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
                 .willReturn(List.of(dailyStudySummary));
 
         // when
