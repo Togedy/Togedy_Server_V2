@@ -44,6 +44,12 @@ public class DailyStudySummary {
     }
 
     public void addStudyTime(long additionalStudyTime) {
+        if (additionalStudyTime < 0) {
+            throw new IllegalArgumentException("additionalStudyTime must be >= 0");
+        }
+        if (this.studyTime == null) {
+            this.studyTime = 0L;
+        }
         this.studyTime += additionalStudyTime;
     }
 
