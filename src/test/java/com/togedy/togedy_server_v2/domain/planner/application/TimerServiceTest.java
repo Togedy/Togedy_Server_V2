@@ -125,7 +125,7 @@ class TimerServiceTest {
         ReflectionTestUtils.setField(running, "id", timerId);
 
         given(studyTimeRepository.findByIdForUpdate(timerId)).willReturn(Optional.of(running));
-        given(dailyStudySummaryRepository.findByUserIdAndDate(eq(userId), any())).willReturn(Optional.empty());
+        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(eq(userId), any())).willReturn(Optional.empty());
         given(dailyStudySummaryRepository.save(any(DailyStudySummary.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
 
@@ -236,6 +236,40 @@ class TimerServiceTest {
         GetTimerTotalResponse response = timerService.findTodayTotalStudyTime(userId);
 
         assertThat(response.getStudyTime()).isEqualTo(2400L);
+    }
+
+    @Test
+    void 기존_일일_요약은_락을_획득한_후_업데이트한다() {
+        Long userId = 1L;
+        Long timerId = 100L;
+        LocalDateTime startTime = LocalDateTime.now().minusMinutes(30);
+
+        PostTimerStopRequest request = new PostTimerStopRequest();
+        ReflectionTestUtils.setField(request, "timerId", timerId);
+
+        StudyTime running = StudyTime.builder()
+                .userId(userId)
+                .studySubjectId(10L)
+                .startTime(startTime)
+                .endTime(null)
+                .build();
+        ReflectionTestUtils.setField(running, "id", timerId);
+
+        DailyStudySummary summary = DailyStudySummary.builder()
+                .userId(userId)
+                .studyTime(100L)
+                .date(startTime.toLocalDate())
+                .build();
+
+        given(studyTimeRepository.findByIdForUpdate(timerId)).willReturn(Optional.of(running));
+        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(eq(userId), any()))
+                .willReturn(Optional.of(summary));
+        given(dailyStudySummaryRepository.save(any(DailyStudySummary.class)))
+                .willAnswer(invocation -> invocation.getArgument(0));
+
+        timerService.stopTimer(request, userId);
+
+        assertThat(summary.getStudyTime()).isGreaterThan(100L);
     }
 
 }

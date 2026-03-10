@@ -187,7 +187,7 @@ public class TimerService {
     }
 
     private void upsertDailyStudySummary(Long userId, LocalDate date, Long additionalStudyTime) {
-        DailyStudySummary dailyStudySummary = dailyStudySummaryRepository.findByUserIdAndDate(userId, date)
+        DailyStudySummary dailyStudySummary = dailyStudySummaryRepository.findByUserIdAndDateForUpdate(userId, date)
                 .orElseGet(() -> DailyStudySummary.builder()
                         .userId(userId)
                         .studyTime(0L)
@@ -198,7 +198,7 @@ public class TimerService {
         try {
             dailyStudySummaryRepository.save(dailyStudySummary);
         } catch (DataIntegrityViolationException e) {
-            DailyStudySummary existingSummary = dailyStudySummaryRepository.findByUserIdAndDate(userId, date)
+            DailyStudySummary existingSummary = dailyStudySummaryRepository.findByUserIdAndDateForUpdate(userId, date)
                     .orElseThrow(() -> e);
             existingSummary.addStudyTime(additionalStudyTime);
             dailyStudySummaryRepository.save(existingSummary);
