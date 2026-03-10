@@ -12,8 +12,8 @@ public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
             SELECT st
             FROM StudyTime st
             WHERE st.studySubjectId IN :studySubjectIds
-                AND st.startTime >= :startTime
                 AND st.startTime < :endTime
+                AND st.endTime > :startTime
                 AND st.endTime IS NOT NULL
             """)
     List<StudyTime> findDailyStudyTimesBySubjectIds(
@@ -28,8 +28,8 @@ public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
             SELECT st
             FROM StudyTime st
             WHERE st.userId = :userId
-                AND st.startTime >= :startTime
                 AND st.startTime < :endTime
+                AND st.endTime > :startTime
                 AND st.endTime IS NOT NULL
             """)
     List<StudyTime> findDailyStudyTimesByUserId(
@@ -39,11 +39,15 @@ public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
     );
 
     @Query(value = """
-            SELECT st.study_subject_id, COALESCE(SUM(TIMESTAMPDIFF(SECOND, st.start_time, st.end_time)), 0)
+            SELECT st.study_subject_id,
+                   COALESCE(SUM(TIMESTAMPDIFF(SECOND,
+                       GREATEST(st.start_time, :startTime),
+                       LEAST(st.end_time, :endTime)
+                   )), 0)
             FROM study_time st
             WHERE st.user_id = :userId
-              AND st.start_time >= :startTime
               AND st.start_time < :endTime
+              AND st.end_time > :startTime
               AND st.end_time IS NOT NULL
             GROUP BY st.study_subject_id
             """, nativeQuery = true)
@@ -54,11 +58,14 @@ public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
     );
 
     @Query(value = """
-            SELECT COALESCE(SUM(TIMESTAMPDIFF(SECOND, st.start_time, st.end_time)), 0)
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(SECOND,
+                GREATEST(st.start_time, :startTime),
+                LEAST(st.end_time, :endTime)
+            )), 0)
             FROM study_time st
             WHERE st.user_id = :userId
-              AND st.start_time >= :startTime
               AND st.start_time < :endTime
+              AND st.end_time > :startTime
               AND st.end_time IS NOT NULL
             """, nativeQuery = true)
     Long sumDailyStudyTimeByUserId(

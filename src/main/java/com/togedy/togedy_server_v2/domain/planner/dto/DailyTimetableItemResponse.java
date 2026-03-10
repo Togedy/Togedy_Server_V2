@@ -3,6 +3,7 @@ package com.togedy.togedy_server_v2.domain.planner.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
 import java.time.LocalTime;
+import java.time.LocalDateTime;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -22,6 +23,14 @@ public class DailyTimetableItemResponse {
         return DailyTimetableItemResponse.builder()
                 .startTime(studyTime.getStartTime().toLocalTime())
                 .endTime(studyTime.getEndTime().toLocalTime())
+                .subjectColor(subjectColor)
+                .build();
+    }
+
+    public static DailyTimetableItemResponse of(LocalDateTime startTime, LocalDateTime endTime, String subjectColor) {
+        return DailyTimetableItemResponse.builder()
+                .startTime(startTime.toLocalTime())
+                .endTime(endTime.toLocalTime())
                 .subjectColor(subjectColor)
                 .build();
     }

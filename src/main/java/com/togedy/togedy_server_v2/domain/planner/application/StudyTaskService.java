@@ -56,7 +56,7 @@ public class StudyTaskService {
                 .collect(Collectors.groupingBy(
                         StudyTime::getStudySubjectId,
                         Collectors.summingLong(studyTime ->
-                                TimeUtil.calculateStudySeconds(studyTime.getStartTime(), studyTime.getEndTime()))
+                                calculateOverlapStudySeconds(studyTime, startOfDate, startOfNextDate))
                 ));
 
         List<DailyPlannerTaskDto> dailyPlanner = studySubjects.stream()
@@ -133,5 +133,11 @@ public class StudyTaskService {
         if (name == null || name.isBlank()) {
             throw new InvalidStudyTaskNameException();
         }
+    }
+
+    private long calculateOverlapStudySeconds(StudyTime studyTime, LocalDateTime periodStart, LocalDateTime periodEnd) {
+        LocalDateTime effectiveStart = studyTime.getStartTime().isAfter(periodStart) ? studyTime.getStartTime() : periodStart;
+        LocalDateTime effectiveEnd = studyTime.getEndTime().isBefore(periodEnd) ? studyTime.getEndTime() : periodEnd;
+        return TimeUtil.calculateStudySeconds(effectiveStart, effectiveEnd);
     }
 }
