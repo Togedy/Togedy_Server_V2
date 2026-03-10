@@ -141,7 +141,7 @@ public class TimerService {
         LocalDateTime dayStart = TimeUtil.startOfStudyDay(now);
         LocalDateTime dayEnd = TimeUtil.endOfStudyDay(now);
 
-        Long totalStudyTime = studyTimeRepository.sumDailyStudyTimeByUserId(userId, dayStart, dayEnd);
+        long totalStudyTime = studyTimeRepository.sumDailyStudyTimeByUserId(userId, dayStart, dayEnd);
 
         return GetTimerTotalResponse.of(totalStudyTime);
     }
@@ -204,4 +204,5 @@ public class TimerService {
             dailyStudySummaryRepository.save(existingSummary);
         }
     }
+
 }
