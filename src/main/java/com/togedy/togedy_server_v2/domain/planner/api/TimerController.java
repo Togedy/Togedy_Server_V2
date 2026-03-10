@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,7 +42,7 @@ public class TimerController {
     @Operation(summary = "타이머 종료", description = "해당 타이머를 종료한다.")
     @PostMapping("/stop")
     public ApiResponse<PostTimerStopResponse> stopTimer(
-            @RequestBody PostTimerStopRequest request,
+            @Validated @RequestBody PostTimerStopRequest request,
             @AuthenticationPrincipal AuthUser user
     ) {
         PostTimerStopResponse response = timerService.stopTimer(request, user.getId());
