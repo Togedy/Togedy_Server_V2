@@ -78,7 +78,7 @@ public class TimerService {
     public PostTimerStopResponse stopTimer(PostTimerStopRequest request, Long userId) {
         validateStopRequest(request);
 
-        StudyTime studyTime = studyTimeRepository.findById(request.getTimerId())
+        StudyTime studyTime = studyTimeRepository.findByIdForUpdate(request.getTimerId())
                 .orElseThrow(TimerNotFoundException::new);
 
         if (!studyTime.getUserId().equals(userId)) {

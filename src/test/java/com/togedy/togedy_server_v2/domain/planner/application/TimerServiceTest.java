@@ -124,7 +124,7 @@ class TimerServiceTest {
                 .build();
         ReflectionTestUtils.setField(running, "id", timerId);
 
-        given(studyTimeRepository.findById(timerId)).willReturn(Optional.of(running));
+        given(studyTimeRepository.findByIdForUpdate(timerId)).willReturn(Optional.of(running));
         given(dailyStudySummaryRepository.findByUserIdAndDate(eq(userId), any())).willReturn(Optional.empty());
         given(dailyStudySummaryRepository.save(any(DailyStudySummary.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
@@ -149,7 +149,7 @@ class TimerServiceTest {
                 .build();
         ReflectionTestUtils.setField(running, "id", 100L);
 
-        given(studyTimeRepository.findById(100L)).willReturn(Optional.of(running));
+        given(studyTimeRepository.findByIdForUpdate(100L)).willReturn(Optional.of(running));
 
         assertThatThrownBy(() -> timerService.stopTimer(request, 1L))
                 .isInstanceOf(TimerNotOwnedException.class);
@@ -168,7 +168,7 @@ class TimerServiceTest {
                 .build();
         ReflectionTestUtils.setField(stopped, "id", 100L);
 
-        given(studyTimeRepository.findById(100L)).willReturn(Optional.of(stopped));
+        given(studyTimeRepository.findByIdForUpdate(100L)).willReturn(Optional.of(stopped));
 
         assertThatThrownBy(() -> timerService.stopTimer(request, 1L))
                 .isInstanceOf(TimerAlreadyStoppedException.class);

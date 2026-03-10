@@ -1,13 +1,23 @@
 package com.togedy.togedy_server_v2.domain.planner.dao;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
+import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT st
+            FROM StudyTime st
+            WHERE st.id = :id
+            """)
+    Optional<StudyTime> findByIdForUpdate(Long id);
+
     @Query("""
             SELECT st
             FROM StudyTime st
