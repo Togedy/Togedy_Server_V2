@@ -58,6 +58,15 @@ public class StudyTime {
     }
 
     public void stop(LocalDateTime endTime) {
+        if (endTime == null) {
+            throw new IllegalArgumentException("endTime must not be null");
+        }
+        if (this.endTime != null) {
+            throw new IllegalStateException("Timer is already stopped");
+        }
+        if (this.startTime == null || endTime.isBefore(this.startTime)) {
+            throw new IllegalArgumentException("endTime must be after startTime");
+        }
         this.endTime = endTime;
         this.isRunning = null;
     }
