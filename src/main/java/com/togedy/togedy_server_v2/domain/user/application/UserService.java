@@ -18,6 +18,7 @@ import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingR
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
+import com.togedy.togedy_server_v2.domain.user.exception.InvalidUserProfileImageException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateNicknameException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
@@ -240,7 +241,12 @@ public class UserService {
             return null;
         }
 
+        if (userProfileImage == null || userProfileImage.isEmpty()) {
+            throw new InvalidUserProfileImageException();
+        }
+
         return s3Service.uploadFile(userProfileImage, ImageCategory.PROFILE);
+
     }
 
     /**
