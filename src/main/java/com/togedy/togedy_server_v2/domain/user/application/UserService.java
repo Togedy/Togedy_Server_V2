@@ -147,14 +147,16 @@ public class UserService {
     }
 
     /**
-     * 사용자의 닉네임을 변경한다.
+     * 사용자의 프로필 정보를 수정한다.
      * <p>
-     * 요청된 닉네임으로 사용자 정보를 수정한다. 닉네임 유효성 검증은 도메인 객체 내부에서 수행된다.
+     * 요청 값에 따라 사용자의 닉네임과 프로필 이미지를 변경한다. 닉네임 변경은 {@link User} 도메인 객체 내부 규칙에 따라 수행되며, 프로필 이미지는 제거 여부와 업로드 파일 존재 여부를 기준으로
+     * 변경된다.
      * </p>
      *
-     * @param request 닉네임 변경 요청 DTO
-     * @param userId  닉네임을 변경할 사용자 ID
-     * @throws UserNotFoundException 사용자가 존재하지 않는 경우
+     * @param request 프로필 수정 요청 DTO
+     * @param userId  프로필을 수정할 사용자 ID
+     * @throws UserNotFoundException            사용자가 존재하지 않는 경우
+     * @throws InvalidUserProfileImageException 프로필 이미지 제거 요청이 아님에도 업로드 파일이 없거나 비어 있는 경우
      */
     @Transactional
     public void modifyProfile(PatchProfileRequest request, Long userId) {
@@ -213,13 +215,14 @@ public class UserService {
     }
 
     /**
-     * 프로필 이미지 교체 로직을 수행한다.
+     * 사용자의 프로필 이미지를 변경한다.
      * <p>
-     * 요청 값에 따라 새 이미지 URL을 결정하고, 기존 이미지가 존재하는 경우 삭제 이벤트를 발행한다.
+     * 요청 값에 따라 새 프로필 이미지 URL을 결정한 뒤, 사용자 엔티티의 프로필 이미지 URL을 변경하고 기존 이미지가 존재하면 삭제 이벤트를 발행한다.
      * </p>
      *
-     * @param request 프로필 이미지 변경 요청 DTO
-     * @param user    대상 사용자
+     * @param userProfileImage       새로 업로드할 프로필 이미지 파일
+     * @param removeUserProfileImage 프로필 이미지 제거 여부
+     * @param user                   프로필 이미지를 변경할 사용자
      */
     private void replaceUserProfileImage(MultipartFile userProfileImage, boolean removeUserProfileImage, User user) {
         String newImageUrl = resolveNewProfileImageUrl(userProfileImage, removeUserProfileImage);
@@ -230,11 +233,13 @@ public class UserService {
     /**
      * 요청 값에 따라 새 프로필 이미지 URL을 결정한다.
      * <p>
-     * 이미지 제거 요청인 경우 {@code null}을 반환하며, 그렇지 않은 경우 S3에 이미지를 업로드하고 URL을 반환한다.
+     * 프로필 이미지 제거 요청인 경우 {@code null}을 반환한다. 제거 요청이 아닌 경우 업로드 파일이 존재해야 하며, 파일을 S3에 업로드한 뒤 해당 URL을 반환한다.
      * </p>
      *
-     * @param request 프로필 이미지 변경 요청 DTO
-     * @return 새 프로필 이미지 URL, 제거 요청인 경우 {@code null}
+     * @param userProfileImage       새로 업로드할 프로필 이미지 파일
+     * @param removeUserProfileImage 프로필 이미지 제거 여부
+     * @return 새 프로필 이미지 URL, 이미지 제거 요청인 경우 {@code null}
+     * @throws InvalidUserProfileImageException 프로필 이미지 제거 요청이 아님에도 업로드 파일이 없거나 비어 있는 경우
      */
     private String resolveNewProfileImageUrl(MultipartFile userProfileImage, boolean removeUserProfileImage) {
         if (removeUserProfileImage) {
@@ -246,7 +251,6 @@ public class UserService {
         }
 
         return s3Service.uploadFile(userProfileImage, ImageCategory.PROFILE);
-
     }
 
     /**
