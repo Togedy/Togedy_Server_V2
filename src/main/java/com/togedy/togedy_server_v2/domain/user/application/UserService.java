@@ -13,8 +13,7 @@ import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.MyPageStudyDto;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
-import com.togedy.togedy_server_v2.domain.user.dto.PatchNicknameRequest;
-import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileImageRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
@@ -35,6 +34,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @RequiredArgsConstructor
@@ -156,29 +156,12 @@ public class UserService {
      * @throws UserNotFoundException 사용자가 존재하지 않는 경우
      */
     @Transactional
-    public void modifyNickname(PatchNicknameRequest request, Long userId) {
+    public void modifyProfile(PatchProfileRequest request, Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
         user.changeNickname(request.getNickname());
-    }
-
-    /**
-     * 사용자의 프로필 이미지를 변경한다.
-     * <p>
-     * 요청 값에 따라 프로필 이미지를 새로 업로드하거나 제거한다. 기존 이미지가 존재하는 경우 이벤트를 발행하여 비동기적으로 삭제 처리한다.
-     * </p>
-     *
-     * @param request 프로필 이미지 변경 요청 DTO
-     * @param userId  프로필 이미지를 변경할 사용자 ID
-     * @throws UserNotFoundException 사용자가 존재하지 않는 경우
-     */
-    @Transactional
-    public void modifyProfileImage(PatchProfileImageRequest request, Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
-        replaceUserProfileImage(request, user);
+        replaceUserProfileImage(request.getUserProfileImage(), request.isRemoveUserProfileImage(), user);
     }
 
     /**
@@ -237,8 +220,8 @@ public class UserService {
      * @param request 프로필 이미지 변경 요청 DTO
      * @param user    대상 사용자
      */
-    private void replaceUserProfileImage(PatchProfileImageRequest request, User user) {
-        String newImageUrl = resolveNewProfileImageUrl(request);
+    private void replaceUserProfileImage(MultipartFile userProfileImage, boolean removeUserProfileImage, User user) {
+        String newImageUrl = resolveNewProfileImageUrl(userProfileImage, removeUserProfileImage);
         String oldImageUrl = user.changeProfileImageUrl(newImageUrl);
         publishImageRemovedEvent(oldImageUrl);
     }
@@ -252,12 +235,12 @@ public class UserService {
      * @param request 프로필 이미지 변경 요청 DTO
      * @return 새 프로필 이미지 URL, 제거 요청인 경우 {@code null}
      */
-    private String resolveNewProfileImageUrl(PatchProfileImageRequest request) {
-        if (Boolean.TRUE.equals(request.getRemoveUserProfileImage())) {
+    private String resolveNewProfileImageUrl(MultipartFile userProfileImage, boolean removeUserProfileImage) {
+        if (removeUserProfileImage) {
             return null;
         }
 
-        return s3Service.uploadFile(request.getUserProfileImage(), ImageCategory.PROFILE);
+        return s3Service.uploadFile(userProfileImage, ImageCategory.PROFILE);
     }
 
     /**
