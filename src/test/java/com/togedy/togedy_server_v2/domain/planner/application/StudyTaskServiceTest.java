@@ -102,7 +102,7 @@ class StudyTaskServiceTest {
         assertThat(englishPlanner.getSubjectId()).isEqualTo(1L);
         assertThat(englishPlanner.getSubjectName()).isEqualTo("영어");
         assertThat(englishPlanner.getSubjectColor()).isEqualTo("노란색");
-        assertThat(englishPlanner.getSubjectStudyTime()).isEqualTo("00:12:00");
+        assertThat(englishPlanner.getSubjectStudyTime()).isEqualTo(720L);
         assertThat(englishPlanner.getTaskList()).hasSize(2);
         assertThat(englishPlanner.getTaskList().get(0).getTaskId()).isEqualTo(101L);
         assertThat(englishPlanner.getTaskList().get(0).getTaskName()).isEqualTo("영어단어 10개 암기");
@@ -112,7 +112,7 @@ class StudyTaskServiceTest {
         assertThat(mathPlanner.getSubjectId()).isEqualTo(2L);
         assertThat(mathPlanner.getSubjectName()).isEqualTo("수학");
         assertThat(mathPlanner.getSubjectColor()).isEqualTo("파란색");
-        assertThat(mathPlanner.getSubjectStudyTime()).isEqualTo("00:00:00");
+        assertThat(mathPlanner.getSubjectStudyTime()).isEqualTo(0L);
         assertThat(mathPlanner.getTaskList()).isEmpty();
     }
 }

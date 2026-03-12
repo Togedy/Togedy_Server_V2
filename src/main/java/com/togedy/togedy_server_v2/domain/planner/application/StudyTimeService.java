@@ -48,10 +48,15 @@ public class StudyTimeService {
 
         List<DailyTimetableItemResponse> timeTableList = studyTimes.stream()
                 .sorted(Comparator.comparing(StudyTime::getStartTime))
-                .map(studyTime -> DailyTimetableItemResponse.of(
-                        studyTime,
-                        subjectColorById.get(studyTime.getStudySubjectId())
-                ))
+                .map(studyTime -> {
+                    LocalDateTime clippedStart = studyTime.getStartTime().isAfter(dayStart) ? studyTime.getStartTime() : dayStart;
+                    LocalDateTime clippedEnd = studyTime.getEndTime().isBefore(dayEnd) ? studyTime.getEndTime() : dayEnd;
+                    return DailyTimetableItemResponse.of(
+                            clippedStart,
+                            clippedEnd,
+                            subjectColorById.get(studyTime.getStudySubjectId())
+                    );
+                })
                 .toList();
 
         return GetDailyTimetableResponse.of(timeTableList);

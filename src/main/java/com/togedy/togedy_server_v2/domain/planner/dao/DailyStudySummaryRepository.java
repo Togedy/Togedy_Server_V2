@@ -1,10 +1,12 @@
 package com.togedy.togedy_server_v2.domain.planner.dao;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import jakarta.persistence.LockModeType;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -29,6 +31,18 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
                 AND dss.date = :date
             """)
     Optional<DailyStudySummary> findByUserIdAndDate(
+            @Param("userId") Long userId,
+            @Param("date") LocalDate date
+    );
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("""
+            SELECT dss
+            FROM DailyStudySummary dss
+            WHERE dss.userId = :userId
+                AND dss.date = :date
+            """)
+    Optional<DailyStudySummary> findByUserIdAndDateForUpdate(
             @Param("userId") Long userId,
             @Param("date") LocalDate date
     );
