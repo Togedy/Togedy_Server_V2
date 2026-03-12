@@ -18,6 +18,7 @@ import com.togedy.togedy_server_v2.global.fixtures.UserFixture;
 import com.togedy.togedy_server_v2.global.fixtures.UserStudyFixture;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -156,7 +157,7 @@ public class StudyMemberServiceTest extends AbstractStudyServiceTest {
         Long userId = 1L;
         Long memberId = 2L;
 
-        LocalDate date = LocalDate.now().plusDays(1).atStartOfDay().toLocalDate();
+        LocalDate date = YearMonth.now().atDay(1);
         DailyStudySummary dailyStudySummary = DailyStudySummaryFixture.createDailyStudySummaryWithDate(date);
 
         given(userStudyRepository.existsByStudyIdAndUserId(any(), any()))
@@ -182,7 +183,7 @@ public class StudyMemberServiceTest extends AbstractStudyServiceTest {
         Long userId = 1L;
         Long memberId = 2L;
 
-        LocalDate date = LocalDate.now().plusDays(1).atStartOfDay().toLocalDate();
+        LocalDate date = YearMonth.now().atDay(1);
         DailyStudySummary dailyStudySummary = DailyStudySummaryFixture.createDailyStudySummaryWithDate(date);
 
         given(userStudyRepository.existsByStudyIdAndUserId(any(), any()))

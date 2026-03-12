@@ -93,8 +93,10 @@ public class User extends BaseEntity {
         this.marketingConsented = marketingConsented;
     }
 
-    public void changeNickname(String userName) {
-        this.nickname = userName;
+    public void changeNickname(String nickname) {
+        if (nickname != null && !nickname.isBlank()) {
+            this.nickname = nickname;
+        }
     }
 
     public String changeProfileImageUrl(String newImageUrl) {

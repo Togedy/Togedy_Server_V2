@@ -5,8 +5,7 @@ import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
-import com.togedy.togedy_server_v2.domain.user.dto.PatchNicknameRequest;
-import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileImageRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
@@ -16,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -83,23 +83,14 @@ public class UserController {
         return ApiUtil.successOnly();
     }
 
-    @Operation(summary = "유저 닉네임 변경", description = "본인의 닉네임을 변경한다.")
-    @PatchMapping("/me/nickname")
-    public ApiResponse<Void> updateNickname(
-            @RequestBody PatchNicknameRequest request,
+    @Operation(summary = "유저 프로필 변경", description = "유저의 닉네임 및 프로필 이미지를 변경한다.")
+    @PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<Void> updateProfile(
+            @ModelAttribute PatchProfileRequest request,
             @AuthenticationPrincipal AuthUser user
     ) {
-        userService.modifyNickname(request, user.getId());
+        userService.modifyProfile(request, user.getId());
         return ApiUtil.successOnly();
     }
 
-    @Operation(summary = "유저 프로필 이미지 변경", description = "본인의 프로필 이미지를 변경한다.")
-    @PatchMapping("/me/profile-image")
-    public ApiResponse<Void> updateProfileImage(
-            @ModelAttribute PatchProfileImageRequest request,
-            @AuthenticationPrincipal AuthUser user
-    ) {
-        userService.modifyProfileImage(request, user.getId());
-        return ApiUtil.successOnly();
-    }
 }
