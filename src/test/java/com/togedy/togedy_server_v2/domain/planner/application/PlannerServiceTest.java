@@ -1,13 +1,16 @@
 package com.togedy.togedy_server_v2.domain.planner.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.PlannerDailyImageRepository;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerTopResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.PutDailyPlannerImageRequest;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.planner.exception.InvalidPlannerImageException;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.global.service.S3Service;
@@ -69,7 +72,7 @@ class PlannerServiceTest {
         assertThat(response.getDate()).isEqualTo(queryDate);
         assertThat(response.getUserScheduleName()).isEqualTo("수능");
         assertThat(response.getRemainingDays()).isEqualTo(TimeUtil.calculateDaysUntil(ddayDate));
-        assertThat(response.getTotalStudyTime()).isEqualTo("12:00:04");
+        assertThat(response.getTotalStudyTime()).isEqualTo(43204L);
         assertThat(response.getPlannerImage()).isNull();
     }
 
@@ -91,7 +94,15 @@ class PlannerServiceTest {
         assertThat(response.getDate()).isEqualTo(queryDate);
         assertThat(response.getUserScheduleName()).isNull();
         assertThat(response.getRemainingDays()).isNull();
-        assertThat(response.getTotalStudyTime()).isEqualTo("00:00:00");
+        assertThat(response.getTotalStudyTime()).isEqualTo(0L);
         assertThat(response.getPlannerImage()).isNull();
+    }
+
+    @Test
+    void 플래너_이미지_업서트_시_이미지와_remove가_모두_비정상인_경우_예외가_발생한다() {
+        PutDailyPlannerImageRequest request = new PutDailyPlannerImageRequest(null, false);
+
+        assertThatThrownBy(() -> plannerService.upsertDailyPlannerImage(LocalDate.of(2026, 3, 2), request, 1L))
+                .isInstanceOf(InvalidPlannerImageException.class);
     }
 }

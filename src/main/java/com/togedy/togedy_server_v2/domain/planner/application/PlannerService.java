@@ -6,9 +6,8 @@ import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerTopResponse
 import com.togedy.togedy_server_v2.domain.planner.dto.PutDailyPlannerImageRequest;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.entity.PlannerDailyImage;
+import com.togedy.togedy_server_v2.domain.planner.exception.InvalidPlannerImageException;
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
-import com.togedy.togedy_server_v2.global.error.CustomException;
-import com.togedy.togedy_server_v2.global.error.ErrorCode;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
@@ -47,7 +46,7 @@ public class PlannerService {
                     true,
                     schedule.getName(),
                     remainingDays,
-                    TimeUtil.formatSecondsToHms(dailyStudyTime),
+                    dailyStudyTime,
                     plannerImage
             );
         }
@@ -57,7 +56,7 @@ public class PlannerService {
                 false,
                 null,
                 null,
-                TimeUtil.formatSecondsToHms(dailyStudyTime),
+                dailyStudyTime,
                 plannerImage
         );
     }
@@ -81,7 +80,7 @@ public class PlannerService {
         }
 
         if (request.getPlannerImage() == null || request.getPlannerImage().isEmpty()) {
-            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE, "plannerImage 파일이 필요합니다.");
+            throw new InvalidPlannerImageException();
         }
 
         return s3Service.uploadFile(request.getPlannerImage(), ImageCategory.PLANNER);

@@ -25,7 +25,6 @@ import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundExcept
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -324,7 +323,7 @@ public class UserService {
         List<Long> challengeUserIds = findChallengeUserIds(studies, userStudyMap);
 
         return dailyStudySummaryRepository
-                .findAllByUserIdsAndDate(challengeUserIds, LocalDate.now())
+                .findAllByUserIdsAndDate(challengeUserIds, TimeUtil.currentStudyDate())
                 .stream()
                 .collect(Collectors.toMap(
                         DailyStudySummary::getUserId,
