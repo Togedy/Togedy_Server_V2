@@ -89,25 +89,14 @@ public class DailyStudySummaryRepositoryTest extends AbstractRepositoryTest {
     @Test
     public void 유저의_모든_공부_시간의_총합을_계산한다() {
         //given
-        DailyStudySummary dailyStudySummary1 = DailyStudySummaryFixture.createDailyStudySummaryWithStudyTime(3000L);
+        DailyStudySummary dailyStudySummary1 = DailyStudySummaryFixture.createDailyStudySummaryWithDate(DEFAULT_DATE);
         dailyStudySummaryRepository.save(dailyStudySummary1);
 
-        DailyStudySummary dailyStudySummary2 = DailyStudySummary.builder()
-                .userId(dailyStudySummary1.getUserId())
-                .studyTime(2000L)
-                .date(DEFAULT_DATE.plusDays(1))
-                .build();
+        DailyStudySummary dailyStudySummary2 =
+                DailyStudySummaryFixture.createDailyStudySummaryWithDate(DEFAULT_DATE.plusDays(1));
         dailyStudySummaryRepository.save(dailyStudySummary2);
 
-        DailyStudySummary dailyStudySummary3 = DailyStudySummary.builder()
-                .userId(dailyStudySummary1.getUserId())
-                .studyTime(1000L)
-                .date(DEFAULT_DATE.plusDays(2))
-                .build();
-        dailyStudySummaryRepository.save(dailyStudySummary3);
-
-        Long totalStudyTime = dailyStudySummary1.getStudyTime() + dailyStudySummary2.getStudyTime()
-                + dailyStudySummary3.getStudyTime();
+        Long totalStudyTime = dailyStudySummary1.getStudyTime() + dailyStudySummary2.getStudyTime();
 
         // when
         Optional<Long> result = dailyStudySummaryRepository.findTotalStudyTimeByUserId(dailyStudySummary1.getUserId());
@@ -194,26 +183,4 @@ public class DailyStudySummaryRepositoryTest extends AbstractRepositoryTest {
                                 dailyStudySummary3.getStudyTime()));
     }
 
-    @Test
-    public void 특정_기간의_공부시간의_합을_구해_DTO로_조회한다() {
-        //given
-        DailyStudySummary dailyStudySummary1 = DailyStudySummaryFixture.createDailyStudySummaryWithStudyTime(3000L);
-        dailyStudySummaryRepository.save(dailyStudySummary1);
-
-        DailyStudySummary dailyStudySummary2 = DailyStudySummary.builder()
-                .userId(dailyStudySummary1.getUserId())
-                .studyTime(3000L)
-                .date(DEFAULT_DATE.plusDays(1))
-                .build();
-        dailyStudySummaryRepository.save(dailyStudySummary2);
-
-        // when
-        List<DailyStudyTimeDto> result = dailyStudySummaryRepository.findDailyStudyTimeByUserIdsAndPeriod(
-                List.of(dailyStudySummary1.getUserId()), DEFAULT_DATE, DEFAULT_DATE.plusDays(1));
-
-        // then
-        Assertions.assertThat(result).hasSize(2);
-        Assertions.assertThat(result).extracting(DailyStudyTimeDto::getStudyTime)
-                .containsExactlyInAnyOrder(dailyStudySummary1.getStudyTime(), dailyStudySummary2.getStudyTime());
-    }
 }

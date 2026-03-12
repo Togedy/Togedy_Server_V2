@@ -17,7 +17,12 @@ import lombok.NoArgsConstructor;
 @Getter
 @Table(
         name = "daily_study_summary",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "date"})
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_daily_study_summary_user_id_date",
+                        columnNames = {"user_id", "date"}
+                )
+        }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DailyStudySummary {

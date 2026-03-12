@@ -29,6 +29,7 @@ public enum ErrorCode {
     DUPLICATE_NICKNAME(HttpStatus.CONFLICT, "U2001", "동일한 닉네임이 존재합니다."),
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U2002", "동일한 이메일이 존재합니다."),
     USER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "U2003", "유저 접근 권한이 존재하지 않습니다."),
+    INVALID_USER_PROFILE_IMAGE(HttpStatus.BAD_REQUEST, "U2004", "유저 프로필 이미지가 올바르지 않습니다."),
 
     // CATEGORY (3000)
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "C3000", "해당 카테고리를 찾을 수 없습니다."),
@@ -68,6 +69,7 @@ public enum ErrorCode {
     STUDY_ALREADY_JOINED(HttpStatus.CONFLICT, "S9014", "이미 가입한 스터디입니다."),
     STUDY_NAME_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "S9015", "스터디 이름에 비속어가 포함되어 있습니다."),
     STUDY_DESCRIPTION_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "S9016", "스터디 소개에 비속어가 포함되어 있습니다."),
+    NOT_CHALLENGE_STUDY(HttpStatus.BAD_REQUEST, "S9017", "챌린지 스터디에서만 수행할 수 있는 요청입니다."),
 
     // USER_STUDY(9000)
     USER_STUDY_NOT_FOUND(HttpStatus.NOT_FOUND, "US9000", "해당 유저가 가입한 스터디를 찾을 수 없습니다."),
