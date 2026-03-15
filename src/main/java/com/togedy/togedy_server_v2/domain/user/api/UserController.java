@@ -4,6 +4,7 @@ import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingRequest;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -47,6 +49,13 @@ public class UserController {
         Map<String, Long> response = new HashMap<>();
         response.put("userId", userId);
 
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "닉네임 검증", description = "온보딩 전에 닉네임의 공백, 길이, 비속어, 중복 여부를 검증한다.")
+    @GetMapping("/nickname/validate")
+    public ApiResponse<GetNicknameValidationResponse> validateNickname(@RequestParam String nickname) {
+        GetNicknameValidationResponse response = userService.validateNickname(nickname);
         return ApiUtil.success(response);
     }
 

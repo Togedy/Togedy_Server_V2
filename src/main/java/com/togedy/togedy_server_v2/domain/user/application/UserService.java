@@ -12,6 +12,7 @@ import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.MyPageStudyDto;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileRequest;
@@ -19,11 +20,13 @@ import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingR
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
+import com.togedy.togedy_server_v2.domain.user.enums.NicknameValidationReason;
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.domain.user.exception.InvalidUserProfileImageException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateNicknameException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
+import com.togedy.togedy_server_v2.global.enums.BadWords;
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
@@ -74,6 +77,23 @@ public class UserService {
     public User loadUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
+    }
+
+    public GetNicknameValidationResponse validateNickname(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            return GetNicknameValidationResponse.of(false, NicknameValidationReason.BLANK, "닉네임을 입력해 주세요.");
+        }
+        if (nickname.length() > 10) {
+            return GetNicknameValidationResponse.of(false, NicknameValidationReason.TOO_LONG, "닉네임은 10자 이하여야 합니다.");
+        }
+        if (BadWords.containsBadWord(nickname)) {
+            return GetNicknameValidationResponse.of(false, NicknameValidationReason.BAD_WORD, "닉네임에 사용할 수 없는 표현이 포함되어 있습니다.");
+        }
+        if (userRepository.existsByNickname(nickname)) {
+            return GetNicknameValidationResponse.of(false, NicknameValidationReason.DUPLICATE, "이미 사용 중인 닉네임입니다.");
+        }
+
+        return GetNicknameValidationResponse.of(true, NicknameValidationReason.OK, "사용 가능한 닉네임입니다.");
     }
 
     /**
