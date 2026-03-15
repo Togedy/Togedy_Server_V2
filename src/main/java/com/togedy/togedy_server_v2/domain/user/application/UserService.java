@@ -7,6 +7,7 @@ import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.user.dao.AuthProviderRepository;
+import com.togedy.togedy_server_v2.domain.user.dao.RefreshTokenRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
@@ -18,6 +19,7 @@ import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingR
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
+import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.domain.user.exception.InvalidUserProfileImageException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateNicknameException;
@@ -45,6 +47,7 @@ public class UserService {
     private final StudyRepository studyRepository;
     private final UserStudyRepository userStudyRepository;
     private final AuthProviderRepository authProviderRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -164,6 +167,15 @@ public class UserService {
 
         user.changeNickname(request.getNickname());
         replaceUserProfileImage(request.getUserProfileImage(), request.isRemoveUserProfileImage(), user);
+    }
+
+    @Transactional
+    public void withdrawUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.updateStatus(UserStatus.INACTIVE);
+        refreshTokenRepository.deleteByUserId(userId);
     }
 
     /**

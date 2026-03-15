@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -90,6 +91,13 @@ public class UserController {
             @AuthenticationPrincipal AuthUser user
     ) {
         userService.modifyProfile(request, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @Operation(summary = "회원 탈퇴", description = "본인 계정을 탈퇴 처리한다.")
+    @DeleteMapping("/me")
+    public ApiResponse<Void> withdrawUser(@AuthenticationPrincipal AuthUser user) {
+        userService.withdrawUser(user.getId());
         return ApiUtil.successOnly();
     }
 

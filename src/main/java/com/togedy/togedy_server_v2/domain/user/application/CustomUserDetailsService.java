@@ -2,6 +2,8 @@ package com.togedy.togedy_server_v2.domain.user.application;
 
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
+import com.togedy.togedy_server_v2.domain.user.exception.user.UserInactiveException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,10 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            throw new UserInactiveException();
+        }
 
         return AuthUser.builder()
                 .id(user.getId())
