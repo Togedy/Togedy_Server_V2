@@ -1,22 +1,25 @@
 package com.togedy.togedy_server_v2.global.security;
 
+import com.togedy.togedy_server_v2.domain.user.enums.UserRole;
 import lombok.Builder;
 import lombok.Getter;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
 
 @Getter
 @Builder
 public class AuthUser implements UserDetails {
 
     private final Long id;
+    private final UserRole userRole;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList();
+        return List.of(new SimpleGrantedAuthority("ROLE_" + userRole.name()));
     }
 
     @Override

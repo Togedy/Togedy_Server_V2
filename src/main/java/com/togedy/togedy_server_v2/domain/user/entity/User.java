@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.user.entity;
 
+import com.togedy.togedy_server_v2.domain.user.enums.UserRole;
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
@@ -61,10 +62,15 @@ public class User extends BaseEntity {
     @Column(name = "status", nullable = false, columnDefinition = "varchar(20)")
     private UserStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_role", nullable = false, columnDefinition = "varchar(20)")
+    private UserRole userRole;
+
     private User(String nickname, String email) {
         this.nickname = nickname;
         this.email = email;
         this.status = UserStatus.ACTIVE;
+        this.userRole = UserRole.USER;
         this.studyStreak = 0;
         this.profileCompleted = false;
     }
