@@ -8,6 +8,8 @@ import lombok.Getter;
 @Builder
 public class MyPageStudyDto {
 
+    private Long studyId;
+
     private String studyName;
 
     private String studyImageUrl;
@@ -20,6 +22,7 @@ public class MyPageStudyDto {
 
     public static MyPageStudyDto from(Study study, Boolean isCompleted, int completedMemberCount) {
         return MyPageStudyDto.builder()
+                .studyId(study.getId())
                 .studyName(study.getName())
                 .studyImageUrl(study.getImageUrl())
                 .isCompleted(isCompleted)
@@ -30,6 +33,7 @@ public class MyPageStudyDto {
 
     public static MyPageStudyDto from(Study study) {
         return MyPageStudyDto.builder()
+                .studyId(study.getId())
                 .studyName(study.getName())
                 .studyImageUrl(study.getImageUrl())
                 .studyMemberCount(study.getMemberCount())
