@@ -32,6 +32,7 @@ public class MyPageStudyDto {
         return MyPageStudyDto.builder()
                 .studyName(study.getName())
                 .studyImageUrl(study.getImageUrl())
+                .studyMemberCount(study.getMemberCount())
                 .build();
     }
 }
