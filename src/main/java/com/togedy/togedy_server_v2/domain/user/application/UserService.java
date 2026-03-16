@@ -27,14 +27,18 @@ import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.domain.user.exception.InvalidUserProfileImageException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateNicknameException;
+import com.togedy.togedy_server_v2.domain.user.exception.user.InvalidNicknameException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.NicknameContainsBadWordException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.enums.BadWords;
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -60,6 +64,7 @@ public class UserService {
             "판다", "코알라", "부엉이", "강아지", "고양이"
     );
     private static final int MAX_NICKNAME_SUGGESTION_ATTEMPTS = 100;
+    private static final int NICKNAME_SUGGESTION_BATCH_SIZE = 10;
     private final S3Service s3Service;
     private final UserRepository userRepository;
     private final StudyRepository studyRepository;
@@ -105,13 +110,50 @@ public class UserService {
 
     public GetNicknameSuggestionResponse suggestNickname() {
         for (int attempt = 0; attempt < MAX_NICKNAME_SUGGESTION_ATTEMPTS; attempt++) {
-            String nickname = generateNicknameSuggestion();
-            if (evaluateNicknameValidationReason(nickname, null) == NicknameValidationReason.OK) {
-                return GetNicknameSuggestionResponse.from(nickname);
+            List<String> candidates = generateNicknameSuggestionBatch();
+            List<String> existingNicknames = userRepository.findExistingNicknames(candidates);
+            Set<String> existingNicknameSet = new LinkedHashSet<>(existingNicknames);
+
+            for (String nickname : candidates) {
+                if (!existingNicknameSet.contains(nickname)) {
+                    return GetNicknameSuggestionResponse.from(nickname);
+                }
             }
         }
 
         throw new IllegalStateException("사용 가능한 추천 닉네임을 생성하지 못했습니다.");
+    }
+
+    private List<String> generateNicknameSuggestionBatch() {
+        Set<String> candidates = new LinkedHashSet<>();
+
+        while (candidates.size() < NICKNAME_SUGGESTION_BATCH_SIZE) {
+            String nickname = generateNicknameSuggestion();
+            if (isValidNicknameSuggestionCandidate(nickname)) {
+                candidates.add(nickname);
+            }
+        }
+
+        return new ArrayList<>(candidates);
+    }
+
+    private boolean isValidNicknameSuggestionCandidate(String nickname) {
+        NicknameValidationReason reason = evaluateNicknameValidationReasonWithoutDuplicate(nickname);
+        return reason == NicknameValidationReason.OK;
+    }
+
+    private NicknameValidationReason evaluateNicknameValidationReasonWithoutDuplicate(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            return NicknameValidationReason.BLANK;
+        }
+        if (nickname.length() < 2 || nickname.length() > 10) {
+            return NicknameValidationReason.INVALID_LENGTH;
+        }
+        if (BadWords.containsBadWord(nickname)) {
+            return NicknameValidationReason.BAD_WORD;
+        }
+
+        return NicknameValidationReason.OK;
     }
 
     /**
@@ -416,7 +458,7 @@ public class UserService {
         NicknameValidationReason reason = evaluateNicknameValidationReason(nickname, currentNickname);
 
         switch (reason) {
-            case BLANK, INVALID_LENGTH -> throw new com.togedy.togedy_server_v2.domain.user.exception.user.InvalidNicknameException();
+            case BLANK, INVALID_LENGTH -> throw new InvalidNicknameException();
             case BAD_WORD -> throw new NicknameContainsBadWordException();
             case DUPLICATE -> throw new DuplicateNicknameException();
             case OK -> {
