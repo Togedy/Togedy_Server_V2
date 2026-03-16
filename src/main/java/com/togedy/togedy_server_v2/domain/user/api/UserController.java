@@ -5,6 +5,7 @@ import com.togedy.togedy_server_v2.domain.user.dto.PatchUserOnboardingRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameSuggestionResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileRequest;
@@ -57,6 +58,13 @@ public class UserController {
     @GetMapping("/nickname/validate")
     public ApiResponse<GetNicknameValidationResponse> validateNickname(@RequestParam String nickname) {
         GetNicknameValidationResponse response = userService.validateNickname(nickname);
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "닉네임 추천", description = "형용사, 동물, 세 자리 숫자를 조합한 사용 가능한 닉네임을 1개 추천한다.")
+    @GetMapping("/nickname/suggestions")
+    public ApiResponse<GetNicknameSuggestionResponse> suggestNickname() {
+        GetNicknameSuggestionResponse response = userService.suggestNickname();
         return ApiUtil.success(response);
     }
 

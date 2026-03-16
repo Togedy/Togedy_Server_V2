@@ -13,6 +13,7 @@ import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameSuggestionResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.MyPageStudyDto;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileRequest;
@@ -34,6 +35,7 @@ import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -47,6 +49,17 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final List<String> NICKNAME_ADJECTIVES = List.of(
+            "용감한", "반짝이는", "차분한", "행복한", "든든한",
+            "엉뚱한", "재빠른", "느긋한", "부지런한", "다정한",
+            "명랑한", "씩씩한", "포근한", "총명한", "산뜻한"
+    );
+    private static final List<String> NICKNAME_ANIMALS = List.of(
+            "하마", "여우", "고래", "토끼", "호랑이",
+            "수달", "참새", "펭귄", "사슴", "다람쥐",
+            "판다", "코알라", "부엉이", "강아지", "고양이"
+    );
+    private static final int MAX_NICKNAME_SUGGESTION_ATTEMPTS = 100;
     private final S3Service s3Service;
     private final UserRepository userRepository;
     private final StudyRepository studyRepository;
@@ -88,6 +101,17 @@ public class UserService {
             case DUPLICATE -> GetNicknameValidationResponse.of(false, reason, "이미 사용 중인 닉네임이에요.");
             case OK -> GetNicknameValidationResponse.of(true, reason, "사용 가능한 닉네임입니다.");
         };
+    }
+
+    public GetNicknameSuggestionResponse suggestNickname() {
+        for (int attempt = 0; attempt < MAX_NICKNAME_SUGGESTION_ATTEMPTS; attempt++) {
+            String nickname = generateNicknameSuggestion();
+            if (evaluateNicknameValidationReason(nickname, null) == NicknameValidationReason.OK) {
+                return GetNicknameSuggestionResponse.from(nickname);
+            }
+        }
+
+        throw new IllegalStateException("사용 가능한 추천 닉네임을 생성하지 못했습니다.");
     }
 
     /**
@@ -417,5 +441,13 @@ public class UserService {
             return NicknameValidationReason.DUPLICATE;
         }
         return NicknameValidationReason.OK;
+    }
+
+    private String generateNicknameSuggestion() {
+        String adjective = NICKNAME_ADJECTIVES.get(ThreadLocalRandom.current().nextInt(NICKNAME_ADJECTIVES.size()));
+        String animal = NICKNAME_ANIMALS.get(ThreadLocalRandom.current().nextInt(NICKNAME_ANIMALS.size()));
+        int number = ThreadLocalRandom.current().nextInt(1000);
+
+        return adjective + animal + String.format("%03d", number);
     }
 }
