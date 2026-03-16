@@ -12,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -37,6 +38,9 @@ public class User extends BaseEntity {
 
     @Column(name = "email", nullable = true)
     private String email;
+
+    @Column(name = "birth_date", nullable = true)
+    private LocalDate birthDate;
 
     @Column(name = "profile_image_url", nullable = true)
     private String profileImageUrl;
@@ -118,6 +122,13 @@ public class User extends BaseEntity {
     }
 
     public void completeProfile() {
+        this.profileCompleted = true;
+    }
+
+    public void completeOnboarding(String nickname, LocalDate birthDate) {
+        validateNicknameLength(nickname);
+        this.nickname = nickname;
+        this.birthDate = birthDate;
         this.profileCompleted = true;
     }
 

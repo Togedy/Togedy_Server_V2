@@ -17,6 +17,7 @@ import com.togedy.togedy_server_v2.domain.user.dto.MyPageStudyDto;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchUserOnboardingRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
@@ -25,6 +26,7 @@ import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.domain.user.exception.InvalidUserProfileImageException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateNicknameException;
+import com.togedy.togedy_server_v2.domain.user.exception.user.NicknameContainsBadWordException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.enums.BadWords;
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
@@ -58,9 +60,7 @@ public class UserService {
 
     @Transactional
     public Long generateUser(CreateUserRequest request) {
-        if (userRepository.existsByNickname(request.getNickname())) {
-            throw new DuplicateNicknameException();
-        }
+        validateNicknameForSave(request.getNickname(), null);
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateEmailException();
         }
@@ -80,20 +80,14 @@ public class UserService {
     }
 
     public GetNicknameValidationResponse validateNickname(String nickname) {
-        if (nickname == null || nickname.isBlank()) {
-            return GetNicknameValidationResponse.of(false, NicknameValidationReason.BLANK, "닉네임을 입력해 주세요.");
-        }
-        if (nickname.length() < 2 || nickname.length() > 10) {
-            return GetNicknameValidationResponse.of(false, NicknameValidationReason.INVALID_LENGTH, "닉네임은 2~10자로 입력해 주세요.");
-        }
-        if (BadWords.containsBadWord(nickname)) {
-            return GetNicknameValidationResponse.of(false, NicknameValidationReason.BAD_WORD, "사용할 수 없는 단어가 포함되어 있어요.");
-        }
-        if (userRepository.existsByNickname(nickname)) {
-            return GetNicknameValidationResponse.of(false, NicknameValidationReason.DUPLICATE, "이미 사용 중인 닉네임이에요.");
-        }
-
-        return GetNicknameValidationResponse.of(true, NicknameValidationReason.OK, "사용 가능한 닉네임입니다.");
+        NicknameValidationReason reason = evaluateNicknameValidationReason(nickname, null);
+        return switch (reason) {
+            case BLANK -> GetNicknameValidationResponse.of(false, reason, "닉네임을 입력해 주세요.");
+            case INVALID_LENGTH -> GetNicknameValidationResponse.of(false, reason, "닉네임은 2~10자로 입력해 주세요.");
+            case BAD_WORD -> GetNicknameValidationResponse.of(false, reason, "사용할 수 없는 단어가 포함되어 있어요.");
+            case DUPLICATE -> GetNicknameValidationResponse.of(false, reason, "이미 사용 중인 닉네임이에요.");
+            case OK -> GetNicknameValidationResponse.of(true, reason, "사용 가능한 닉네임입니다.");
+        };
     }
 
     /**
@@ -185,8 +179,20 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
+        if (request.getNickname() != null && !request.getNickname().isBlank()) {
+            validateNicknameForSave(request.getNickname(), user.getNickname());
+        }
         user.changeNickname(request.getNickname());
         replaceUserProfileImage(request.getUserProfileImage(), request.isRemoveUserProfileImage(), user);
+    }
+
+    @Transactional
+    public void completeOnboarding(PatchUserOnboardingRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        validateNicknameForSave(request.getNickname(), user.getNickname());
+        user.completeOnboarding(request.getNickname(), request.getBirthDate());
     }
 
     @Transactional
@@ -380,5 +386,36 @@ public class UserService {
                 .map(UserStudy::getUserId)
                 .distinct()
                 .toList();
+    }
+
+    private void validateNicknameForSave(String nickname, String currentNickname) {
+        NicknameValidationReason reason = evaluateNicknameValidationReason(nickname, currentNickname);
+
+        switch (reason) {
+            case BLANK, INVALID_LENGTH -> throw new com.togedy.togedy_server_v2.domain.user.exception.user.InvalidNicknameException();
+            case BAD_WORD -> throw new NicknameContainsBadWordException();
+            case DUPLICATE -> throw new DuplicateNicknameException();
+            case OK -> {
+            }
+        }
+    }
+
+    private NicknameValidationReason evaluateNicknameValidationReason(String nickname, String currentNickname) {
+        if (nickname == null || nickname.isBlank()) {
+            return NicknameValidationReason.BLANK;
+        }
+        if (nickname.length() < 2 || nickname.length() > 10) {
+            return NicknameValidationReason.INVALID_LENGTH;
+        }
+        if (BadWords.containsBadWord(nickname)) {
+            return NicknameValidationReason.BAD_WORD;
+        }
+        if (currentNickname != null && currentNickname.equals(nickname)) {
+            return NicknameValidationReason.OK;
+        }
+        if (userRepository.existsByNickname(nickname)) {
+            return NicknameValidationReason.DUPLICATE;
+        }
+        return NicknameValidationReason.OK;
     }
 }

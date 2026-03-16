@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.user.api;
 
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchUserOnboardingRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
@@ -100,6 +101,16 @@ public class UserController {
             @AuthenticationPrincipal AuthUser user
     ) {
         userService.modifyProfile(request, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @Operation(summary = "온보딩 완료", description = "카카오 로그인 이후 닉네임과 생년월일을 저장하고 온보딩을 완료한다.")
+    @PatchMapping("/me/onboarding")
+    public ApiResponse<Void> completeOnboarding(
+            @Validated @RequestBody PatchUserOnboardingRequest request,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        userService.completeOnboarding(request, user.getId());
         return ApiUtil.successOnly();
     }
 
