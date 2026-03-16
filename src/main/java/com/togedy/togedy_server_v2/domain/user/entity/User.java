@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.user.entity;
 
 import com.togedy.togedy_server_v2.domain.user.enums.UserRole;
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
+import com.togedy.togedy_server_v2.domain.user.exception.user.InvalidNicknameException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,6 +23,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseEntity {
+
+    private static final int MIN_NICKNAME_LENGTH = 2;
+    private static final int MAX_NICKNAME_LENGTH = 10;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -67,6 +71,7 @@ public class User extends BaseEntity {
     private UserRole userRole;
 
     private User(String nickname, String email) {
+        validateNicknameLength(nickname);
         this.nickname = nickname;
         this.email = email;
         this.status = UserStatus.ACTIVE;
@@ -101,6 +106,7 @@ public class User extends BaseEntity {
 
     public void changeNickname(String nickname) {
         if (nickname != null && !nickname.isBlank()) {
+            validateNicknameLength(nickname);
             this.nickname = nickname;
         }
     }
@@ -113,5 +119,11 @@ public class User extends BaseEntity {
 
     public void completeProfile() {
         this.profileCompleted = true;
+    }
+
+    private void validateNicknameLength(String nickname) {
+        if (nickname == null || nickname.length() < MIN_NICKNAME_LENGTH || nickname.length() > MAX_NICKNAME_LENGTH) {
+            throw new InvalidNicknameException();
+        }
     }
 }

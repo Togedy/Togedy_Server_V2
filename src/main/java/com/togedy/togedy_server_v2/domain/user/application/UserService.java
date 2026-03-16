@@ -83,14 +83,14 @@ public class UserService {
         if (nickname == null || nickname.isBlank()) {
             return GetNicknameValidationResponse.of(false, NicknameValidationReason.BLANK, "닉네임을 입력해 주세요.");
         }
-        if (nickname.length() > 10) {
-            return GetNicknameValidationResponse.of(false, NicknameValidationReason.TOO_LONG, "닉네임은 10자 이하여야 합니다.");
+        if (nickname.length() < 2 || nickname.length() > 10) {
+            return GetNicknameValidationResponse.of(false, NicknameValidationReason.INVALID_LENGTH, "닉네임은 2~10자로 입력해 주세요.");
         }
         if (BadWords.containsBadWord(nickname)) {
-            return GetNicknameValidationResponse.of(false, NicknameValidationReason.BAD_WORD, "닉네임에 사용할 수 없는 표현이 포함되어 있습니다.");
+            return GetNicknameValidationResponse.of(false, NicknameValidationReason.BAD_WORD, "사용할 수 없는 단어가 포함되어 있어요.");
         }
         if (userRepository.existsByNickname(nickname)) {
-            return GetNicknameValidationResponse.of(false, NicknameValidationReason.DUPLICATE, "이미 사용 중인 닉네임입니다.");
+            return GetNicknameValidationResponse.of(false, NicknameValidationReason.DUPLICATE, "이미 사용 중인 닉네임이에요.");
         }
 
         return GetNicknameValidationResponse.of(true, NicknameValidationReason.OK, "사용 가능한 닉네임입니다.");
