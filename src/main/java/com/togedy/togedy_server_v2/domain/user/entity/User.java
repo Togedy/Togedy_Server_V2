@@ -1,6 +1,8 @@
 package com.togedy.togedy_server_v2.domain.user.entity;
 
+import com.togedy.togedy_server_v2.domain.user.enums.UserRole;
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
+import com.togedy.togedy_server_v2.domain.user.exception.user.InvalidNicknameException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +12,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.AccessLevel;
@@ -22,6 +25,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class User extends BaseEntity {
 
+    private static final int MIN_NICKNAME_LENGTH = 2;
+    private static final int MAX_NICKNAME_LENGTH = 10;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id", updatable = false)
@@ -32,6 +38,9 @@ public class User extends BaseEntity {
 
     @Column(name = "email", nullable = true)
     private String email;
+
+    @Column(name = "birth_date", nullable = true)
+    private LocalDate birthDate;
 
     @Column(name = "profile_image_url", nullable = true)
     private String profileImageUrl;
@@ -61,10 +70,16 @@ public class User extends BaseEntity {
     @Column(name = "status", nullable = false, columnDefinition = "varchar(20)")
     private UserStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_role", nullable = false, columnDefinition = "varchar(20)")
+    private UserRole userRole;
+
     private User(String nickname, String email) {
+        validateNicknameLength(nickname);
         this.nickname = nickname;
         this.email = email;
         this.status = UserStatus.ACTIVE;
+        this.userRole = UserRole.USER;
         this.studyStreak = 0;
         this.profileCompleted = false;
     }
@@ -81,6 +96,10 @@ public class User extends BaseEntity {
         this.plannerVisible = plannerVisible;
     }
 
+    public UserRole getUserRole() {
+        return userRole != null ? userRole : UserRole.USER;
+    }
+
     public static User createTemp(String email) {
         return new User("tmp" + UUID.randomUUID().toString().substring(0, 7), email);
     }
@@ -95,6 +114,7 @@ public class User extends BaseEntity {
 
     public void changeNickname(String nickname) {
         if (nickname != null && !nickname.isBlank()) {
+            validateNicknameLength(nickname);
             this.nickname = nickname;
         }
     }
@@ -107,5 +127,18 @@ public class User extends BaseEntity {
 
     public void completeProfile() {
         this.profileCompleted = true;
+    }
+
+    public void completeOnboarding(String nickname, LocalDate birthDate) {
+        validateNicknameLength(nickname);
+        this.nickname = nickname;
+        this.birthDate = birthDate;
+        this.profileCompleted = true;
+    }
+
+    private void validateNicknameLength(String nickname) {
+        if (nickname == null || nickname.length() < MIN_NICKNAME_LENGTH || nickname.length() > MAX_NICKNAME_LENGTH) {
+            throw new InvalidNicknameException();
+        }
     }
 }

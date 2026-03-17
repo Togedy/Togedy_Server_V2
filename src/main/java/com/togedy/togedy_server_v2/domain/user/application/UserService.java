@@ -7,26 +7,39 @@ import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.user.dao.AuthProviderRepository;
+import com.togedy.togedy_server_v2.domain.user.dao.RefreshTokenRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameSuggestionResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.MyPageStudyDto;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchUserOnboardingRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
+import com.togedy.togedy_server_v2.domain.user.enums.NicknameValidationReason;
+import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.domain.user.exception.InvalidUserProfileImageException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateNicknameException;
+import com.togedy.togedy_server_v2.domain.user.exception.user.InvalidNicknameException;
+import com.togedy.togedy_server_v2.domain.user.exception.user.NicknameContainsBadWordException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
+import com.togedy.togedy_server_v2.global.enums.BadWords;
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
@@ -40,11 +53,24 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final List<String> NICKNAME_ADJECTIVES = List.of(
+            "용감한", "반짝이는", "차분한", "행복한", "든든한",
+            "엉뚱한", "재빠른", "느긋한", "부지런한", "다정한",
+            "명랑한", "씩씩한", "포근한", "총명한", "산뜻한"
+    );
+    private static final List<String> NICKNAME_ANIMALS = List.of(
+            "하마", "여우", "고래", "토끼", "호랑이",
+            "수달", "참새", "펭귄", "사슴", "다람쥐",
+            "판다", "코알라", "부엉이", "강아지", "고양이"
+    );
+    private static final int MAX_NICKNAME_SUGGESTION_ATTEMPTS = 100;
+    private static final int NICKNAME_SUGGESTION_BATCH_SIZE = 10;
     private final S3Service s3Service;
     private final UserRepository userRepository;
     private final StudyRepository studyRepository;
     private final UserStudyRepository userStudyRepository;
     private final AuthProviderRepository authProviderRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
 
@@ -52,9 +78,7 @@ public class UserService {
 
     @Transactional
     public Long generateUser(CreateUserRequest request) {
-        if (userRepository.existsByNickname(request.getNickname())) {
-            throw new DuplicateNicknameException();
-        }
+        validateNicknameForSave(request.getNickname(), null);
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new DuplicateEmailException();
         }
@@ -71,6 +95,65 @@ public class UserService {
     public User loadUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
+    }
+
+    public GetNicknameValidationResponse validateNickname(String nickname) {
+        NicknameValidationReason reason = evaluateNicknameValidationReason(nickname, null);
+        return switch (reason) {
+            case BLANK -> GetNicknameValidationResponse.of(false, reason, "닉네임을 입력해 주세요.");
+            case INVALID_LENGTH -> GetNicknameValidationResponse.of(false, reason, "닉네임은 2~10자로 입력해 주세요.");
+            case BAD_WORD -> GetNicknameValidationResponse.of(false, reason, "사용할 수 없는 단어가 포함되어 있어요.");
+            case DUPLICATE -> GetNicknameValidationResponse.of(false, reason, "이미 사용 중인 닉네임이에요.");
+            case OK -> GetNicknameValidationResponse.of(true, reason, "사용 가능한 닉네임입니다.");
+        };
+    }
+
+    public GetNicknameSuggestionResponse suggestNickname() {
+        for (int attempt = 0; attempt < MAX_NICKNAME_SUGGESTION_ATTEMPTS; attempt++) {
+            List<String> candidates = generateNicknameSuggestionBatch();
+            List<String> existingNicknames = userRepository.findExistingNicknames(candidates);
+            Set<String> existingNicknameSet = new LinkedHashSet<>(existingNicknames);
+
+            for (String nickname : candidates) {
+                if (!existingNicknameSet.contains(nickname)) {
+                    return GetNicknameSuggestionResponse.from(nickname);
+                }
+            }
+        }
+
+        throw new IllegalStateException("사용 가능한 추천 닉네임을 생성하지 못했습니다.");
+    }
+
+    private List<String> generateNicknameSuggestionBatch() {
+        Set<String> candidates = new LinkedHashSet<>();
+
+        while (candidates.size() < NICKNAME_SUGGESTION_BATCH_SIZE) {
+            String nickname = generateNicknameSuggestion();
+            if (isValidNicknameSuggestionCandidate(nickname)) {
+                candidates.add(nickname);
+            }
+        }
+
+        return new ArrayList<>(candidates);
+    }
+
+    private boolean isValidNicknameSuggestionCandidate(String nickname) {
+        NicknameValidationReason reason = evaluateNicknameValidationReasonWithoutDuplicate(nickname);
+        return reason == NicknameValidationReason.OK;
+    }
+
+    private NicknameValidationReason evaluateNicknameValidationReasonWithoutDuplicate(String nickname) {
+        if (nickname == null || nickname.isBlank()) {
+            return NicknameValidationReason.BLANK;
+        }
+        if (nickname.length() < 2 || nickname.length() > 10) {
+            return NicknameValidationReason.INVALID_LENGTH;
+        }
+        if (BadWords.containsBadWord(nickname)) {
+            return NicknameValidationReason.BAD_WORD;
+        }
+
+        return NicknameValidationReason.OK;
     }
 
     /**
@@ -162,8 +245,29 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
+        if (request.getNickname() != null && !request.getNickname().isBlank()) {
+            validateNicknameForSave(request.getNickname(), user.getNickname());
+        }
         user.changeNickname(request.getNickname());
         replaceUserProfileImage(request.getUserProfileImage(), request.isRemoveUserProfileImage(), user);
+    }
+
+    @Transactional
+    public void completeOnboarding(PatchUserOnboardingRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        validateNicknameForSave(request.getNickname(), user.getNickname());
+        user.completeOnboarding(request.getNickname(), request.getBirthDate());
+    }
+
+    @Transactional
+    public void withdrawUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.updateStatus(UserStatus.INACTIVE);
+        refreshTokenRepository.deleteByUserId(userId);
     }
 
     /**
@@ -348,5 +452,44 @@ public class UserService {
                 .map(UserStudy::getUserId)
                 .distinct()
                 .toList();
+    }
+
+    private void validateNicknameForSave(String nickname, String currentNickname) {
+        NicknameValidationReason reason = evaluateNicknameValidationReason(nickname, currentNickname);
+
+        switch (reason) {
+            case BLANK, INVALID_LENGTH -> throw new InvalidNicknameException();
+            case BAD_WORD -> throw new NicknameContainsBadWordException();
+            case DUPLICATE -> throw new DuplicateNicknameException();
+            case OK -> {
+            }
+        }
+    }
+
+    private NicknameValidationReason evaluateNicknameValidationReason(String nickname, String currentNickname) {
+        if (nickname == null || nickname.isBlank()) {
+            return NicknameValidationReason.BLANK;
+        }
+        if (nickname.length() < 2 || nickname.length() > 10) {
+            return NicknameValidationReason.INVALID_LENGTH;
+        }
+        if (BadWords.containsBadWord(nickname)) {
+            return NicknameValidationReason.BAD_WORD;
+        }
+        if (currentNickname != null && currentNickname.equals(nickname)) {
+            return NicknameValidationReason.OK;
+        }
+        if (userRepository.existsByNickname(nickname)) {
+            return NicknameValidationReason.DUPLICATE;
+        }
+        return NicknameValidationReason.OK;
+    }
+
+    private String generateNicknameSuggestion() {
+        String adjective = NICKNAME_ADJECTIVES.get(ThreadLocalRandom.current().nextInt(NICKNAME_ADJECTIVES.size()));
+        String animal = NICKNAME_ANIMALS.get(ThreadLocalRandom.current().nextInt(NICKNAME_ANIMALS.size()));
+        int number = ThreadLocalRandom.current().nextInt(1000);
+
+        return adjective + animal + String.format("%03d", number);
     }
 }
