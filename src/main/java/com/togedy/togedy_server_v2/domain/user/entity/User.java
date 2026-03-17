@@ -96,6 +96,10 @@ public class User extends BaseEntity {
         this.plannerVisible = plannerVisible;
     }
 
+    public UserRole getUserRole() {
+        return userRole != null ? userRole : UserRole.USER;
+    }
+
     public static User createTemp(String email) {
         return new User("tmp" + UUID.randomUUID().toString().substring(0, 7), email);
     }
