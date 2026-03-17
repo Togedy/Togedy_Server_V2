@@ -3,9 +3,9 @@ package com.togedy.togedy_server_v2.domain.user.application;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
-import com.togedy.togedy_server_v2.domain.user.exception.user.UserInactiveException;
-import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
+import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtInvalidException;
+import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtUserInactiveException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,10 +23,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         Long userId = Long.parseLong(username);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+                .orElseThrow(JwtInvalidException::new);
 
         if (user.getStatus() != UserStatus.ACTIVE) {
-            throw new UserInactiveException();
+            throw new JwtUserInactiveException();
         }
 
         return AuthUser.builder()
