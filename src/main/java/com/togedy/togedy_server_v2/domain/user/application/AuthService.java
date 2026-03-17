@@ -57,6 +57,9 @@ public class AuthService {
         }
 
         Long userId = Long.parseLong(jwtTokenProvider.getAuthentication(refreshToken).getName());
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        validateActiveUser(user);
 
         String storedToken = refreshTokenRepository.findByUserId(userId)
                 .orElseThrow(JwtNotFoundException::new);
@@ -66,7 +69,7 @@ public class AuthService {
             throw new JwtRefreshMismatchException();
         }
 
-        JwtTokenInfo newTokenInfo = jwtTokenProvider.generateTokenInfo(userId);
+        JwtTokenInfo newTokenInfo = jwtTokenProvider.generateTokenInfo(user.getId());
         refreshTokenRepository.deleteByUserId(userId);
         refreshTokenRepository.save(userId, newTokenInfo.getRefreshToken());
         return newTokenInfo;
