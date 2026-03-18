@@ -68,6 +68,19 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
     );
 
     @Query("""
+            SELECT dss.date
+            FROM DailyStudySummary dss
+            WHERE dss.userId = :userId
+                AND dss.date <= :date
+                AND dss.studyTime > 0
+            ORDER BY dss.date DESC
+            """)
+    List<LocalDate> findStudyDatesByUserIdUntilDateOrderByDateDesc(
+            @Param("userId") Long userId,
+            @Param("date") LocalDate date
+    );
+
+    @Query("""
             SELECT new com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto(
                 d.userId as userId,
                 d.date as date,

@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.planner.api;
 
 import com.togedy.togedy_server_v2.domain.planner.application.PlannerService;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerShareResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerStatisticsResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerTopResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetMonthlyPlannerHeatmapResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PutDailyPlannerImageRequest;
@@ -62,6 +63,17 @@ public class PlannerController {
             @AuthenticationPrincipal AuthUser user
     ) {
         GetDailyPlannerShareResponse response = plannerService.findDailyPlannerShare(date, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "일간 플래너 통계 조회",
+            description = "해당 날짜 기준 연속 학습 정보, 주간 복기, 월간 복기를 조회한다.")
+    @GetMapping("/daily/statistics")
+    public ApiResponse<GetDailyPlannerStatisticsResponse> readDailyPlannerStatistics(
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        GetDailyPlannerStatisticsResponse response = plannerService.findDailyPlannerStatistics(date, user.getId());
         return ApiUtil.success(response);
     }
 
