@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.planner.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.PlannerDailyImageRepository;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerShareResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerTopResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetMonthlyPlannerHeatmapResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PutDailyPlannerImageRequest;
@@ -31,14 +32,17 @@ public class PlannerService {
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final PlannerDailyImageRepository plannerDailyImageRepository;
     private final S3Service s3Service;
+    private final StudyTaskService studyTaskService;
+    private final StudyTimeService studyTimeService;
 
     @Transactional(readOnly = true)
     public GetDailyPlannerTopResponse findDailyPlannerTop(LocalDate date, Long userId) {
+        LocalDate studyDate = resolveStudyDate(date);
         Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
-        Long dailyStudyTime = dailyStudySummaryRepository.findByUserIdAndDate(userId, date)
+        Long dailyStudyTime = dailyStudySummaryRepository.findByUserIdAndDate(userId, studyDate)
                 .map(DailyStudySummary::getStudyTime)
                 .orElse(0L);
-        String plannerImage = plannerDailyImageRepository.findTopByUserIdAndDateLessThanEqualOrderByDateDesc(userId, date)
+        String plannerImage = plannerDailyImageRepository.findTopByUserIdAndDateLessThanEqualOrderByDateDesc(userId, studyDate)
                 .map(PlannerDailyImage::getImageUrl)
                 .orElse(null);
 
@@ -47,21 +51,21 @@ public class PlannerService {
             int remainingDays = TimeUtil.calculateDaysUntil(schedule.getStartDate());
 
             return GetDailyPlannerTopResponse.of(
-                    date,
+                    studyDate,
                     true,
                     schedule.getName(),
                     remainingDays,
-                    dailyStudyTime,
+                    TimeUtil.formatSecondsToHms(dailyStudyTime),
                     plannerImage
             );
         }
 
         return GetDailyPlannerTopResponse.of(
-                date,
+                studyDate,
                 false,
                 null,
                 null,
-                dailyStudyTime,
+                TimeUtil.formatSecondsToHms(dailyStudyTime),
                 plannerImage
         );
     }
@@ -89,13 +93,37 @@ public class PlannerService {
         return GetMonthlyPlannerHeatmapResponse.of(heatmapList);
     }
 
+    @Transactional(readOnly = true)
+    public GetDailyPlannerShareResponse findDailyPlannerShare(LocalDate date, Long userId) {
+        LocalDate studyDate = resolveStudyDate(date);
+        Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
+        Long dailyStudyTime = dailyStudySummaryRepository.findByUserIdAndDate(userId, studyDate)
+                .map(DailyStudySummary::getStudyTime)
+                .orElse(0L);
+        String plannerImage = plannerDailyImageRepository.findTopByUserIdAndDateLessThanEqualOrderByDateDesc(userId, studyDate)
+                .map(PlannerDailyImage::getImageUrl)
+                .orElse(null);
+
+        return GetDailyPlannerShareResponse.of(
+                studyDate,
+                dDaySchedule.isPresent(),
+                dDaySchedule.map(UserSchedule::getName).orElse(null),
+                dDaySchedule.map(schedule -> TimeUtil.calculateDaysUntil(schedule.getStartDate())).orElse(null),
+                TimeUtil.formatSecondsToHms(dailyStudyTime),
+                plannerImage,
+                studyTaskService.findDailyPlannerShareItems(studyDate, userId),
+                studyTimeService.findDailyTimetables(studyDate, userId).getTimeTableList()
+        );
+    }
+
     @Transactional
     public void upsertDailyPlannerImage(LocalDate date, PutDailyPlannerImageRequest request, Long userId) {
+        LocalDate studyDate = resolveStudyDate(date);
         String plannerImageUrl = resolvePlannerImageUrl(request);
-        PlannerDailyImage dailyImage = plannerDailyImageRepository.findByUserIdAndDate(userId, date)
+        PlannerDailyImage dailyImage = plannerDailyImageRepository.findByUserIdAndDate(userId, studyDate)
                 .orElseGet(() -> PlannerDailyImage.builder()
                         .userId(userId)
-                        .date(date)
+                        .date(studyDate)
                         .build());
 
         dailyImage.updateImageUrl(plannerImageUrl);
@@ -128,5 +156,12 @@ public class PlannerService {
             return 4;
         }
         return 5;
+    }
+
+    private LocalDate resolveStudyDate(LocalDate requestedDate) {
+        if (requestedDate != null && requestedDate.equals(LocalDate.now())) {
+            return TimeUtil.currentStudyDate();
+        }
+        return requestedDate;
     }
 }

@@ -5,6 +5,8 @@ import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.dto.DailyPlannerTaskDto;
 import com.togedy.togedy_server_v2.domain.planner.dto.DailyPlannerTaskItemDto;
+import com.togedy.togedy_server_v2.domain.planner.dto.DailyPlannerShareItemResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.DailyPlannerShareTaskItemResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerTaskResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PutStudyTaskRequest;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
@@ -32,48 +34,26 @@ public class StudyTaskService {
 
     @Transactional(readOnly = true)
     public GetDailyPlannerTaskResponse findDailyPlannerTasks(LocalDate date, Long userId) {
-        List<StudySubject> studySubjects = studySubjectRepository.findAllByUserId(userId);
-        List<Long> studySubjectIds = studySubjects.stream()
-                .map(StudySubject::getId)
+        LocalDate studyDate = resolveStudyDate(date);
+        return GetDailyPlannerTaskResponse.of(buildDailyPlannerTasks(studyDate, userId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<DailyPlannerShareItemResponse> findDailyPlannerShareItems(LocalDate date, Long userId) {
+        LocalDate studyDate = resolveStudyDate(date);
+
+        return buildDailyPlannerTasks(studyDate, userId).stream()
+                .map(item -> DailyPlannerShareItemResponse.of(
+                        item.getSubjectId(),
+                        item.getSubjectName(),
+                        item.getSubjectColor(),
+                        item.getTaskList().size(),
+                        (int) item.getTaskList().stream().filter(DailyPlannerTaskItemDto::isChecked).count(),
+                        item.getTaskList().stream()
+                                .map(task -> DailyPlannerShareTaskItemResponse.of(task.getTaskName(), task.isChecked()))
+                                .toList()
+                ))
                 .toList();
-
-        if (studySubjectIds.isEmpty()) {
-            return GetDailyPlannerTaskResponse.of(List.of());
-        }
-
-        List<StudyTask> dailyStudyTasks = studyTaskRepository.findAllByStudySubjectIdsAndDate(studySubjectIds, date);
-        Map<Long, List<StudyTask>> tasksByStudySubjectId = dailyStudyTasks.stream()
-                .collect(Collectors.groupingBy(StudyTask::getStudySubjectId));
-
-        LocalDateTime startOfDate = date.atStartOfDay();
-        LocalDateTime startOfNextDate = date.plusDays(1).atStartOfDay();
-
-        List<StudyTime> studyTimes = studyTimeRepository.findDailyStudyTimesBySubjectIds(
-                studySubjectIds, startOfDate, startOfNextDate
-        );
-
-        Map<Long, Long> studyTimeBySubjectId = studyTimes.stream()
-                .collect(Collectors.groupingBy(
-                        StudyTime::getStudySubjectId,
-                        Collectors.summingLong(studyTime ->
-                                calculateOverlapStudySeconds(studyTime, startOfDate, startOfNextDate))
-                ));
-
-        List<DailyPlannerTaskDto> dailyPlanner = studySubjects.stream()
-                .map(studySubject -> {
-                    List<DailyPlannerTaskItemDto> taskList = tasksByStudySubjectId
-                            .getOrDefault(studySubject.getId(), List.of())
-                            .stream()
-                            .map(DailyPlannerTaskItemDto::from)
-                            .toList();
-
-                    Long subjectStudyTime = studyTimeBySubjectId.getOrDefault(studySubject.getId(), 0L);
-
-                    return DailyPlannerTaskDto.of(studySubject, subjectStudyTime, taskList);
-                })
-                .toList();
-
-        return GetDailyPlannerTaskResponse.of(dailyPlanner);
     }
 
     @Transactional
@@ -87,7 +67,7 @@ public class StudyTaskService {
                     .userId(userId)
                     .studySubjectId(subject.getId())
                     .name(request.getName())
-                    .date(request.getDate())
+                    .date(resolveStudyDate(request.getDate()))
                     .build();
             return studyTaskRepository.save(task).getId();
         }
@@ -95,6 +75,49 @@ public class StudyTaskService {
         StudyTask task = validateTask(request.getTaskId(), userId);
         task.update(request.getName());
         return task.getId();
+    }
+
+    private List<DailyPlannerTaskDto> buildDailyPlannerTasks(LocalDate studyDate, Long userId) {
+        List<StudySubject> studySubjects = studySubjectRepository.findAllByUserId(userId);
+        List<Long> studySubjectIds = studySubjects.stream()
+                .map(StudySubject::getId)
+                .toList();
+
+        if (studySubjectIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<StudyTask> dailyStudyTasks = studyTaskRepository.findAllByStudySubjectIdsAndDate(studySubjectIds, studyDate);
+        Map<Long, List<StudyTask>> tasksByStudySubjectId = dailyStudyTasks.stream()
+                .collect(Collectors.groupingBy(StudyTask::getStudySubjectId));
+
+        LocalDateTime startOfDate = studyDate.atTime(5, 0);
+        LocalDateTime startOfNextDate = startOfDate.plusDays(1);
+
+        List<StudyTime> studyTimes = studyTimeRepository.findDailyStudyTimesBySubjectIds(
+                studySubjectIds, startOfDate, startOfNextDate
+        );
+
+        Map<Long, Long> studyTimeBySubjectId = studyTimes.stream()
+                .collect(Collectors.groupingBy(
+                        StudyTime::getStudySubjectId,
+                        Collectors.summingLong(studyTime ->
+                                calculateOverlapStudySeconds(studyTime, startOfDate, startOfNextDate))
+                ));
+
+        return studySubjects.stream()
+                .map(studySubject -> {
+                    List<DailyPlannerTaskItemDto> taskList = tasksByStudySubjectId
+                            .getOrDefault(studySubject.getId(), List.of())
+                            .stream()
+                            .map(DailyPlannerTaskItemDto::from)
+                            .toList();
+
+                    Long subjectStudyTime = studyTimeBySubjectId.getOrDefault(studySubject.getId(), 0L);
+
+                    return DailyPlannerTaskDto.of(studySubject, subjectStudyTime, taskList);
+                })
+                .toList();
     }
 
     @Transactional
@@ -139,5 +162,12 @@ public class StudyTaskService {
         LocalDateTime effectiveStart = studyTime.getStartTime().isAfter(periodStart) ? studyTime.getStartTime() : periodStart;
         LocalDateTime effectiveEnd = studyTime.getEndTime().isBefore(periodEnd) ? studyTime.getEndTime() : periodEnd;
         return TimeUtil.calculateStudySeconds(effectiveStart, effectiveEnd);
+    }
+
+    private LocalDate resolveStudyDate(LocalDate requestedDate) {
+        if (requestedDate != null && requestedDate.equals(LocalDate.now())) {
+            return TimeUtil.currentStudyDate();
+        }
+        return requestedDate;
     }
 }

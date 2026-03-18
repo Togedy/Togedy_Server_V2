@@ -6,6 +6,7 @@ import com.togedy.togedy_server_v2.domain.planner.dto.DailyTimetableItemResponse
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyTimetableResponse;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -25,6 +26,7 @@ public class StudyTimeService {
 
     @Transactional(readOnly = true)
     public GetDailyTimetableResponse findDailyTimetables(LocalDate date, Long userId) {
+        LocalDate studyDate = resolveStudyDate(date);
         List<StudySubject> studySubjects = studySubjectRepository.findAllByUserId(userId);
         if (studySubjects.isEmpty()) {
             return GetDailyTimetableResponse.of(List.of());
@@ -34,7 +36,7 @@ public class StudyTimeService {
                 .map(StudySubject::getId)
                 .toList();
 
-        LocalDateTime dayStart = date.atTime(5, 0);
+        LocalDateTime dayStart = studyDate.atTime(5, 0);
         LocalDateTime dayEnd = dayStart.plusDays(1);
 
         List<StudyTime> studyTimes = studyTimeRepository.findDailyStudyTimesBySubjectIds(
@@ -60,5 +62,12 @@ public class StudyTimeService {
                 .toList();
 
         return GetDailyTimetableResponse.of(timeTableList);
+    }
+
+    private LocalDate resolveStudyDate(LocalDate requestedDate) {
+        if (requestedDate != null && requestedDate.equals(LocalDate.now())) {
+            return TimeUtil.currentStudyDate();
+        }
+        return requestedDate;
     }
 }

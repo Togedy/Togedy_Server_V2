@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.planner.api;
 
 import com.togedy.togedy_server_v2.domain.planner.application.PlannerService;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerShareResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerTopResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetMonthlyPlannerHeatmapResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PutDailyPlannerImageRequest;
@@ -50,6 +51,17 @@ public class PlannerController {
             @AuthenticationPrincipal AuthUser user
     ) {
         GetMonthlyPlannerHeatmapResponse response = plannerService.findMonthlyPlannerHeatmap(month, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "일별 플래너 공유 조회",
+            description = "해당 날짜의 플래너 공유용 정보를 조회한다. 모든 일일 데이터는 오전 5시 기준 스터디 데이로 계산된다.")
+    @GetMapping("/daily/share")
+    public ApiResponse<GetDailyPlannerShareResponse> readDailyPlannerShare(
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        GetDailyPlannerShareResponse response = plannerService.findDailyPlannerShare(date, user.getId());
         return ApiUtil.success(response);
     }
 
