@@ -7,8 +7,10 @@ import static org.mockito.BDDMockito.given;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.PlannerDailyImageRepository;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerShareResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerStatisticsResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerTopResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyTimetableResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PutDailyPlannerImageRequest;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.exception.InvalidPlannerImageException;
@@ -153,7 +155,7 @@ class PlannerServiceTest {
                 null,
                 null
         );
-        assertThat(response.getMonthlyReview().subList(0, 4)).containsExactly(2, 1, 4, 3);
+        assertThat(response.getMonthlyReview().subList(0, 4)).containsExactly(2, 1, 4, 4);
     }
 
     @Test
@@ -176,5 +178,31 @@ class PlannerServiceTest {
 
         assertThat(response.getDaysSinceLastStudy()).isEqualTo(1);
         assertThat(response.getCurrentStreakDays()).isEqualTo(0);
+    }
+
+    @Test
+    void 일별_플래너_공유_조회_시_Dday가_없으면_nullable_필드들을_null로_반환한다() {
+        Long userId = 1L;
+        LocalDate queryDate = LocalDate.of(2026, 3, 18);
+
+        given(userScheduleRepository.findByUserIdAndDDayTrue(userId))
+                .willReturn(Optional.empty());
+        given(dailyStudySummaryRepository.findByUserIdAndDate(userId, queryDate))
+                .willReturn(Optional.empty());
+        given(plannerDailyImageRepository.findTopByUserIdAndDateLessThanEqualOrderByDateDesc(userId, queryDate))
+                .willReturn(Optional.empty());
+        given(studyTaskService.findDailyPlannerShareItems(queryDate, userId))
+                .willReturn(List.of());
+        given(studyTimeService.findDailyTimetables(queryDate, userId))
+                .willReturn(GetDailyTimetableResponse.of(List.of()));
+
+        GetDailyPlannerShareResponse response = plannerService.findDailyPlannerShare(queryDate, userId);
+
+        assertThat(response.isHasDday()).isFalse();
+        assertThat(response.getUserScheduleName()).isNull();
+        assertThat(response.getRemainingDays()).isNull();
+        assertThat(response.getTotalStudyTime()).isEqualTo("00:00:00");
+        assertThat(response.getPlannerItemList()).isEmpty();
+        assertThat(response.getTimeTableList()).isEmpty();
     }
 }

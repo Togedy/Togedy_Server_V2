@@ -90,8 +90,8 @@ class StudyTaskServiceTest {
                 .willReturn(List.of(task1, task2));
         given(studyTimeRepository.findDailyStudyTimesBySubjectIds(
                 List.of(1L, 2L),
-                date.atStartOfDay(),
-                date.plusDays(1).atStartOfDay()
+                date.atTime(5, 0),
+                date.atTime(5, 0).plusDays(1)
         )).willReturn(List.of(time1, time2));
 
         GetDailyPlannerTaskResponse response = studyTaskService.findDailyPlannerTasks(date, userId);
