@@ -43,9 +43,23 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/v2/**").permitAll()
+                        .requestMatchers(
+                                "/api/v2/auth/login",
+                                "/api/v2/auth/reissue",
+                                "/api/v2/auth/kakao",
+                                "/api/v2/users/sign-up",
+                                "/api/v2/users/nickname/validate",
+                                "/api/v2/users/nickname/suggestions",
+                                "/api/v2/calendars/announcement",
+                                "/api/v2/policies/**",
+                                "/api/v2/studies/duplicate",
+                                "/api/v2/studies",
+                                "/api/v2/studies/popular"
+                        ).permitAll()
+                        .requestMatchers("/api/v2/admin/**").hasRole("ADMIN")
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/api/v2/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .headers(headers -> headers

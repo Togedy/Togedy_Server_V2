@@ -30,6 +30,9 @@ public enum ErrorCode {
     DUPLICATE_EMAIL(HttpStatus.CONFLICT, "U2002", "동일한 이메일이 존재합니다."),
     USER_ACCESS_DENIED(HttpStatus.FORBIDDEN, "U2003", "유저 접근 권한이 존재하지 않습니다."),
     INVALID_USER_PROFILE_IMAGE(HttpStatus.BAD_REQUEST, "U2004", "유저 프로필 이미지가 올바르지 않습니다."),
+    USER_INACTIVE(HttpStatus.FORBIDDEN, "U2005", "탈퇴했거나 비활성화된 사용자입니다."),
+    INVALID_NICKNAME(HttpStatus.BAD_REQUEST, "U2006", "닉네임은 2자 이상 10자 이하여야 합니다."),
+    NICKNAME_CONTAINS_BAD_WORD(HttpStatus.BAD_REQUEST, "U2007", "닉네임에 사용할 수 없는 단어가 포함되어 있습니다."),
 
     // CATEGORY (3000)
     CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "C3000", "해당 카테고리를 찾을 수 없습니다."),
