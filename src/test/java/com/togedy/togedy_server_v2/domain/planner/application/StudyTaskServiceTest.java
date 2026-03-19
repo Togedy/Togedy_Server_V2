@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.planner.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
@@ -8,17 +9,21 @@ import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.dto.DailyPlannerTaskDto;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerTaskResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.PutStudyTaskRequest;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTask;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
+import com.togedy.togedy_server_v2.domain.planner.exception.StudySubjectNotFoundException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.BeanUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -114,5 +119,45 @@ class StudyTaskServiceTest {
         assertThat(mathPlanner.getSubjectColor()).isEqualTo("파란색");
         assertThat(mathPlanner.getSubjectStudyTime()).isEqualTo(0L);
         assertThat(mathPlanner.getTaskList()).isEmpty();
+    }
+
+    @Test
+    void 스터디_태스크_생성_시에는_과목을_검증한다() {
+        Long userId = 1L;
+
+        PutStudyTaskRequest request = BeanUtils.instantiateClass(PutStudyTaskRequest.class);
+        ReflectionTestUtils.setField(request, "studySubjectId", 999L);
+        ReflectionTestUtils.setField(request, "name", "영어단어");
+        ReflectionTestUtils.setField(request, "date", LocalDate.of(2026, 2, 17));
+
+        given(studySubjectRepository.findById(999L)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> studyTaskService.upsertStudyTask(request, userId))
+                .isInstanceOf(StudySubjectNotFoundException.class);
+    }
+
+    @Test
+    void 스터디_태스크_수정_시에는_과목없이_이름만_변경할_수_있다() {
+        Long userId = 1L;
+        Long taskId = 101L;
+
+        PutStudyTaskRequest request = BeanUtils.instantiateClass(PutStudyTaskRequest.class);
+        ReflectionTestUtils.setField(request, "taskId", taskId);
+        ReflectionTestUtils.setField(request, "name", "수정된 이름");
+
+        StudyTask task = StudyTask.builder()
+                .userId(userId)
+                .studySubjectId(1L)
+                .name("기존 이름")
+                .date(LocalDate.of(2026, 2, 17))
+                .build();
+        ReflectionTestUtils.setField(task, "id", taskId);
+
+        given(studyTaskRepository.findById(taskId)).willReturn(Optional.of(task));
+
+        Long updatedTaskId = studyTaskService.upsertStudyTask(request, userId);
+
+        assertThat(updatedTaskId).isEqualTo(taskId);
+        assertThat(task.getName()).isEqualTo("수정된 이름");
     }
 }

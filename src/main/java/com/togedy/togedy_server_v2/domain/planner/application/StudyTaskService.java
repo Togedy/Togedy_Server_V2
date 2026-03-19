@@ -60,9 +60,8 @@ public class StudyTaskService {
     public Long upsertStudyTask(PutStudyTaskRequest request, Long userId) {
         validateTaskName(request.getName());
 
-        StudySubject subject = validateSubject(request.getStudySubjectId(), userId);
-
         if (request.getTaskId() == null) {
+            StudySubject subject = validateSubject(request.getStudySubjectId(), userId);
             StudyTask task = StudyTask.builder()
                     .userId(userId)
                     .studySubjectId(subject.getId())
