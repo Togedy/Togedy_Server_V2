@@ -147,6 +147,13 @@ public class TimeUtil {
         return startOfStudyDay(LocalDateTime.now()).toLocalDate();
     }
 
+    public static LocalDate resolveStudyDate(LocalDate requestedDate) {
+        if (requestedDate != null && requestedDate.equals(LocalDate.now())) {
+            return currentStudyDate();
+        }
+        return requestedDate;
+    }
+
     public static Long convertHoursToSeconds(int hour) {
         return hour * 3600L;
     }

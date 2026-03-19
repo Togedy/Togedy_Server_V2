@@ -5,6 +5,8 @@ import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.dto.DailyPlannerTaskDto;
 import com.togedy.togedy_server_v2.domain.planner.dto.DailyPlannerTaskItemDto;
+import com.togedy.togedy_server_v2.domain.planner.dto.DailyPlannerShareItemResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.DailyPlannerShareTaskItemResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerTaskResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PutStudyTaskRequest;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
@@ -32,21 +34,64 @@ public class StudyTaskService {
 
     @Transactional(readOnly = true)
     public GetDailyPlannerTaskResponse findDailyPlannerTasks(LocalDate date, Long userId) {
+        LocalDate studyDate = TimeUtil.resolveStudyDate(date);
+        return GetDailyPlannerTaskResponse.of(buildDailyPlannerTasks(studyDate, userId));
+    }
+
+    @Transactional(readOnly = true)
+    public List<DailyPlannerShareItemResponse> findDailyPlannerShareItems(LocalDate date, Long userId) {
+        LocalDate studyDate = TimeUtil.resolveStudyDate(date);
+
+        return buildDailyPlannerTasks(studyDate, userId).stream()
+                .map(item -> DailyPlannerShareItemResponse.of(
+                        item.getSubjectId(),
+                        item.getSubjectName(),
+                        item.getSubjectColor(),
+                        item.getTaskList().size(),
+                        (int) item.getTaskList().stream().filter(DailyPlannerTaskItemDto::isChecked).count(),
+                        item.getTaskList().stream()
+                                .map(task -> DailyPlannerShareTaskItemResponse.of(task.getTaskName(), task.isChecked()))
+                                .toList()
+                ))
+                .toList();
+    }
+
+    @Transactional
+    public Long upsertStudyTask(PutStudyTaskRequest request, Long userId) {
+        validateTaskName(request.getName());
+
+        if (request.getTaskId() == null) {
+            StudySubject subject = validateSubject(request.getStudySubjectId(), userId);
+            StudyTask task = StudyTask.builder()
+                    .userId(userId)
+                    .studySubjectId(subject.getId())
+                    .name(request.getName())
+                    .date(TimeUtil.resolveStudyDate(request.getDate()))
+                    .build();
+            return studyTaskRepository.save(task).getId();
+        }
+
+        StudyTask task = validateTask(request.getTaskId(), userId);
+        task.update(request.getName());
+        return task.getId();
+    }
+
+    private List<DailyPlannerTaskDto> buildDailyPlannerTasks(LocalDate studyDate, Long userId) {
         List<StudySubject> studySubjects = studySubjectRepository.findAllByUserId(userId);
         List<Long> studySubjectIds = studySubjects.stream()
                 .map(StudySubject::getId)
                 .toList();
 
         if (studySubjectIds.isEmpty()) {
-            return GetDailyPlannerTaskResponse.of(List.of());
+            return List.of();
         }
 
-        List<StudyTask> dailyStudyTasks = studyTaskRepository.findAllByStudySubjectIdsAndDate(studySubjectIds, date);
+        List<StudyTask> dailyStudyTasks = studyTaskRepository.findAllByStudySubjectIdsAndDate(studySubjectIds, studyDate);
         Map<Long, List<StudyTask>> tasksByStudySubjectId = dailyStudyTasks.stream()
                 .collect(Collectors.groupingBy(StudyTask::getStudySubjectId));
 
-        LocalDateTime startOfDate = date.atStartOfDay();
-        LocalDateTime startOfNextDate = date.plusDays(1).atStartOfDay();
+        LocalDateTime startOfDate = studyDate.atTime(5, 0);
+        LocalDateTime startOfNextDate = startOfDate.plusDays(1);
 
         List<StudyTime> studyTimes = studyTimeRepository.findDailyStudyTimesBySubjectIds(
                 studySubjectIds, startOfDate, startOfNextDate
@@ -59,7 +104,7 @@ public class StudyTaskService {
                                 calculateOverlapStudySeconds(studyTime, startOfDate, startOfNextDate))
                 ));
 
-        List<DailyPlannerTaskDto> dailyPlanner = studySubjects.stream()
+        return studySubjects.stream()
                 .map(studySubject -> {
                     List<DailyPlannerTaskItemDto> taskList = tasksByStudySubjectId
                             .getOrDefault(studySubject.getId(), List.of())
@@ -72,29 +117,6 @@ public class StudyTaskService {
                     return DailyPlannerTaskDto.of(studySubject, subjectStudyTime, taskList);
                 })
                 .toList();
-
-        return GetDailyPlannerTaskResponse.of(dailyPlanner);
-    }
-
-    @Transactional
-    public Long upsertStudyTask(PutStudyTaskRequest request, Long userId) {
-        validateTaskName(request.getName());
-
-        StudySubject subject = validateSubject(request.getStudySubjectId(), userId);
-
-        if (request.getTaskId() == null) {
-            StudyTask task = StudyTask.builder()
-                    .userId(userId)
-                    .studySubjectId(subject.getId())
-                    .name(request.getName())
-                    .date(request.getDate())
-                    .build();
-            return studyTaskRepository.save(task).getId();
-        }
-
-        StudyTask task = validateTask(request.getTaskId(), userId);
-        task.update(request.getName());
-        return task.getId();
     }
 
     @Transactional
