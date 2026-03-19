@@ -34,13 +34,13 @@ public class StudyTaskService {
 
     @Transactional(readOnly = true)
     public GetDailyPlannerTaskResponse findDailyPlannerTasks(LocalDate date, Long userId) {
-        LocalDate studyDate = resolveStudyDate(date);
+        LocalDate studyDate = TimeUtil.resolveStudyDate(date);
         return GetDailyPlannerTaskResponse.of(buildDailyPlannerTasks(studyDate, userId));
     }
 
     @Transactional(readOnly = true)
     public List<DailyPlannerShareItemResponse> findDailyPlannerShareItems(LocalDate date, Long userId) {
-        LocalDate studyDate = resolveStudyDate(date);
+        LocalDate studyDate = TimeUtil.resolveStudyDate(date);
 
         return buildDailyPlannerTasks(studyDate, userId).stream()
                 .map(item -> DailyPlannerShareItemResponse.of(
@@ -67,7 +67,7 @@ public class StudyTaskService {
                     .userId(userId)
                     .studySubjectId(subject.getId())
                     .name(request.getName())
-                    .date(resolveStudyDate(request.getDate()))
+                    .date(TimeUtil.resolveStudyDate(request.getDate()))
                     .build();
             return studyTaskRepository.save(task).getId();
         }
@@ -162,12 +162,5 @@ public class StudyTaskService {
         LocalDateTime effectiveStart = studyTime.getStartTime().isAfter(periodStart) ? studyTime.getStartTime() : periodStart;
         LocalDateTime effectiveEnd = studyTime.getEndTime().isBefore(periodEnd) ? studyTime.getEndTime() : periodEnd;
         return TimeUtil.calculateStudySeconds(effectiveStart, effectiveEnd);
-    }
-
-    private LocalDate resolveStudyDate(LocalDate requestedDate) {
-        if (requestedDate != null && requestedDate.equals(LocalDate.now())) {
-            return TimeUtil.currentStudyDate();
-        }
-        return requestedDate;
     }
 }

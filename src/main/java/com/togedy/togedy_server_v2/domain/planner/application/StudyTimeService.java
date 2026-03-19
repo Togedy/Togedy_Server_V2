@@ -26,7 +26,7 @@ public class StudyTimeService {
 
     @Transactional(readOnly = true)
     public GetDailyTimetableResponse findDailyTimetables(LocalDate date, Long userId) {
-        LocalDate studyDate = resolveStudyDate(date);
+        LocalDate studyDate = TimeUtil.resolveStudyDate(date);
         List<StudySubject> studySubjects = studySubjectRepository.findAllByUserId(userId);
         if (studySubjects.isEmpty()) {
             return GetDailyTimetableResponse.of(List.of());
@@ -62,12 +62,5 @@ public class StudyTimeService {
                 .toList();
 
         return GetDailyTimetableResponse.of(timeTableList);
-    }
-
-    private LocalDate resolveStudyDate(LocalDate requestedDate) {
-        if (requestedDate != null && requestedDate.equals(LocalDate.now())) {
-            return TimeUtil.currentStudyDate();
-        }
-        return requestedDate;
     }
 }

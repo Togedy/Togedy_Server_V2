@@ -24,6 +24,8 @@ import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudySubjectE
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyRunningException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyStoppedException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotOwnedException;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -277,7 +279,10 @@ class TimerServiceTest {
     void 타이머_종료_시_5시를_넘기면_일일_요약을_스터디데이별로_나눠_저장한다() {
         Long userId = 1L;
         Long timerId = 100L;
-        LocalDateTime startTime = LocalDateTime.of(2026, 3, 18, 4, 0, 0);
+        LocalDateTime studyDayStart = TimeUtil.startOfStudyDay(LocalDateTime.now());
+        LocalDate previousStudyDate = studyDayStart.minusDays(1).toLocalDate();
+        LocalDate currentStudyDate = studyDayStart.toLocalDate();
+        LocalDateTime startTime = studyDayStart.minusHours(1);
 
         PostTimerStopRequest request = new PostTimerStopRequest();
         ReflectionTestUtils.setField(request, "timerId", timerId);
@@ -293,19 +298,19 @@ class TimerServiceTest {
         DailyStudySummary previousDaySummary = DailyStudySummary.builder()
                 .userId(userId)
                 .studyTime(0L)
-                .date(LocalDateTime.of(2026, 3, 17, 0, 0).toLocalDate())
+                .date(previousStudyDate)
                 .build();
 
         DailyStudySummary currentDaySummary = DailyStudySummary.builder()
                 .userId(userId)
                 .studyTime(0L)
-                .date(LocalDateTime.of(2026, 3, 18, 0, 0).toLocalDate())
+                .date(currentStudyDate)
                 .build();
 
         given(studyTimeRepository.findByIdForUpdate(timerId)).willReturn(Optional.of(running));
-        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(userId, LocalDateTime.of(2026, 3, 17, 0, 0).toLocalDate()))
+        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(userId, previousStudyDate))
                 .willReturn(Optional.of(previousDaySummary));
-        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(userId, LocalDateTime.of(2026, 3, 18, 0, 0).toLocalDate()))
+        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(userId, currentStudyDate))
                 .willReturn(Optional.of(currentDaySummary));
         given(dailyStudySummaryRepository.save(any(DailyStudySummary.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
@@ -314,8 +319,8 @@ class TimerServiceTest {
 
         assertThat(previousDaySummary.getStudyTime()).isEqualTo(3600L);
         assertThat(currentDaySummary.getStudyTime()).isGreaterThanOrEqualTo(0L);
-        verify(dailyStudySummaryRepository).findByUserIdAndDateForUpdate(userId, LocalDateTime.of(2026, 3, 17, 0, 0).toLocalDate());
-        verify(dailyStudySummaryRepository).findByUserIdAndDateForUpdate(userId, LocalDateTime.of(2026, 3, 18, 0, 0).toLocalDate());
+        verify(dailyStudySummaryRepository).findByUserIdAndDateForUpdate(userId, previousStudyDate);
+        verify(dailyStudySummaryRepository).findByUserIdAndDateForUpdate(userId, currentStudyDate);
     }
 
 }
