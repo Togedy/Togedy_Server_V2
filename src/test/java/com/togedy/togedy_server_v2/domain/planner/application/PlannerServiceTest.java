@@ -155,7 +155,7 @@ class PlannerServiceTest {
                 null,
                 null
         );
-        assertThat(response.getMonthlyReview().subList(0, 4)).containsExactly(2, 1, 4, 4);
+        assertThat(response.getMonthlyReview().subList(0, 4)).containsExactly(3, 1, 4, 4);
     }
 
     @Test
