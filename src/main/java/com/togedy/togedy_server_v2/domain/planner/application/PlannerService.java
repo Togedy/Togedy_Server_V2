@@ -46,7 +46,7 @@ public class PlannerService {
 
         if (dDaySchedule.isPresent()) {
             UserSchedule schedule = dDaySchedule.get();
-            int remainingDays = TimeUtil.calculateDaysUntil(schedule.getStartDate());
+            int remainingDays = (int) ChronoUnit.DAYS.between(context.studyDate(), schedule.getStartDate());
 
             return GetDailyPlannerTopResponse.of(
                     context.studyDate(),
@@ -91,7 +91,7 @@ public class PlannerService {
                 context.studyDate(),
                 dDaySchedule.isPresent(),
                 dDaySchedule.map(UserSchedule::getName).orElse(null),
-                dDaySchedule.map(schedule -> TimeUtil.calculateDaysUntil(schedule.getStartDate())).orElse(null),
+                dDaySchedule.map(schedule -> (int) ChronoUnit.DAYS.between(context.studyDate(), schedule.getStartDate())).orElse(null),
                 TimeUtil.formatSecondsToHms(context.dailyStudyTime()),
                 context.plannerImage(),
                 studyTaskService.findDailyPlannerShareItems(context.studyDate(), userId),
