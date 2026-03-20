@@ -52,7 +52,7 @@ public class AuthService {
     }
 
     public JwtTokenInfo reissueToken(String refreshToken) {
-        if(!jwtTokenProvider.validateToken(refreshToken)) {
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new JwtInvalidException();
         }
 
@@ -64,7 +64,7 @@ public class AuthService {
         String storedToken = refreshTokenRepository.findByUserId(userId)
                 .orElseThrow(JwtNotFoundException::new);
 
-        if(!storedToken.equals(refreshToken)) {
+        if (!storedToken.equals(refreshToken)) {
             refreshTokenRepository.deleteByUserId(userId);
             throw new JwtRefreshMismatchException();
         }
@@ -80,7 +80,7 @@ public class AuthService {
     }
 
     private void validateActiveUser(User user) {
-        if (user.getStatus() != UserStatus.ACTIVE) {
+        if (user.getStatus() == UserStatus.INACTIVE) {
             throw new UserInactiveException();
         }
     }
