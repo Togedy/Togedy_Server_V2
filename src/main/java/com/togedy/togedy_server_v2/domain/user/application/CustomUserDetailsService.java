@@ -25,7 +25,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findById(userId)
                 .orElseThrow(JwtInvalidException::new);
 
-        if (user.getStatus() != UserStatus.ACTIVE) {
+        if (user.getStatus() == UserStatus.INACTIVE) {
             throw new JwtUserInactiveException();
         }
 

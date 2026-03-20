@@ -20,6 +20,10 @@ import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyRunningE
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyStoppedException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotFoundException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotOwnedException;
+import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
+import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
+import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -36,12 +40,16 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class TimerService {
 
+    private final UserRepository userRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final StudySubjectRepository studySubjectRepository;
     private final StudyTimeRepository studyTimeRepository;
 
     @Transactional
     public PostTimerStartResponse startTimer(PostTimerStartRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
         validateStartRequest(request);
 
         if (studyTimeRepository.findByUserIdAndEndTimeIsNull(userId).isPresent()) {
@@ -71,11 +79,17 @@ public class TimerService {
         } catch (DataIntegrityViolationException e) {
             throw new TimerAlreadyRunningException();
         }
+
+        user.updateStatus(UserStatus.STUDYING);
+
         return PostTimerStartResponse.of(timerId, startTime);
     }
 
     @Transactional
     public PostTimerStopResponse stopTimer(PostTimerStopRequest request, Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
         validateStopRequest(request);
 
         StudyTime studyTime = studyTimeRepository.findByIdForUpdate(request.getTimerId())
@@ -91,6 +105,7 @@ public class TimerService {
         LocalDateTime endTime = LocalDateTime.now();
         studyTime.stop(endTime);
         updateDailyStudySummary(userId, studyTime.getStartTime(), endTime);
+        user.updateStatus(UserStatus.ACTIVE);
         return PostTimerStopResponse.of(studyTime.getId(), studyTime.getStartTime(), endTime);
     }
 
@@ -164,7 +179,8 @@ public class TimerService {
         }
 
         Map<LocalDate, Long> additionalStudyTimeByDate = splitByStudyDay(startTime, endTime);
-        additionalStudyTimeByDate.forEach((date, additionalStudyTime) -> upsertDailyStudySummary(userId, date, additionalStudyTime));
+        additionalStudyTimeByDate.forEach(
+                (date, additionalStudyTime) -> upsertDailyStudySummary(userId, date, additionalStudyTime));
     }
 
     private Map<LocalDate, Long> splitByStudyDay(LocalDateTime startTime, LocalDateTime endTime) {
