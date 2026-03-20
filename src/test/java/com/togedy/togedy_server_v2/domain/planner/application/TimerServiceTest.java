@@ -24,6 +24,9 @@ import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudySubjectE
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyRunningException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyStoppedException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotOwnedException;
+import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
+import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.global.fixtures.UserFixture;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -48,19 +51,27 @@ class TimerServiceTest {
     @Mock
     private StudyTimeRepository studyTimeRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private TimerService timerService;
 
     @Test
     void 타이머를_시작한다() {
-        Long userId = 1L;
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        given(userRepository.findById(any()))
+                .willReturn(Optional.of(user));
+
         Long studySubjectId = 10L;
 
         PostTimerStartRequest request = new PostTimerStartRequest();
         ReflectionTestUtils.setField(request, "studySubjectId", studySubjectId);
 
         StudySubject studySubject = StudySubject.builder()
-                .userId(userId)
+                .userId(user.getId())
                 .name("수학")
                 .color("파란색")
                 .orderIndex(1L)
@@ -68,16 +79,16 @@ class TimerServiceTest {
         ReflectionTestUtils.setField(studySubject, "id", studySubjectId);
 
         StudyTime saved = StudyTime.builder()
-                .userId(userId)
+                .userId(user.getId())
                 .studySubjectId(studySubjectId)
                 .build();
         ReflectionTestUtils.setField(saved, "id", 100L);
 
-        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(userId)).willReturn(Optional.empty());
+        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(user.getId())).willReturn(Optional.empty());
         given(studySubjectRepository.findActiveById(studySubjectId)).willReturn(Optional.of(studySubject));
         given(studyTimeRepository.saveAndFlush(any(StudyTime.class))).willReturn(saved);
 
-        PostTimerStartResponse response = timerService.startTimer(request, userId);
+        PostTimerStartResponse response = timerService.startTimer(request, user.getId());
 
         assertThat(response.getTimerId()).isEqualTo(100L);
         assertThat(response.getStartTime()).isNotNull();
@@ -85,34 +96,48 @@ class TimerServiceTest {
 
     @Test
     void 진행_중인_타이머가_있으면_예외가_발생한다() {
-        Long userId = 1L;
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        given(userRepository.findById(any()))
+                .willReturn(Optional.of(user));
 
         PostTimerStartRequest request = new PostTimerStartRequest();
         ReflectionTestUtils.setField(request, "studySubjectId", 10L);
 
         StudyTime running = StudyTime.builder()
-                .userId(userId)
+                .userId(user.getId())
                 .studySubjectId(10L)
                 .build();
 
-        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(userId)).willReturn(Optional.of(running));
+        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(user.getId())).willReturn(Optional.of(running));
 
-        assertThatThrownBy(() -> timerService.startTimer(request, userId))
+        assertThatThrownBy(() -> timerService.startTimer(request, user.getId()))
                 .isInstanceOf(TimerAlreadyRunningException.class);
     }
 
     @Test
     void 과목_id가_없거나_유효하지_않으면_예외가_발생한다() {
-        Long userId = 1L;
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        given(userRepository.findById(any()))
+                .willReturn(Optional.of(user));
+
         PostTimerStartRequest request = new PostTimerStartRequest();
 
-        assertThatThrownBy(() -> timerService.startTimer(request, userId))
+        assertThatThrownBy(() -> timerService.startTimer(request, user.getId()))
                 .isInstanceOf(InvalidStudySubjectException.class);
     }
 
     @Test
     void 타이머를_종료한다() {
-        Long userId = 1L;
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        given(userRepository.findById(any()))
+                .willReturn(Optional.of(user));
+
         Long timerId = 100L;
         LocalDateTime startTime = LocalDateTime.now().minusMinutes(30);
 
@@ -120,7 +145,7 @@ class TimerServiceTest {
         ReflectionTestUtils.setField(request, "timerId", timerId);
 
         StudyTime running = StudyTime.builder()
-                .userId(userId)
+                .userId(user.getId())
                 .studySubjectId(10L)
                 .startTime(startTime)
                 .endTime(null)
@@ -128,11 +153,12 @@ class TimerServiceTest {
         ReflectionTestUtils.setField(running, "id", timerId);
 
         given(studyTimeRepository.findByIdForUpdate(timerId)).willReturn(Optional.of(running));
-        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(eq(userId), any())).willReturn(Optional.empty());
+        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(eq(user.getId()), any())).willReturn(
+                Optional.empty());
         given(dailyStudySummaryRepository.save(any(DailyStudySummary.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
 
-        PostTimerStopResponse response = timerService.stopTimer(request, userId);
+        PostTimerStopResponse response = timerService.stopTimer(request, user.getId());
 
         assertThat(response.getTimerId()).isEqualTo(timerId);
         assertThat(response.getStartTime()).isEqualTo(startTime);
@@ -141,6 +167,12 @@ class TimerServiceTest {
 
     @Test
     void 타이머_소유자가_아니면_종료_시_예외가_발생한다() {
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        given(userRepository.findById(any()))
+                .willReturn(Optional.of(user));
+
         PostTimerStopRequest request = new PostTimerStopRequest();
         ReflectionTestUtils.setField(request, "timerId", 100L);
 
@@ -160,6 +192,12 @@ class TimerServiceTest {
 
     @Test
     void 이미_종료된_타이머를_종료하면_예외가_발생한다() {
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        given(userRepository.findById(any()))
+                .willReturn(Optional.of(user));
+
         PostTimerStopRequest request = new PostTimerStopRequest();
         ReflectionTestUtils.setField(request, "timerId", 100L);
 
@@ -179,18 +217,20 @@ class TimerServiceTest {
 
     @Test
     void 실행_중인_타이머를_조회한다() {
-        Long userId = 1L;
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+
         StudyTime running = StudyTime.builder()
-                .userId(userId)
+                .userId(user.getId())
                 .studySubjectId(10L)
                 .startTime(java.time.LocalDateTime.of(2026, 2, 28, 10, 0, 0))
                 .endTime(null)
                 .build();
         ReflectionTestUtils.setField(running, "id", 100L);
 
-        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(userId)).willReturn(Optional.of(running));
+        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(user.getId())).willReturn(Optional.of(running));
 
-        GetRunningTimerResponse response = timerService.findRunningTimer(userId);
+        GetRunningTimerResponse response = timerService.findRunningTimer(user.getId());
 
         assertThat(response).isNotNull();
         assertThat(response.getTimerId()).isEqualTo(100L);
@@ -200,7 +240,10 @@ class TimerServiceTest {
 
     @Test
     void 실행_중인_타이머가_없으면_null을_반환한다() {
-        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(1L)).willReturn(Optional.empty());
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(user.getId())).willReturn(Optional.empty());
 
         GetRunningTimerResponse response = timerService.findRunningTimer(1L);
 
@@ -209,20 +252,23 @@ class TimerServiceTest {
 
     @Test
     void 오늘_과목별_누적_공부시간을_조회한다() {
-        Long userId = 1L;
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+
         StudySubject subject = StudySubject.builder()
-                .userId(userId)
+                .userId(user.getId())
                 .name("수학")
                 .color("파란색")
                 .orderIndex(1L)
                 .build();
         ReflectionTestUtils.setField(subject, "id", 10L);
 
-        given(studySubjectRepository.findAllByUserId(userId)).willReturn(List.of(subject));
-        given(studyTimeRepository.findDailyStudyTimeBySubject(org.mockito.ArgumentMatchers.eq(userId), any(), any()))
+        given(studySubjectRepository.findAllByUserId(user.getId())).willReturn(List.of(subject));
+        given(studyTimeRepository.findDailyStudyTimeBySubject(org.mockito.ArgumentMatchers.eq(user.getId()), any(),
+                any()))
                 .willReturn(java.util.Collections.singletonList(new Object[]{10L, 2400L}));
 
-        List<SubjectStudyTimeItemResponse> response = timerService.findTodaySubjectStudyTimes(userId);
+        List<SubjectStudyTimeItemResponse> response = timerService.findTodaySubjectStudyTimes(user.getId());
 
         assertThat(response).hasSize(1);
         assertThat(response.get(0).getSubjectId()).isEqualTo(10L);
@@ -232,18 +278,26 @@ class TimerServiceTest {
 
     @Test
     void 오늘_총_공부시간을_조회한다() {
-        Long userId = 1L;
-        given(studyTimeRepository.sumDailyStudyTimeByUserId(org.mockito.ArgumentMatchers.eq(userId), any(), any()))
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        given(studyTimeRepository.sumDailyStudyTimeByUserId(org.mockito.ArgumentMatchers.eq(user.getId()), any(),
+                any()))
                 .willReturn(2400L);
 
-        GetTimerTotalResponse response = timerService.findTodayTotalStudyTime(userId);
+        GetTimerTotalResponse response = timerService.findTodayTotalStudyTime(user.getId());
 
         assertThat(response.getStudyTime()).isEqualTo(2400L);
     }
 
     @Test
     void 기존_일일_요약은_락을_획득한_후_업데이트한다() {
-        Long userId = 1L;
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        given(userRepository.findById(any()))
+                .willReturn(Optional.of(user));
+
         Long timerId = 100L;
         LocalDateTime startTime = LocalDateTime.now().minusMinutes(30);
 
@@ -251,7 +305,7 @@ class TimerServiceTest {
         ReflectionTestUtils.setField(request, "timerId", timerId);
 
         StudyTime running = StudyTime.builder()
-                .userId(userId)
+                .userId(user.getId())
                 .studySubjectId(10L)
                 .startTime(startTime)
                 .endTime(null)
@@ -259,25 +313,30 @@ class TimerServiceTest {
         ReflectionTestUtils.setField(running, "id", timerId);
 
         DailyStudySummary summary = DailyStudySummary.builder()
-                .userId(userId)
+                .userId(user.getId())
                 .studyTime(100L)
                 .date(startTime.toLocalDate())
                 .build();
 
         given(studyTimeRepository.findByIdForUpdate(timerId)).willReturn(Optional.of(running));
-        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(eq(userId), any()))
+        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(eq(user.getId()), any()))
                 .willReturn(Optional.of(summary));
         given(dailyStudySummaryRepository.save(any(DailyStudySummary.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
 
-        timerService.stopTimer(request, userId);
+        timerService.stopTimer(request, user.getId());
 
         assertThat(summary.getStudyTime()).isGreaterThan(100L);
     }
 
     @Test
     void 타이머_종료_시_5시를_넘기면_일일_요약을_스터디데이별로_나눠_저장한다() {
-        Long userId = 1L;
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", 1L);
+
+        given(userRepository.findById(any()))
+                .willReturn(Optional.of(user));
+
         Long timerId = 100L;
         LocalDateTime studyDayStart = TimeUtil.startOfStudyDay(LocalDateTime.now());
         LocalDate previousStudyDate = studyDayStart.minusDays(1).toLocalDate();
@@ -288,7 +347,7 @@ class TimerServiceTest {
         ReflectionTestUtils.setField(request, "timerId", timerId);
 
         StudyTime running = StudyTime.builder()
-                .userId(userId)
+                .userId(user.getId())
                 .studySubjectId(10L)
                 .startTime(startTime)
                 .endTime(null)
@@ -296,31 +355,31 @@ class TimerServiceTest {
         ReflectionTestUtils.setField(running, "id", timerId);
 
         DailyStudySummary previousDaySummary = DailyStudySummary.builder()
-                .userId(userId)
+                .userId(user.getId())
                 .studyTime(0L)
                 .date(previousStudyDate)
                 .build();
 
         DailyStudySummary currentDaySummary = DailyStudySummary.builder()
-                .userId(userId)
+                .userId(user.getId())
                 .studyTime(0L)
                 .date(currentStudyDate)
                 .build();
 
         given(studyTimeRepository.findByIdForUpdate(timerId)).willReturn(Optional.of(running));
-        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(userId, previousStudyDate))
+        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(user.getId(), previousStudyDate))
                 .willReturn(Optional.of(previousDaySummary));
-        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(userId, currentStudyDate))
+        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(user.getId(), currentStudyDate))
                 .willReturn(Optional.of(currentDaySummary));
         given(dailyStudySummaryRepository.save(any(DailyStudySummary.class)))
                 .willAnswer(invocation -> invocation.getArgument(0));
 
-        timerService.stopTimer(request, userId);
+        timerService.stopTimer(request, user.getId());
 
         assertThat(previousDaySummary.getStudyTime()).isEqualTo(3600L);
         assertThat(currentDaySummary.getStudyTime()).isGreaterThanOrEqualTo(0L);
-        verify(dailyStudySummaryRepository).findByUserIdAndDateForUpdate(userId, previousStudyDate);
-        verify(dailyStudySummaryRepository).findByUserIdAndDateForUpdate(userId, currentStudyDate);
+        verify(dailyStudySummaryRepository).findByUserIdAndDateForUpdate(user.getId(), previousStudyDate);
+        verify(dailyStudySummaryRepository).findByUserIdAndDateForUpdate(user.getId(), currentStudyDate);
     }
 
 }
