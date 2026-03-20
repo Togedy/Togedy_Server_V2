@@ -1,7 +1,10 @@
 package com.togedy.togedy_server_v2.domain.planner.api;
 
 import com.togedy.togedy_server_v2.domain.planner.application.PlannerService;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerShareResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerStatisticsResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.GetDailyPlannerTopResponse;
+import com.togedy.togedy_server_v2.domain.planner.dto.GetMonthlyPlannerHeatmapResponse;
 import com.togedy.togedy_server_v2.domain.planner.dto.PutDailyPlannerImageRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
@@ -20,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDate;
+import java.time.YearMonth;
 
 @RestController
 @RequiredArgsConstructor
@@ -37,6 +41,39 @@ public class PlannerController {
             @AuthenticationPrincipal AuthUser user
     ) {
         GetDailyPlannerTopResponse response = plannerService.findDailyPlannerTop(date, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "월별 플래너 히트맵 조회",
+            description = "해당 월의 날짜별 누적 공부 시간을 히트맵 레벨 리스트로 조회한다.")
+    @GetMapping("/monthly")
+    public ApiResponse<GetMonthlyPlannerHeatmapResponse> readMonthlyPlannerHeatmap(
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM") YearMonth month,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        GetMonthlyPlannerHeatmapResponse response = plannerService.findMonthlyPlannerHeatmap(month, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "일별 플래너 공유 조회",
+            description = "해당 날짜의 플래너 공유용 정보를 조회한다. 모든 일일 데이터는 오전 5시 기준 스터디 데이로 계산된다.")
+    @GetMapping("/daily/share")
+    public ApiResponse<GetDailyPlannerShareResponse> readDailyPlannerShare(
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        GetDailyPlannerShareResponse response = plannerService.findDailyPlannerShare(date, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "일간 플래너 통계 조회",
+            description = "해당 날짜 기준 연속 학습 정보, 주간 복기, 월간 복기를 조회한다.")
+    @GetMapping("/daily/statistics")
+    public ApiResponse<GetDailyPlannerStatisticsResponse> readDailyPlannerStatistics(
+            @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        GetDailyPlannerStatisticsResponse response = plannerService.findDailyPlannerStatistics(date, user.getId());
         return ApiUtil.success(response);
     }
 
