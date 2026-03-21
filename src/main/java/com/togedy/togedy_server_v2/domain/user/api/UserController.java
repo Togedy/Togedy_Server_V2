@@ -1,23 +1,35 @@
 package com.togedy.togedy_server_v2.domain.user.api;
 
-import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
-import com.togedy.togedy_server_v2.domain.user.dto.LoginUserRequest;
-import com.togedy.togedy_server_v2.domain.user.dto.LoginUserResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchUserOnboardingRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameSuggestionResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileRequest;
+import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
-import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenInfo;
+import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.HashMap;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -41,4 +53,80 @@ public class UserController {
 
         return ApiUtil.success(response);
     }
+
+    @Operation(summary = "닉네임 검증", description = "온보딩 전에 닉네임의 공백, 길이, 비속어, 중복 여부를 검증한다.")
+    @GetMapping("/nickname/validate")
+    public ApiResponse<GetNicknameValidationResponse> validateNickname(@RequestParam String nickname) {
+        GetNicknameValidationResponse response = userService.validateNickname(nickname);
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "닉네임 추천", description = "형용사, 동물, 세 자리 숫자를 조합한 사용 가능한 닉네임을 1개 추천한다.")
+    @GetMapping("/nickname/suggestions")
+    public ApiResponse<GetNicknameSuggestionResponse> suggestNickname() {
+        GetNicknameSuggestionResponse response = userService.suggestNickname();
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "마이페이지 조회", description = "본인의 마이페이지를 조회한다.")
+    @GetMapping("/me")
+    public ApiResponse<GetMyPageResponse> readMyPage(@AuthenticationPrincipal AuthUser user) {
+        GetMyPageResponse response = userService.findMyPage(user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "유저 설정 조회", description = "본인의 알림 설정 및 이메일을 조회한다.")
+    @GetMapping("/me/settings")
+    public ApiResponse<GetMySettingsResponse> readMySettings(@AuthenticationPrincipal AuthUser user) {
+        GetMySettingsResponse response = userService.findMySettings(user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "유저 푸시알림 여부 변경", description = "본인의 푸시알림 여부를 변경한다.")
+    @PatchMapping("/me/settings/push")
+    public ApiResponse<Void> updatePushNotificationSetting(
+            @RequestBody PatchPushNotificationSettingRequest request,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        userService.modifyPushNotificationSetting(request, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @Operation(summary = "유저 마케팅 수신 동의 여부 변경", description = "본인의 마케팅 수신 동의 여부를 변경한다.")
+    @PatchMapping("/me/settings/marketing")
+    public ApiResponse<Void> updateMarketingConsentedSetting(
+            @RequestBody PatchMarketingConsentedSettingRequest request,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        userService.modifyMarketingConsentedSetting(request, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @Operation(summary = "유저 프로필 변경", description = "유저의 닉네임 및 프로필 이미지를 변경한다.")
+    @PatchMapping(value = "/me", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<Void> updateProfile(
+            @ModelAttribute PatchProfileRequest request,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        userService.modifyProfile(request, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @Operation(summary = "온보딩 완료", description = "카카오 로그인 이후 닉네임과 생년월일을 저장하고 온보딩을 완료한다.")
+    @PatchMapping("/me/onboarding")
+    public ApiResponse<Void> completeOnboarding(
+            @Validated @RequestBody PatchUserOnboardingRequest request,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        userService.completeOnboarding(request, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @Operation(summary = "회원 탈퇴", description = "본인 계정을 탈퇴 처리한다.")
+    @DeleteMapping("/me")
+    public ApiResponse<Void> withdrawUser(@AuthenticationPrincipal AuthUser user) {
+        userService.withdrawUser(user.getId());
+        return ApiUtil.successOnly();
+    }
+
 }

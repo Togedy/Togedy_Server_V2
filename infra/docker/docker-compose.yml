@@ -11,14 +11,16 @@ services:
       MYSQL_HOST: ${MYSQL_HOST}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      JWT_SECRET_KEY : ${JWT_SECRET_KEY}
-      SWAGGER_URL : ${SWAGGER_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SWAGGER_URL: ${SWAGGER_URL}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
       ACCESS_KEY: ${ACCESS_KEY}
       SECRET_KEY: ${SECRET_KEY}
       BUCKET_NAME: ${BUCKET_NAME}
+      MONGODB_URI: ${MONGODB_URI}
+      AI_SERVER_URL: ${AI_SERVER_URL}
     depends_on:
       redis:
         condition: service_healthy
@@ -27,11 +29,11 @@ services:
     image: redis:7-alpine
     container_name: redis
     restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
+    command: [ "redis-server", "--appendonly", "yes" ]
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 3s
       retries: 5

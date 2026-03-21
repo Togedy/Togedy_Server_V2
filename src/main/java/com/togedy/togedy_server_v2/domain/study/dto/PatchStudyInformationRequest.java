@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PatchStudyInfoRequest {
+public class PatchStudyInformationRequest {
 
     private String studyName;
 
@@ -20,5 +20,7 @@ public class PatchStudyInfoRequest {
     private MultipartFile studyImage;
 
     private String studyPassword;
+
+    private boolean removeStudyImage;
 
 }

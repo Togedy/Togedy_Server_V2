@@ -2,7 +2,18 @@ package com.togedy.togedy_server_v2.domain.user.entity;
 
 import com.togedy.togedy_server_v2.domain.user.enums.ProviderType;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,30 +46,17 @@ public class AuthProvider extends BaseEntity {
     @Column(name = "provider_user_id", nullable = false)
     private String providerUserId;
 
-    @Column(name = "email", nullable = true)
-    private String email;
-
-    @Column(name = "profile_completed", nullable = false)
-    private boolean profileCompleted;
-
-    private AuthProvider(User user, ProviderType provider, String providerUserId, String email, boolean profileCompleted) {
+    private AuthProvider(User user, ProviderType provider, String providerUserId) {
         this.user = user;
         this.provider = provider;
         this.providerUserId = providerUserId;
-        this.email = email;
-        this.profileCompleted = profileCompleted;
     }
 
-    public static AuthProvider kakao(User user, String kakaoId, String email) {
-        return new AuthProvider(user, ProviderType.KAKAO, kakaoId, email, false);
+    public static AuthProvider kakao(User user, String kakaoId) {
+        return new AuthProvider(user, ProviderType.KAKAO, kakaoId);
     }
 
-    public static AuthProvider local(User user, String email) {
-        return new AuthProvider(user, ProviderType.LOCAL, email, email, true);
+    public static AuthProvider local(User user) {
+        return new AuthProvider(user, ProviderType.LOCAL, user.getEmail());
     }
-
-    public void completeProfile() {
-        this.profileCompleted = true;
-    }
-
 }

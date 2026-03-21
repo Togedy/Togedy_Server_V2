@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.user.dao;
 
+import com.togedy.togedy_server_v2.domain.study.dto.StudyMemberRoleDto;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import java.util.List;
@@ -13,6 +14,13 @@ import org.springframework.stereotype.Repository;
 public interface UserRepository extends JpaRepository<User, Long> {
 
     Boolean existsByNickname(String nickname);
+
+    @Query("""
+                SELECT u.nickname
+                FROM User u
+                WHERE u.nickname IN :nicknames
+            """)
+    List<String> findExistingNicknames(List<String> nicknames);
 
     Boolean existsByEmail(String email);
 
@@ -36,11 +44,14 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findAllByStudyId(Long studyId);
 
     @Query("""
-                SELECT u, us.role
+                SELECT new com.togedy.togedy_server_v2.domain.study.dto.StudyMemberRoleDto (
+                    u as user,
+                    us.role as role
+                )
                 FROM User u
                 JOIN UserStudy us ON u.id = us.userId
                 WHERE us.studyId = :studyId
                 ORDER BY us.createdAt ASC
             """)
-    List<Object[]> findAllByStudyIdOrderByCreatedAtAsc(Long studyId);
+    List<StudyMemberRoleDto> findAllByStudyIdOrderByCreatedAtAsc(Long studyId);
 }

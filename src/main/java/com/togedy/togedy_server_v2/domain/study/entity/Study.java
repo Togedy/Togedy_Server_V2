@@ -5,12 +5,16 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTier;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
+import com.togedy.togedy_server_v2.domain.study.exception.NotChallengeStudyException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyDescriptionContainsBadWordException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberCountExceededException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberLimitOutOfRangeException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMinimumMemberRequiredException;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyNameContainsBadWordException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
+import com.togedy.togedy_server_v2.global.enums.BadWords;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -83,6 +87,8 @@ public class Study extends BaseEntity {
             String imageUrl,
             String password
     ) {
+        validateStudyName(name);
+        validateStudyDescription(description);
         validateMemberLimitRange(memberLimit);
         this.type = type;
         this.goalTime = goalTime;
@@ -96,7 +102,7 @@ public class Study extends BaseEntity {
         this.tier = StudyTier.BRONZE1;
     }
 
-    public void updateInfo(
+    public void updateInformation(
             String studyName,
             String studyDescription,
             String studyTag,
@@ -104,20 +110,18 @@ public class Study extends BaseEntity {
             String studyImageUrl
     ) {
         if (studyName != null) {
+            validateStudyName(studyName);
             this.name = studyName;
         }
         if (studyDescription != null) {
+            validateStudyDescription(studyDescription);
             this.description = studyDescription;
         }
         if (studyTag != null) {
             this.tag = StudyTag.fromDescription(studyTag);
         }
-        if (studyPassword != null) {
-            this.password = studyPassword;
-        }
-        if (studyImageUrl != null) {
-            this.imageUrl = studyImageUrl;
-        }
+        this.password = studyPassword;
+        this.imageUrl = studyImageUrl;
     }
 
     public void updateMemberLimit(int memberLimit) {
@@ -163,7 +167,21 @@ public class Study extends BaseEntity {
     }
 
     public boolean isAchieved(DailyStudySummary dailyStudySummary) {
+        validateChallengeStudy();
+        if (dailyStudySummary == null) {
+            return false;
+        }
+
         return dailyStudySummary.getStudyTime() >= this.goalTime;
+    }
+
+    public boolean isAchieved(Long studyTime) {
+        validateChallengeStudy();
+        return studyTime >= this.goalTime;
+    }
+
+    public boolean isChallengeSuccess(int completedMemberCount) {
+        return this.memberCount == completedMemberCount;
     }
 
     private void validateMemberLimitRange(int memberLimit) {
@@ -232,4 +250,23 @@ public class Study extends BaseEntity {
             throw new StudyMinimumMemberRequiredException();
         }
     }
+
+    private void validateStudyName(String name) {
+        if (BadWords.containsBadWord(name)) {
+            throw new StudyNameContainsBadWordException();
+        }
+    }
+
+    private void validateStudyDescription(String description) {
+        if (BadWords.containsBadWord(description)) {
+            throw new StudyDescriptionContainsBadWordException();
+        }
+    }
+
+    private void validateChallengeStudy() {
+        if (!isChallengeStudy()) {
+            throw new NotChallengeStudyException();
+        }
+    }
+
 }

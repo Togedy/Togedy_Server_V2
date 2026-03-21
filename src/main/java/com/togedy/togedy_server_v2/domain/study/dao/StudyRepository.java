@@ -87,4 +87,13 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
                 WHERE s.id in :studyIds
             """)
     List<Study> findAllByIds(Collection<Long> studyIds);
+
+    @Query("""
+                SELECT s
+                FROM Study s
+                JOIN UserStudy us ON us.studyId = s.id
+                WHERE us.userId = :userId
+                ORDER BY s.createdAt DESC
+            """)
+    List<Study> findRecentStudiesByUserId(@Param("userId") Long userId, Pageable pageable);
 }

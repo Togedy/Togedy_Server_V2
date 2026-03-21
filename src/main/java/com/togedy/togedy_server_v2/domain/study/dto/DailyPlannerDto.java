@@ -12,12 +12,12 @@ public class DailyPlannerDto {
 
     private String studySubjectName;
 
-    private List<PlanDto> planList;
+    private List<StudyTaskDto> taskList;
 
-    public static DailyPlannerDto of(StudySubject studySubject, List<PlanDto> planList) {
+    public static DailyPlannerDto of(StudySubject studySubject, List<StudyTaskDto> taskList) {
         return DailyPlannerDto.builder()
                 .studySubjectName(studySubject.getName())
-                .planList(planList)
+                .taskList(taskList)
                 .build();
     }
 }

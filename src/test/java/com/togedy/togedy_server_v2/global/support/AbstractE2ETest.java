@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.togedy.togedy_server_v2.global.enums.ImageCategory;
 import com.togedy.togedy_server_v2.global.db.DatabaseCleanerExtension;
 import com.togedy.togedy_server_v2.global.factory.TestJwtFactory;
 import com.togedy.togedy_server_v2.global.service.S3Service;
@@ -42,7 +43,7 @@ public abstract class AbstractE2ETest extends AbstractInfraTest {
 
     @BeforeEach
     void setUp() {
-        when(s3Service.uploadFile(any(MultipartFile.class)))
+        when(s3Service.uploadFile(any(MultipartFile.class), any(ImageCategory.class)))
                 .thenReturn("https://mock-s3/test.png");
     }
 }

@@ -120,16 +120,50 @@ public class TimeUtil {
         return String.format("%02d:%02d:%02d", hours, minutes, seconds);
     }
 
+    public static long calculateStudySeconds(LocalDateTime startTime, LocalDateTime endTime) {
+        if (startTime == null || endTime == null) {
+            return 0L;
+        }
+        return Math.max(0L, Duration.between(startTime, endTime).getSeconds());
+    }
+
+    public static LocalDateTime startOfStudyDay(LocalDateTime now) {
+        return startOfStudyDay(now, LocalTime.of(5, 0));
+    }
+
+    public static LocalDateTime startOfStudyDay(LocalDateTime now, LocalTime boundaryTime) {
+        LocalDateTime todayStart = now.toLocalDate().atTime(boundaryTime);
+        if (now.isBefore(todayStart)) {
+            return todayStart.minusDays(1);
+        }
+        return todayStart;
+    }
+
+    public static LocalDateTime endOfStudyDay(LocalDateTime now) {
+        return startOfStudyDay(now).plusDays(1);
+    }
+
+    public static LocalDate currentStudyDate() {
+        return startOfStudyDay(LocalDateTime.now()).toLocalDate();
+    }
+
+    public static LocalDate resolveStudyDate(LocalDate requestedDate) {
+        if (requestedDate != null && requestedDate.equals(LocalDate.now())) {
+            return currentStudyDate();
+        }
+        return requestedDate;
+    }
+
     public static Long convertHoursToSeconds(int hour) {
         return hour * 3600L;
     }
 
-    public static LocalDateTime startOfMonthsAgo(int monthsAgo) {
-        return YearMonth.now().minusMonths(monthsAgo).atDay(1).atStartOfDay();
+    public static LocalDate startOfMonthsAgo(int monthsAgo) {
+        return YearMonth.now().minusMonths(monthsAgo).atDay(1);
     }
 
-    public static LocalDateTime startOfNextMonth() {
-        return YearMonth.now().plusMonths(1).atDay(1).atStartOfDay();
+    public static LocalDate startOfNextMonth() {
+        return YearMonth.now().plusMonths(1).atDay(1);
     }
 
     public static LocalDateTime startOfToday() {

@@ -2,9 +2,12 @@ package com.togedy.togedy_server_v2.domain.user.application;
 
 import com.togedy.togedy_server_v2.domain.user.dao.AuthProviderRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.RefreshTokenRepository;
+import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.enums.ProviderType;
+import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
+import com.togedy.togedy_server_v2.domain.user.exception.user.UserInactiveException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenInfo;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenProvider;
@@ -21,6 +24,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final RefreshTokenRepository refreshTokenRepository;
     private final AuthProviderRepository authProviderRepository;
+    private final UserRepository userRepository;
 
     public JwtTokenInfo signInUser(String email) {
         AuthProvider provider = authProviderRepository
@@ -28,6 +32,7 @@ public class AuthService {
                 .orElseThrow(UserNotFoundException::new);
 
         User user = provider.getUser();
+        validateActiveUser(user);
 
         JwtTokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(user.getId());
 
@@ -37,27 +42,34 @@ public class AuthService {
     }
 
     public JwtTokenInfo issueToken(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        validateActiveUser(user);
+
         JwtTokenInfo tokenInfo = jwtTokenProvider.generateTokenInfo(userId);
         refreshTokenRepository.save(userId, tokenInfo.getRefreshToken());
         return tokenInfo;
     }
 
     public JwtTokenInfo reissueToken(String refreshToken) {
-        if(!jwtTokenProvider.validateToken(refreshToken)) {
+        if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new JwtInvalidException();
         }
 
         Long userId = Long.parseLong(jwtTokenProvider.getAuthentication(refreshToken).getName());
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+        validateActiveUser(user);
 
         String storedToken = refreshTokenRepository.findByUserId(userId)
                 .orElseThrow(JwtNotFoundException::new);
 
-        if(!storedToken.equals(refreshToken)) {
+        if (!storedToken.equals(refreshToken)) {
             refreshTokenRepository.deleteByUserId(userId);
             throw new JwtRefreshMismatchException();
         }
 
-        JwtTokenInfo newTokenInfo = jwtTokenProvider.generateTokenInfo(userId);
+        JwtTokenInfo newTokenInfo = jwtTokenProvider.generateTokenInfo(user.getId());
         refreshTokenRepository.deleteByUserId(userId);
         refreshTokenRepository.save(userId, newTokenInfo.getRefreshToken());
         return newTokenInfo;
@@ -65,5 +77,11 @@ public class AuthService {
 
     public void deleteRefreshToken(Long userId) {
         refreshTokenRepository.deleteByUserId(userId);
+    }
+
+    private void validateActiveUser(User user) {
+        if (user.getStatus() == UserStatus.INACTIVE) {
+            throw new UserInactiveException();
+        }
     }
 }

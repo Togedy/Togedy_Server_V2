@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
+import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderCannotRemoveSelfException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
@@ -12,6 +13,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import lombok.AccessLevel;
@@ -20,7 +22,15 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "user_study")
+@Table(
+        name = "user_study",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_user_study_user_id_study_id",
+                        columnNames = {"user_id", "study_id"}
+                )
+        }
+)
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserStudy extends BaseEntity {
@@ -59,6 +69,11 @@ public class UserStudy extends BaseEntity {
         }
     }
 
+    public void validateRemovable(Long removeUserId) {
+        validateStudyLeader();
+        validateRemoveSelf(removeUserId);
+    }
+
     public void delegateLeader(UserStudy member) {
         this.validateStudyLeader();
         this.role = StudyRole.MEMBER;
@@ -70,5 +85,11 @@ public class UserStudy extends BaseEntity {
         LocalDate createdDate = this.getCreatedAt().toLocalDate();
 
         return (int) ChronoUnit.DAYS.between(createdDate, now);
+    }
+
+    private void validateRemoveSelf(Long removeUserId) {
+        if (this.userId.equals(removeUserId)) {
+            throw new StudyLeaderCannotRemoveSelfException();
+        }
     }
 }

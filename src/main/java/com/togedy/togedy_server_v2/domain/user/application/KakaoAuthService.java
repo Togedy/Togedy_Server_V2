@@ -46,7 +46,7 @@ public class KakaoAuthService {
 
         if (provider != null) {
             user = provider.getUser();
-            completed = provider.isProfileCompleted();
+            completed = user.isProfileCompleted();
         } else {
             user = (email != null)
                     ? userRepository.findByEmail(email)
@@ -54,7 +54,7 @@ public class KakaoAuthService {
                     : userRepository.save(User.createTemp(null));
 
             authProviderRepository.save(
-                    AuthProvider.kakao(user, providerUserId, email)
+                    AuthProvider.kakao(user, providerUserId)
             );
             completed = false;
         }

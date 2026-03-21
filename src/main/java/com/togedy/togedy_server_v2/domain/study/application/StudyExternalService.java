@@ -19,9 +19,10 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.global.enums.ImageCategory;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -124,13 +125,11 @@ public class StudyExternalService {
      * @return 당일 공부 기록 및 참여 스터디 정보를 포함한 응답 DTO
      */
     public GetMyStudyInfoResponse findMyStudyInfo(Long userId) {
-        LocalDateTime start = TimeUtil.startOfToday();
-        LocalDateTime end = TimeUtil.startOfTomorrow();
-
+        LocalDate today = TimeUtil.currentStudyDate();
         List<Study> studies = studyRepository.findAllByUserIdOrderByCreatedAtAsc(userId);
 
         Long studyTime = dailyStudySummaryRepository
-                .findByUserIdAndCreatedAt(userId, start, end)
+                .findByUserIdAndDate(userId, today)
                 .map(DailyStudySummary::getStudyTime)
                 .orElse(0L);
 
@@ -148,10 +147,9 @@ public class StudyExternalService {
                 .stream()
                 .collect(Collectors.toMap(User::getId, user -> user));
 
-        List<DailyStudySummary> dailyStudySummaries = dailyStudySummaryRepository.findAllByUserIdsAndPeriod(
+        List<DailyStudySummary> dailyStudySummaries = dailyStudySummaryRepository.findAllByUserIdsAndDate(
                 memberIds,
-                start,
-                end
+                today
         );
 
         Map<Long, Long> studyTimeMap = dailyStudySummaries.stream()
@@ -183,10 +181,8 @@ public class StudyExternalService {
      * @param challenge 챌린지 스터디만 조회할지 여부
      * @param page      페이지 번호 (1부터 시작)
      * @param size      페이지당 조회 개수
-     * @param userId    검색을 요청한 사용자 ID
      * @return 스터디 검색 결과 및 다음 페이지 존재 여부를 포함한 응답 DTO
      */
-
     public GetStudySearchResponse findStudySearch(
             String name,
             List<String> tags,
@@ -194,8 +190,7 @@ public class StudyExternalService {
             boolean joinable,
             boolean challenge,
             int page,
-            int size,
-            Long userId
+            int size
     ) {
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
 
@@ -335,7 +330,7 @@ public class StudyExternalService {
      */
     private String uploadStudyImage(MultipartFile image) {
         if (image != null) {
-            return s3Service.uploadFile(image);
+            return s3Service.uploadFile(image, ImageCategory.STUDY);
         }
         return null;
     }
@@ -519,6 +514,9 @@ public class StudyExternalService {
                             studyDtos
                     );
                 })
-                .orElse(GetMyStudyInfoResponse.from(studyDtos));
+                .orElse(GetMyStudyInfoResponse.from(
+                        TimeUtil.formatSecondsToHms(studyTime),
+                        studyDtos)
+                );
     }
 }
