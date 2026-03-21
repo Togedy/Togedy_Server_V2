@@ -498,7 +498,11 @@ public class UserService {
         try {
             userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
-            throw new DuplicateEmailException();
+            String message = e.getMostSpecificCause() != null ? e.getMostSpecificCause().getMessage() : "";
+            if (message != null && message.toLowerCase().contains("email")) {
+                throw new DuplicateEmailException();
+            }
+            throw e;
         }
     }
 }
