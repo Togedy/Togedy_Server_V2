@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.global.security.jwt;
 
+import com.togedy.togedy_server_v2.global.security.PublicEndpointPolicy;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtException;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtInvalidException;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtInvalidFormatException;
@@ -25,20 +26,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String bearerToken = request.getHeader("Authorization");
         String requestURI = request.getRequestURI();
+        String method = request.getMethod();
 
         try {
-            if (requestURI.startsWith("/api/v2/auth/reissue")) {
+            if (PublicEndpointPolicy.isPublic(method, requestURI)) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
             if (bearerToken == null) {
-                if (requiresAuthentication(request)) {
-                    throw new JwtNotFoundException();
-                } else {
-                    filterChain.doFilter(request, response);
-                    return;
-                }
+                throw new JwtNotFoundException();
             }
 
             if (!bearerToken.startsWith(JwtTokenProvider.BEARER)) {
@@ -57,13 +54,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (JwtException e) {
             throw e;
         }
-    }
-    private boolean requiresAuthentication(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        return !(path.startsWith("/api/v2/users/sign-up")
-                || path.startsWith("/api/v2/auth/login")
-                || path.startsWith("/swagger")
-                || path.startsWith("/v3/api-docs")
-                || path.startsWith("/h2-console"));
     }
 }
