@@ -27,7 +27,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String requestURI = request.getRequestURI();
 
         try {
-            if (requestURI.startsWith("/api/v2/auth/reissue")) {
+            if (requestURI.startsWith("/api/v2/auth/reissue")
+                    || requestURI.startsWith("/api/v2/auth/kakao")) {
                 filterChain.doFilter(request, response);
                 return;
             }
