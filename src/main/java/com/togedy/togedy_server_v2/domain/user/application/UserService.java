@@ -45,6 +45,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -84,7 +85,7 @@ public class UserService {
         }
 
         User user = User.create(request.getNickname(), request.getEmail());
-        userRepository.save(user);
+        saveUserHandlingDuplicateEmail(user);
 
         authProviderRepository.save(AuthProvider.local(user));
 
@@ -491,5 +492,13 @@ public class UserService {
         int number = ThreadLocalRandom.current().nextInt(1000);
 
         return adjective + animal + String.format("%03d", number);
+    }
+
+    private void saveUserHandlingDuplicateEmail(User user) {
+        try {
+            userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateEmailException();
+        }
     }
 }

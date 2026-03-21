@@ -12,6 +12,7 @@ import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailExce
 import com.togedy.togedy_server_v2.global.infrastructure.kakao.KakaoApiClient;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenInfo;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,7 +54,7 @@ public class KakaoAuthService {
                 throw new DuplicateEmailException();
             }
 
-            user = userRepository.save(User.createTemp(email));
+            user = saveUserHandlingDuplicateEmail(User.createTemp(email));
 
             authProviderRepository.save(
                     AuthProvider.kakao(user, providerUserId)
@@ -63,5 +64,13 @@ public class KakaoAuthService {
 
         JwtTokenInfo jwtTokenInfo = authService.issueToken(user.getId());
         return new KakaoLoginResponse(jwtTokenInfo, completed);
+    }
+
+    private User saveUserHandlingDuplicateEmail(User user) {
+        try {
+            return userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateEmailException();
+        }
     }
 }

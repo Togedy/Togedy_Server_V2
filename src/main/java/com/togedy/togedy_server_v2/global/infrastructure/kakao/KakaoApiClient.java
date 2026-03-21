@@ -8,6 +8,7 @@ import com.togedy.togedy_server_v2.domain.user.exception.auth.KakaoApiErrorExcep
 import com.togedy.togedy_server_v2.domain.user.exception.auth.KakaoTokenExpiredException;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -17,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 public class KakaoApiClient {
 
@@ -42,26 +44,25 @@ public class KakaoApiClient {
             );
             return response.getBody();
         } catch (HttpClientErrorException e) {
-            handleKakaoClientException(e);
-            throw new KakaoApiErrorException();
+            throw mapKakaoClientException(e);
         } catch (RestClientException e) {
             throw new KakaoApiErrorException();
         }
     }
 
-    private void handleKakaoClientException(HttpClientErrorException e) {
+    private RuntimeException mapKakaoClientException(HttpClientErrorException e) {
         HttpStatusCode statusCode = e.getStatusCode();
         String responseBody = e.getResponseBodyAsString();
         KakaoErrorPayload errorPayload = parseErrorPayload(responseBody);
 
         if (statusCode == HttpStatus.UNAUTHORIZED || statusCode == HttpStatus.FORBIDDEN) {
             if (isExpiredTokenError(errorPayload)) {
-                throw new KakaoTokenExpiredException();
+                return new KakaoTokenExpiredException();
             }
-            throw new InvalidKakaoTokenException();
+            return new InvalidKakaoTokenException();
         }
 
-        throw new KakaoApiErrorException();
+        return new KakaoApiErrorException();
     }
 
     private KakaoErrorPayload parseErrorPayload(String responseBody) {
@@ -74,7 +75,8 @@ public class KakaoApiClient {
             String code = root.path("code").isMissingNode() ? null : root.path("code").asText(null);
             String message = root.path("msg").isMissingNode() ? null : root.path("msg").asText(null);
             return new KakaoErrorPayload(code, message);
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.warn("Failed to parse Kakao error response: {}", responseBody, e);
             return new KakaoErrorPayload(null, null);
         }
     }
