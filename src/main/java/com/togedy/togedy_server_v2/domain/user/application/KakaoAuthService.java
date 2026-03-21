@@ -8,6 +8,7 @@ import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.enums.ProviderType;
 import com.togedy.togedy_server_v2.domain.user.exception.auth.KakaoAccountNotFoundException;
+import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
 import com.togedy.togedy_server_v2.global.infrastructure.kakao.KakaoApiClient;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenInfo;
 import lombok.RequiredArgsConstructor;
@@ -48,10 +49,11 @@ public class KakaoAuthService {
             user = provider.getUser();
             completed = user.isProfileCompleted();
         } else {
-            user = (email != null)
-                    ? userRepository.findByEmail(email)
-                    .orElseGet(() -> userRepository.save(User.createTemp(email)))
-                    : userRepository.save(User.createTemp(null));
+            if (email != null && userRepository.existsByEmail(email)) {
+                throw new DuplicateEmailException();
+            }
+
+            user = userRepository.save(User.createTemp(email));
 
             authProviderRepository.save(
                     AuthProvider.kakao(user, providerUserId)
