@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.global.config;
 
+import com.togedy.togedy_server_v2.global.security.PublicEndpointPolicy;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtAuthenticationFilter;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtExceptionFilter;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenProvider;
@@ -7,6 +8,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -41,23 +43,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(
-                                "/api/v2/auth/login",
-                                "/api/v2/auth/reissue",
-                                "/api/v2/auth/kakao",
-                                "/api/v2/users/sign-up",
-                                "/api/v2/users/nickname/validate",
-                                "/api/v2/users/nickname/suggestions",
-                                "/api/v2/calendars/announcement",
-                                "/api/v2/policies/**",
-                                "/api/v2/studies/duplicate",
-                                "/api/v2/studies",
-                                "/api/v2/studies/popular"
-                        ).permitAll()
+                        .requestMatchers(PublicEndpointPolicy.PUBLIC_ANY_METHOD_PATTERNS).permitAll()
+                        .requestMatchers(HttpMethod.GET, PublicEndpointPolicy.PUBLIC_GET_PATTERNS).permitAll()
+                        .requestMatchers(HttpMethod.POST, PublicEndpointPolicy.PUBLIC_POST_PATTERNS).permitAll()
                         .requestMatchers("/api/v2/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",
-                                "/swagger-resources/**").permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/api/v2/**").authenticated()
                         .anyRequest().authenticated()
                 )
