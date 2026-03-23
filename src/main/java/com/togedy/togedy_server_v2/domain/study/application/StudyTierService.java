@@ -1,13 +1,18 @@
 package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
+import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyStatisticsRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyStudySummaryRow;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.StudyStatistics;
 import jakarta.transaction.Transactional;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +25,44 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class StudyTierService {
 
+    private static final int DAY_BOUNDARY_HOUR = 5;
+
     private final StudyStatisticsRepository studyStatisticsRepository;
     private final StudyRepository studyRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
+    private final StudyTimeRepository studyTimeRepository;
+
+    @Transactional
+    public void aggregateRunningStudyTimes() {
+        LocalDate today = LocalDate.now();
+        LocalDate targetDate = today.minusDays(1);
+
+        LocalDateTime summaryStart = targetDate.atTime(DAY_BOUNDARY_HOUR, 0);
+        LocalDateTime summaryEnd = today.atTime(DAY_BOUNDARY_HOUR, 0);
+
+        List<StudyTime> runningStudyTimes = studyTimeRepository.findRunningStudyTimesBefore(summaryEnd);
+
+        for (StudyTime studyTime : runningStudyTimes) {
+            long studySeconds = calculatePreviousDayStudySeconds(studyTime, summaryStart, summaryEnd);
+
+            if (studySeconds <= 0) {
+                continue;
+            }
+
+            DailyStudySummary dailyStudySummary = dailyStudySummaryRepository.findByUserIdAndDate(
+                            studyTime.getUserId(),
+                            targetDate
+                    )
+                    .orElseGet(() -> DailyStudySummary.builder()
+                            .userId(studyTime.getUserId())
+                            .studyTime(0L)
+                            .date(targetDate)
+                            .build());
+
+            dailyStudySummary.addStudyTime(studySeconds);
+            dailyStudySummaryRepository.save(dailyStudySummary);
+        }
+    }
 
     @Transactional
     public void calculateChallengeStudyScores() {
@@ -51,22 +91,19 @@ public class StudyTierService {
 
     @Transactional
     public void applyStudyTier() {
-        List<StudyStatistics> statistics =
-                studyStatisticsRepository.findUpdatedToday(LocalDate.now());
+        List<StudyStatistics> statistics = studyStatisticsRepository.findUpdatedToday(LocalDate.now());
 
         if (statistics.isEmpty()) {
             return;
         }
 
-        Map<Long, StudyStatistics> statisticsMap =
-                statistics.stream()
-                        .collect(Collectors.toMap(
-                                StudyStatistics::getStudyId,
-                                Function.identity()
-                        ));
+        Map<Long, StudyStatistics> statisticsMap = statistics.stream()
+                .collect(Collectors.toMap(
+                        StudyStatistics::getStudyId,
+                        Function.identity()
+                ));
 
-        List<Study> studies =
-                studyRepository.findAllByIds(statisticsMap.keySet());
+        List<Study> studies = studyRepository.findAllByIds(statisticsMap.keySet());
 
         for (Study study : studies) {
             StudyStatistics studyStatistics = statisticsMap.get(study.getId());
@@ -77,7 +114,23 @@ public class StudyTierService {
     private int countCompletedMembers(Study study, List<DailyStudySummaryRow> rows) {
         return (int) rows.stream()
                 .filter(dailyStudySummaryRow ->
-                        study.isChallengeAchievedBy(dailyStudySummaryRow.getStudyTime())
-                ).count();
+                        study.isChallengeAchievedBy(dailyStudySummaryRow.getStudyTime()))
+                .count();
+    }
+
+    private long calculatePreviousDayStudySeconds(
+            StudyTime studyTime,
+            LocalDateTime summaryStart,
+            LocalDateTime summaryEnd
+    ) {
+        LocalDateTime effectiveStart = studyTime.getStartTime().isAfter(summaryStart)
+                ? studyTime.getStartTime()
+                : summaryStart;
+
+        if (!effectiveStart.isBefore(summaryEnd)) {
+            return 0L;
+        }
+
+        return Duration.between(effectiveStart, summaryEnd).getSeconds();
     }
 }
