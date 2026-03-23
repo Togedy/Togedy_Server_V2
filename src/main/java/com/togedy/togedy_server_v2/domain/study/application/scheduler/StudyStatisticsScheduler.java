@@ -9,7 +9,7 @@ public class StudyStatisticsScheduler {
 
     private StudyTierService studyTierService;
 
-    @Scheduled(cron = "0 0 0 * * *", zone = "Asia/Seoul")
+    @Scheduled(cron = "0 30 5 * * *", zone = "Asia/Seoul")
     public void calculateChallengeStudyScores() {
         studyTierService.calculateChallengeStudyScores();
     }
