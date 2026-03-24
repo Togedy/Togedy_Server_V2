@@ -9,6 +9,7 @@ import com.togedy.togedy_server_v2.domain.study.dao.StudyStatisticsRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyStudySummaryRow;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.StudyStatistics;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -25,8 +26,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class StudyTierService {
 
-    private static final int DAY_BOUNDARY_HOUR = 5;
-
     private final StudyStatisticsRepository studyStatisticsRepository;
     private final StudyRepository studyRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
@@ -34,18 +33,16 @@ public class StudyTierService {
 
     @Transactional
     public void aggregateRunningStudyTimes() {
-        LocalDate today = LocalDate.now();
-        LocalDate targetDate = today.minusDays(1);
-
-        LocalDateTime summaryStart = targetDate.atTime(DAY_BOUNDARY_HOUR, 0);
-        LocalDateTime summaryEnd = today.atTime(DAY_BOUNDARY_HOUR, 0);
+        LocalDateTime summaryEnd = TimeUtil.startOfStudyDay(LocalDateTime.now());
+        LocalDateTime summaryStart = summaryEnd.minusDays(1);
+        LocalDate targetDate = summaryStart.toLocalDate();
 
         List<StudyTime> runningStudyTimes = studyTimeRepository.findRunningStudyTimesBefore(summaryEnd);
 
         for (StudyTime studyTime : runningStudyTimes) {
             long studySeconds = calculatePreviousDayStudySeconds(studyTime, summaryStart, summaryEnd);
 
-            if (studySeconds <= 0) {
+            if (studySeconds == 0) {
                 continue;
             }
 
