@@ -10,6 +10,8 @@ import java.util.Objects;
 
 public class TimeUtil {
 
+    private static final LocalTime STUDY_DAY_BOUNDARY_TIME = LocalTime.of(5, 0);
+
     private TimeUtil() {
     }
 
@@ -128,11 +130,7 @@ public class TimeUtil {
     }
 
     public static LocalDateTime startOfStudyDay(LocalDateTime dateTime) {
-        return startOfStudyDay(dateTime, LocalTime.of(5, 0));
-    }
-
-    public static LocalDateTime startOfStudyDay(LocalDateTime dateTime, LocalTime boundaryTime) {
-        LocalDateTime todayBoundary = dateTime.toLocalDate().atTime(boundaryTime);
+        LocalDateTime todayBoundary = dateTime.toLocalDate().atTime(STUDY_DAY_BOUNDARY_TIME);
         if (dateTime.isBefore(todayBoundary)) {
             return todayBoundary.minusDays(1);
         }
