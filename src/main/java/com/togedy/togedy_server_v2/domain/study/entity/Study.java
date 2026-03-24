@@ -73,6 +73,7 @@ public class Study extends BaseEntity {
     @Column(name = "password", nullable = true)
     private String password;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "tier", nullable = false, columnDefinition = "varchar(20)")
     private StudyTier tier;
 
