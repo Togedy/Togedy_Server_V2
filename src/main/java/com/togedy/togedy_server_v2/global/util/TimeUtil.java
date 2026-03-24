@@ -127,20 +127,20 @@ public class TimeUtil {
         return Math.max(0L, Duration.between(startTime, endTime).getSeconds());
     }
 
-    public static LocalDateTime startOfStudyDay(LocalDateTime now) {
-        return startOfStudyDay(now, LocalTime.of(5, 0));
+    public static LocalDateTime startOfStudyDay(LocalDateTime dateTime) {
+        return startOfStudyDay(dateTime, LocalTime.of(5, 0));
     }
 
-    public static LocalDateTime startOfStudyDay(LocalDateTime now, LocalTime boundaryTime) {
-        LocalDateTime todayStart = now.toLocalDate().atTime(boundaryTime);
-        if (now.isBefore(todayStart)) {
-            return todayStart.minusDays(1);
+    public static LocalDateTime startOfStudyDay(LocalDateTime dateTime, LocalTime boundaryTime) {
+        LocalDateTime todayBoundary = dateTime.toLocalDate().atTime(boundaryTime);
+        if (dateTime.isBefore(todayBoundary)) {
+            return todayBoundary.minusDays(1);
         }
-        return todayStart;
+        return todayBoundary;
     }
 
-    public static LocalDateTime endOfStudyDay(LocalDateTime now) {
-        return startOfStudyDay(now).plusDays(1);
+    public static LocalDateTime startOfNextStudyDay(LocalDateTime dateTime) {
+        return startOfStudyDay(dateTime).plusDays(1);
     }
 
     public static LocalDate currentStudyDate() {
