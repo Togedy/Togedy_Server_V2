@@ -213,7 +213,11 @@ public class Study extends BaseEntity {
         if (hours == 5) {
             return BigDecimal.valueOf(20);
         }
-        return BigDecimal.valueOf(30);
+        if (hours == 7) {
+            return BigDecimal.valueOf(30);
+        }
+
+        throw new InvalidStudyGoalTimeException();
     }
 
     public void updateTier(StudyStatistics studyStatistics) {

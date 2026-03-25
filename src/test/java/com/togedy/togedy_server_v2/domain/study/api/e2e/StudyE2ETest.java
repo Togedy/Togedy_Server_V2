@@ -155,7 +155,7 @@ public class StudyE2ETest extends AbstractE2ETest {
                 .andExpect(jsonPath("$.response.studyDescription").value(study.getDescription()))
                 .andExpect(jsonPath("$.response.studyImageUrl").value(study.getImageUrl()))
                 .andExpect(jsonPath("$.response.studyTag").value(study.getTag().getDescription()))
-                .andExpect(jsonPath("$.response.studyTier").value(study.getDescription()))
+                .andExpect(jsonPath("$.response.studyTier").value(study.getTier()))
                 .andExpect(jsonPath("$.response.studyMemberCount").value(study.getMemberCount()))
                 .andExpect(jsonPath("$.response.completedMemberCount").value(0))
                 .andExpect(jsonPath("$.response.studyMemberLimit").value(study.getMemberLimit()))

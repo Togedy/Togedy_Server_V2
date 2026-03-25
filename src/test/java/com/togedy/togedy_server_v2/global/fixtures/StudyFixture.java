@@ -41,7 +41,7 @@ public class StudyFixture {
                 .tag(StudyTag.SCHOOL)
                 .memberLimit(10)
                 .imageUrl("https://mock-s3/test.png")
-                .type(StudyType.CHALLENGE)
+                .type(StudyType.NORMAL)
                 .build();
     }
 
