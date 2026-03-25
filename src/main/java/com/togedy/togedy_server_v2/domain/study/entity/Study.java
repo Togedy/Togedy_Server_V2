@@ -1,9 +1,11 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.study.enums.ChallengeGoalTime;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTier;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
+import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyGoalTimeException;
 import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
 import com.togedy.togedy_server_v2.domain.study.exception.NotChallengeStudyException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyDescriptionContainsBadWordException;
@@ -88,6 +90,9 @@ public class Study extends BaseEntity {
             String imageUrl,
             String password
     ) {
+        if (type == StudyType.CHALLENGE) {
+            validateGoalTime(goalTime);
+        }
         validateStudyName(name);
         validateStudyDescription(description);
         validateMemberLimitRange(memberLimit);
@@ -208,11 +213,7 @@ public class Study extends BaseEntity {
         if (hours == 5) {
             return BigDecimal.valueOf(20);
         }
-        if (hours == 7) {
-            return BigDecimal.valueOf(30);
-        }
-
-        throw new RuntimeException();
+        return BigDecimal.valueOf(30);
     }
 
     public void updateTier(StudyStatistics studyStatistics) {
@@ -267,6 +268,12 @@ public class Study extends BaseEntity {
     private void validateChallengeStudy() {
         if (!isChallengeStudy()) {
             throw new NotChallengeStudyException();
+        }
+    }
+
+    private void validateGoalTime(Long goalTime) {
+        if (!ChallengeGoalTime.isValid(goalTime)) {
+            throw new InvalidStudyGoalTimeException();
         }
     }
 

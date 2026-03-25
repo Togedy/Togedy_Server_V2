@@ -108,9 +108,7 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
             FROM UserStudy us
             JOIN DailyStudySummary ds ON us.userId = ds.userId
             WHERE us.studyId IN :studyIds
-                AND DATE(ds.date) = :targetDate
+                AND ds.date = :targetDate
             """)
     List<DailyStudySummaryRow> findAllByStudyIdsAndDate(List<Long> studyIds, LocalDate targetDate);
-
-    void deleteAllByDate(LocalDate targetDate);
 }

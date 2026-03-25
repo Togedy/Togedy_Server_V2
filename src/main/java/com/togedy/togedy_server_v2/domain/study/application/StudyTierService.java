@@ -33,7 +33,7 @@ public class StudyTierService {
 
     @Transactional
     public void aggregateRunningStudyTimes() {
-        LocalDateTime summaryEnd = TimeUtil.startOfStudyDay(LocalDateTime.now());
+        LocalDateTime summaryEnd = TimeUtil.startOfStudyDay(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
         LocalDateTime summaryStart = summaryEnd.minusDays(1);
         LocalDate targetDate = summaryStart.toLocalDate();
 
@@ -76,19 +76,24 @@ public class StudyTierService {
                 .collect(Collectors.groupingBy(DailyStudySummaryRow::getStudyId));
 
         for (Study challengeStudy : challengeStudies) {
-            List<DailyStudySummaryRow> rows = dailyStudySummaryMap.get(challengeStudy.getId());
+            List<DailyStudySummaryRow> rows = dailyStudySummaryMap.getOrDefault(challengeStudy.getId(), List.of());
 
             int completedMembers = countCompletedMembers(challengeStudy, rows);
 
-            StudyStatistics studyStatistics = studyStatisticsRepository.findByStudyId(challengeStudy.getId());
-            studyStatistics.applyChallengeSuccess(challengeStudy, completedMembers);
+            StudyStatistics studyStatistics = studyStatisticsRepository.findByStudyId(challengeStudy.getId())
+                    .orElseGet(() -> StudyStatistics.builder()
+                            .studyId(challengeStudy.getId())
+                            .build());
+
+            studyStatistics.applyChallengeSuccess(challengeStudy, completedMembers, targetDate);
             studyStatisticsRepository.save(studyStatistics);
         }
     }
 
     @Transactional
     public void applyStudyTier() {
-        List<StudyStatistics> statistics = studyStatisticsRepository.findUpdatedToday(LocalDate.now());
+        List<StudyStatistics> statistics = studyStatisticsRepository.findUpdatedToday(
+                LocalDate.now(ZoneId.of("Asia/Seoul")));
 
         if (statistics.isEmpty()) {
             return;
