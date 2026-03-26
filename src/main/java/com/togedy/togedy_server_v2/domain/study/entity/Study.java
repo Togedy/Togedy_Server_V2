@@ -1,8 +1,11 @@
 package com.togedy.togedy_server_v2.domain.study.entity;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.study.enums.ChallengeGoalTime;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
+import com.togedy.togedy_server_v2.domain.study.enums.StudyTier;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
+import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyGoalTimeException;
 import com.togedy.togedy_server_v2.domain.study.exception.InvalidStudyMemberLimitException;
 import com.togedy.togedy_server_v2.domain.study.exception.NotChallengeStudyException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyDescriptionContainsBadWordException;
@@ -22,6 +25,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -71,8 +75,9 @@ public class Study extends BaseEntity {
     @Column(name = "password", nullable = true)
     private String password;
 
-    @Column(name = "tier", nullable = true)
-    private String tier;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tier", nullable = false, columnDefinition = "varchar(20)")
+    private StudyTier tier;
 
     @Builder
     public Study(
@@ -83,9 +88,11 @@ public class Study extends BaseEntity {
             int memberLimit,
             StudyTag tag,
             String imageUrl,
-            String password,
-            String tier
+            String password
     ) {
+        if (type == StudyType.CHALLENGE) {
+            validateGoalTime(goalTime);
+        }
         validateStudyName(name);
         validateStudyDescription(description);
         validateMemberLimitRange(memberLimit);
@@ -98,7 +105,7 @@ public class Study extends BaseEntity {
         this.tag = tag;
         this.imageUrl = imageUrl;
         this.password = password;
-        this.tier = tier;
+        this.tier = StudyTier.BRONZE1;
     }
 
     public void updateInformation(
@@ -189,6 +196,37 @@ public class Study extends BaseEntity {
         }
     }
 
+    public boolean isChallengeAchievedBy(Long goalTime) {
+        return goalTime >= this.goalTime;
+    }
+
+    public boolean isChallengeSuccessful(int completedMemberCount) {
+        return completedMemberCount * 4 >= this.memberCount * 3;
+    }
+
+    public BigDecimal challengeTimeScore() {
+        long hours = this.goalTime / 3600;
+
+        if (hours == 3) {
+            return BigDecimal.valueOf(10);
+        }
+        if (hours == 5) {
+            return BigDecimal.valueOf(20);
+        }
+        if (hours == 7) {
+            return BigDecimal.valueOf(30);
+        }
+
+        throw new InvalidStudyGoalTimeException();
+    }
+
+    public void updateTier(StudyStatistics studyStatistics) {
+        StudyTier studyTier = StudyTier.fromScore(studyStatistics.getScore());
+        if (!this.tier.equals(studyTier)) {
+            this.tier = studyTier;
+        }
+    }
+
     private void validateUpdatableMemberLimit(int memberLimit) {
         if (memberLimit < this.memberCount) {
             throw new InvalidStudyMemberLimitException();
@@ -234,6 +272,12 @@ public class Study extends BaseEntity {
     private void validateChallengeStudy() {
         if (!isChallengeStudy()) {
             throw new NotChallengeStudyException();
+        }
+    }
+
+    private void validateGoalTime(Long goalTime) {
+        if (!ChallengeGoalTime.isValid(goalTime)) {
+            throw new InvalidStudyGoalTimeException();
         }
     }
 

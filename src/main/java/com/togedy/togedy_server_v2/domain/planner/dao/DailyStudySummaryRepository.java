@@ -1,13 +1,14 @@
 package com.togedy.togedy_server_v2.domain.planner.dao;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
-import jakarta.persistence.LockModeType;
+import com.togedy.togedy_server_v2.domain.study.dto.DailyStudySummaryRow;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto;
+import jakarta.persistence.LockModeType;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -97,4 +98,17 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
     );
+
+    @Query("""
+            SELECT new com.togedy.togedy_server_v2.domain.study.dto.DailyStudySummaryRow(
+                us.studyId,
+                ds.userId,
+                ds.studyTime
+            )
+            FROM UserStudy us
+            JOIN DailyStudySummary ds ON us.userId = ds.userId
+            WHERE us.studyId IN :studyIds
+                AND ds.date = :targetDate
+            """)
+    List<DailyStudySummaryRow> findAllByStudyIdsAndDate(List<Long> studyIds, LocalDate targetDate);
 }

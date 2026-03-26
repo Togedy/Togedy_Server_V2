@@ -135,7 +135,6 @@ public class StudyE2ETest extends AbstractE2ETest {
     @Test
     public void findStudyByLeader() throws Exception {
         //given
-
         User leader = fixtureSupport.persistUser(UserFixture.createLeader());
         String accessToken = testJwtFactory.createAccessToken(leader.getId());
         Study study = fixtureSupport.persistStudy(StudyFixture.createChallengeStudy());
@@ -155,7 +154,7 @@ public class StudyE2ETest extends AbstractE2ETest {
                 .andExpect(jsonPath("$.response.studyDescription").value(study.getDescription()))
                 .andExpect(jsonPath("$.response.studyImageUrl").value(study.getImageUrl()))
                 .andExpect(jsonPath("$.response.studyTag").value(study.getTag().getDescription()))
-                .andExpect(jsonPath("$.response.studyTier").value("티어"))
+                .andExpect(jsonPath("$.response.studyTier").value(study.getTier().getName()))
                 .andExpect(jsonPath("$.response.studyMemberCount").value(study.getMemberCount()))
                 .andExpect(jsonPath("$.response.completedMemberCount").value(0))
                 .andExpect(jsonPath("$.response.studyMemberLimit").value(study.getMemberLimit()))

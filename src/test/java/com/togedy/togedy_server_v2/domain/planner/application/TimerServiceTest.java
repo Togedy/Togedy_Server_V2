@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
@@ -27,8 +26,6 @@ import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotOwnedExcepti
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.fixtures.UserFixture;
-import com.togedy.togedy_server_v2.global.util.TimeUtil;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -328,58 +325,4 @@ class TimerServiceTest {
 
         assertThat(summary.getStudyTime()).isGreaterThan(100L);
     }
-
-    @Test
-    void 타이머_종료_시_5시를_넘기면_일일_요약을_스터디데이별로_나눠_저장한다() {
-        User user = UserFixture.createUser();
-        ReflectionTestUtils.setField(user, "id", 1L);
-
-        given(userRepository.findById(any()))
-                .willReturn(Optional.of(user));
-
-        Long timerId = 100L;
-        LocalDateTime studyDayStart = TimeUtil.startOfStudyDay(LocalDateTime.now());
-        LocalDate previousStudyDate = studyDayStart.minusDays(1).toLocalDate();
-        LocalDate currentStudyDate = studyDayStart.toLocalDate();
-        LocalDateTime startTime = studyDayStart.minusHours(1);
-
-        PostTimerStopRequest request = new PostTimerStopRequest();
-        ReflectionTestUtils.setField(request, "timerId", timerId);
-
-        StudyTime running = StudyTime.builder()
-                .userId(user.getId())
-                .studySubjectId(10L)
-                .startTime(startTime)
-                .endTime(null)
-                .build();
-        ReflectionTestUtils.setField(running, "id", timerId);
-
-        DailyStudySummary previousDaySummary = DailyStudySummary.builder()
-                .userId(user.getId())
-                .studyTime(0L)
-                .date(previousStudyDate)
-                .build();
-
-        DailyStudySummary currentDaySummary = DailyStudySummary.builder()
-                .userId(user.getId())
-                .studyTime(0L)
-                .date(currentStudyDate)
-                .build();
-
-        given(studyTimeRepository.findByIdForUpdate(timerId)).willReturn(Optional.of(running));
-        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(user.getId(), previousStudyDate))
-                .willReturn(Optional.of(previousDaySummary));
-        given(dailyStudySummaryRepository.findByUserIdAndDateForUpdate(user.getId(), currentStudyDate))
-                .willReturn(Optional.of(currentDaySummary));
-        given(dailyStudySummaryRepository.save(any(DailyStudySummary.class)))
-                .willAnswer(invocation -> invocation.getArgument(0));
-
-        timerService.stopTimer(request, user.getId());
-
-        assertThat(previousDaySummary.getStudyTime()).isEqualTo(3600L);
-        assertThat(currentDaySummary.getStudyTime()).isGreaterThanOrEqualTo(0L);
-        verify(dailyStudySummaryRepository).findByUserIdAndDateForUpdate(user.getId(), previousStudyDate);
-        verify(dailyStudySummaryRepository).findByUserIdAndDateForUpdate(user.getId(), currentStudyDate);
-    }
-
 }

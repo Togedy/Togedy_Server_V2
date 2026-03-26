@@ -49,7 +49,6 @@ public class StudyExternalService {
     private final UserRepository userRepository;
     private final S3Service s3Service;
 
-    private static final String TIER = "tier";
     private static final int POPULAR_STUDY_SEARCH_SIZE = 3;
 
     /**
@@ -83,7 +82,6 @@ public class StudyExternalService {
                 .type(type)
                 .goalTime(goalTime)
                 .password(request.getStudyPassword())
-                .tier(TIER)
                 .build();
 
         Study savedStudy = studyRepository.save(study);
