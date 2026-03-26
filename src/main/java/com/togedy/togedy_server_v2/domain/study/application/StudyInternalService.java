@@ -436,14 +436,29 @@ public class StudyInternalService {
         return buildStudyAttendanceResponses(startDate, endDate, users, studyTimeMap, totalStudyTimeMap);
     }
 
+    /**
+     * 스터디 신고를 생성한다.
+     * <p>
+     * 요청한 사용자가 해당 스터디의 멤버인지 확인한 후, 신고 유형과 신고 사유를 기반으로 스터디 신고 정보를 생성하여 저장한다.
+     * </p>
+     * <p>
+     * 스터디에 가입하지 않은 사용자는 신고할 수 없으며, 신고 대상 스터디가 존재하지 않는 경우 예외가 발생한다.
+     * </p>
+     *
+     * @param request 신고 유형 및 신고 사유를 포함한 스터디 신고 요청 DTO
+     * @param studyId 신고 대상 스터디 ID
+     * @param userId  신고를 요청한 사용자 ID
+     * @throws StudyNotFoundException     신고 대상 스터디가 존재하지 않는 경우
+     * @throws StudyAccessDeniedException 사용자가 해당 스터디의 멤버가 아닌 경우
+     */
     @Transactional
     public void generateReport(PostStudyReportRequest request, Long studyId, Long userId) {
-        if (!userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
-            throw new StudyAccessDeniedException();
-        }
-
         if (!studyRepository.existsById(studyId)) {
             throw new StudyNotFoundException();
+        }
+
+        if (!userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
+            throw new StudyAccessDeniedException();
         }
 
         StudyReport studyReport = StudyReport.builder()
