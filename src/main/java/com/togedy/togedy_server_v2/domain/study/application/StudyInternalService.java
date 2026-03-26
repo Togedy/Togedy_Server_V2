@@ -1,9 +1,10 @@
 package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
-import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.study.dao.StudyReportRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto;
@@ -14,8 +15,10 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInformationRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PostStudyReportRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.StudyMemberRoleDto;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
+import com.togedy.togedy_server_v2.domain.study.entity.StudyReport;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.event.StudyImageRemovedEvent;
@@ -55,6 +58,7 @@ public class StudyInternalService {
     private final UserStudyRepository userStudyRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final StudyReportRepository studyReportRepository;
 
     /**
      * 스터디 단건 정보를 조회한다.
@@ -430,6 +434,26 @@ public class StudyInternalService {
         accumulateStudyTimes(dailyStudyTimes, studyTimeMap, totalStudyTimeMap);
 
         return buildStudyAttendanceResponses(startDate, endDate, users, studyTimeMap, totalStudyTimeMap);
+    }
+
+    @Transactional
+    public void generateReport(PostStudyReportRequest request, Long studyId, Long userId) {
+        if (!userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
+            throw new StudyAccessDeniedException();
+        }
+
+        if (!studyRepository.existsById(studyId)) {
+            throw new StudyNotFoundException();
+        }
+
+        StudyReport studyReport = StudyReport.builder()
+                .userId(userId)
+                .studyId(studyId)
+                .type(request.getReportType())
+                .reason(request.getReportReason())
+                .build();
+
+        studyReportRepository.save(studyReport);
     }
 
     /**
