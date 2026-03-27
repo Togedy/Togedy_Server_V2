@@ -1,9 +1,10 @@
 package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
-import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.study.dao.StudyReportRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto;
@@ -14,8 +15,10 @@ import com.togedy.togedy_server_v2.domain.study.dto.GetStudyResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInformationRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PostStudyReportRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.StudyMemberRoleDto;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
+import com.togedy.togedy_server_v2.domain.study.entity.StudyReport;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.event.StudyImageRemovedEvent;
@@ -55,6 +58,7 @@ public class StudyInternalService {
     private final UserStudyRepository userStudyRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final StudyReportRepository studyReportRepository;
 
     /**
      * 스터디 단건 정보를 조회한다.
@@ -430,6 +434,41 @@ public class StudyInternalService {
         accumulateStudyTimes(dailyStudyTimes, studyTimeMap, totalStudyTimeMap);
 
         return buildStudyAttendanceResponses(startDate, endDate, users, studyTimeMap, totalStudyTimeMap);
+    }
+
+    /**
+     * 스터디 신고를 생성한다.
+     * <p>
+     * 요청한 사용자가 해당 스터디의 멤버인지 확인한 후, 신고 유형과 신고 사유를 기반으로 스터디 신고 정보를 생성하여 저장한다.
+     * </p>
+     * <p>
+     * 스터디에 가입하지 않은 사용자는 신고할 수 없으며, 신고 대상 스터디가 존재하지 않는 경우 예외가 발생한다.
+     * </p>
+     *
+     * @param request 신고 유형 및 신고 사유를 포함한 스터디 신고 요청 DTO
+     * @param studyId 신고 대상 스터디 ID
+     * @param userId  신고를 요청한 사용자 ID
+     * @throws StudyNotFoundException     신고 대상 스터디가 존재하지 않는 경우
+     * @throws StudyAccessDeniedException 사용자가 해당 스터디의 멤버가 아닌 경우
+     */
+    @Transactional
+    public void generateReport(PostStudyReportRequest request, Long studyId, Long userId) {
+        if (!studyRepository.existsById(studyId)) {
+            throw new StudyNotFoundException();
+        }
+
+        if (!userStudyRepository.existsByStudyIdAndUserId(studyId, userId)) {
+            throw new StudyAccessDeniedException();
+        }
+
+        StudyReport studyReport = StudyReport.builder()
+                .userId(userId)
+                .studyId(studyId)
+                .type(request.getReportType())
+                .reason(request.getReportReason())
+                .build();
+
+        studyReportRepository.save(studyReport);
     }
 
     /**
