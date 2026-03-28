@@ -16,6 +16,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 
 @Service
 @RequiredArgsConstructor
@@ -50,16 +52,20 @@ public class KakaoAuthService {
             user = provider.getUser();
             completed = user.isProfileCompleted();
         } else {
-            if (email != null && userRepository.existsByEmail(email)) {
-                throw new DuplicateEmailException();
-            }
+            Optional<User> existingUser = Optional.ofNullable(email)
+                    .flatMap(userRepository::findByEmail);
 
-            user = saveUserHandlingDuplicateEmail(User.createTemp(email));
+            if (existingUser.isPresent()) {
+                user = existingUser.get();
+                completed = user.isProfileCompleted();
+            } else {
+                user = saveUserHandlingDuplicateEmail(User.createTemp(email));
+                completed = false;
+            }
 
             authProviderRepository.save(
                     AuthProvider.kakao(user, providerUserId)
             );
-            completed = false;
         }
 
         JwtTokenInfo jwtTokenInfo = authService.issueToken(user.getId());
