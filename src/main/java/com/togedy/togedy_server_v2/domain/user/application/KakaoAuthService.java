@@ -50,16 +50,22 @@ public class KakaoAuthService {
             user = provider.getUser();
             completed = user.isProfileCompleted();
         } else {
-            if (email != null && userRepository.existsByEmail(email)) {
-                throw new DuplicateEmailException();
+            if (email != null) {
+                user = userRepository.findByEmail(email).orElse(null);
+            } else {
+                user = null;
             }
 
-            user = saveUserHandlingDuplicateEmail(User.createTemp(email));
+            if (user == null) {
+                user = saveUserHandlingDuplicateEmail(User.createTemp(email));
+                completed = false;
+            } else {
+                completed = user.isProfileCompleted();
+            }
 
             authProviderRepository.save(
                     AuthProvider.kakao(user, providerUserId)
             );
-            completed = false;
         }
 
         JwtTokenInfo jwtTokenInfo = authService.issueToken(user.getId());
