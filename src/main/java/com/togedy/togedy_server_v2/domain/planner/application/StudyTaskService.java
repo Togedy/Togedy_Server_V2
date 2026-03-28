@@ -112,7 +112,9 @@ public class StudyTaskService {
                             .map(DailyPlannerTaskItemDto::from)
                             .toList();
 
-                    Long subjectStudyTime = studyTimeBySubjectId.getOrDefault(studySubject.getId(), 0L);
+                    String subjectStudyTime = TimeUtil.formatSecondsToHms(
+                            studyTimeBySubjectId.getOrDefault(studySubject.getId(), 0L)
+                    );
 
                     return DailyPlannerTaskDto.of(studySubject, subjectStudyTime, taskList);
                 })
