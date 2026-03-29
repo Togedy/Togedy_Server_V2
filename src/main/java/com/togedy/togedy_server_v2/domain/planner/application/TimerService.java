@@ -104,7 +104,7 @@ public class TimerService {
 
         LocalDateTime endTime = LocalDateTime.now();
         studyTime.stop(endTime);
-        updateDailyStudySummary(userId, studyTime.getStartTime(), endTime);
+        updateDailyStudySummaryOnStop(userId, studyTime.getStartTime(), endTime);
         user.updateStatus(UserStatus.ACTIVE);
         return PostTimerStopResponse.of(studyTime.getId(), studyTime.getStartTime(), endTime);
     }
@@ -129,7 +129,7 @@ public class TimerService {
 
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime dayStart = TimeUtil.startOfStudyDay(now);
-        LocalDateTime dayEnd = TimeUtil.endOfStudyDay(now);
+        LocalDateTime dayEnd = TimeUtil.startOfNextStudyDay(now);
 
         Map<Long, Long> studyTimeBySubjectId = new HashMap<>();
         List<Object[]> rows = studyTimeRepository.findDailyStudyTimeBySubject(userId, dayStart, dayEnd);
@@ -154,7 +154,7 @@ public class TimerService {
     public GetTimerTotalResponse findTodayTotalStudyTime(Long userId) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime dayStart = TimeUtil.startOfStudyDay(now);
-        LocalDateTime dayEnd = TimeUtil.endOfStudyDay(now);
+        LocalDateTime dayEnd = TimeUtil.startOfNextStudyDay(now);
 
         long totalStudyTime = studyTimeRepository.sumDailyStudyTimeByUserId(userId, dayStart, dayEnd);
 
@@ -173,49 +173,40 @@ public class TimerService {
         }
     }
 
-    private void updateDailyStudySummary(Long userId, LocalDateTime startTime, LocalDateTime endTime) {
-        if (startTime == null || endTime == null || !startTime.isBefore(endTime)) {
+    private void updateDailyStudySummaryOnStop(Long userId, LocalDateTime startTime, LocalDateTime endTime) {
+        if (!startTime.isBefore(endTime)) {
             return;
         }
 
-        Map<LocalDate, Long> additionalStudyTimeByDate = splitByStudyDay(startTime, endTime);
-        additionalStudyTimeByDate.forEach(
-                (date, additionalStudyTime) -> upsertDailyStudySummary(userId, date, additionalStudyTime));
-    }
+        LocalDate startStudyDate = TimeUtil.startOfStudyDay(startTime).toLocalDate();
+        LocalDate endStudyDate = TimeUtil.startOfStudyDay(endTime).toLocalDate();
 
-    private Map<LocalDate, Long> splitByStudyDay(LocalDateTime startTime, LocalDateTime endTime) {
-        Map<LocalDate, Long> additionalStudyTimeByDate = new HashMap<>();
-        LocalDateTime cursor = startTime;
-
-        while (cursor.isBefore(endTime)) {
-            LocalDateTime nextBoundary = TimeUtil.endOfStudyDay(cursor);
-            LocalDateTime chunkEnd = nextBoundary.isBefore(endTime) ? nextBoundary : endTime;
-
-            long seconds = Duration.between(cursor, chunkEnd).getSeconds();
-            if (seconds > 0) {
-                LocalDate studyDate = TimeUtil.startOfStudyDay(cursor).toLocalDate();
-                additionalStudyTimeByDate.merge(studyDate, seconds, Long::sum);
-            }
-            cursor = chunkEnd;
+        if (startStudyDate.equals(endStudyDate)) {
+            long additionalStudyTime = Duration.between(startTime, endTime).getSeconds();
+            upsertDailyStudySummary(userId, endStudyDate, additionalStudyTime);
+            return;
         }
 
-        return additionalStudyTimeByDate;
+        LocalDateTime currentStudyDayStart = TimeUtil.startOfStudyDay(endTime);
+        long additionalStudyTime = Duration.between(currentStudyDayStart, endTime).getSeconds();
+        upsertDailyStudySummary(userId, endStudyDate, additionalStudyTime);
     }
 
     private void upsertDailyStudySummary(Long userId, LocalDate date, Long additionalStudyTime) {
-        DailyStudySummary dailyStudySummary = dailyStudySummaryRepository.findByUserIdAndDateForUpdate(userId, date)
-                .orElseGet(() -> DailyStudySummary.builder()
-                        .userId(userId)
-                        .studyTime(0L)
-                        .date(date)
-                        .build());
-
-        dailyStudySummary.addStudyTime(additionalStudyTime);
         try {
+            DailyStudySummary dailyStudySummary = dailyStudySummaryRepository.findByUserIdAndDateForUpdate(userId, date)
+                    .orElseGet(() -> DailyStudySummary.builder()
+                            .userId(userId)
+                            .studyTime(0L)
+                            .date(date)
+                            .build());
+
+            dailyStudySummary.addStudyTime(additionalStudyTime);
             dailyStudySummaryRepository.save(dailyStudySummary);
         } catch (DataIntegrityViolationException e) {
             DailyStudySummary existingSummary = dailyStudySummaryRepository.findByUserIdAndDateForUpdate(userId, date)
                     .orElseThrow(() -> e);
+
             existingSummary.addStudyTime(additionalStudyTime);
             dailyStudySummaryRepository.save(existingSummary);
         }

@@ -5,9 +5,10 @@ import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -82,5 +83,15 @@ public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
             Long userId,
             LocalDateTime startTime,
             LocalDateTime endTime
+    );
+
+    @Query("""
+                SELECT st
+                FROM StudyTime st
+                WHERE st.endTime IS NULL
+                  AND st.startTime < :summaryEnd
+            """)
+    List<StudyTime> findRunningStudyTimesBefore(
+            @Param("summaryEnd") LocalDateTime summaryEnd
     );
 }

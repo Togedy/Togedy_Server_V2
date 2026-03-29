@@ -17,6 +17,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.PatchPlannerVisibilityReques
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyInformationRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PatchStudyMemberLimitRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyMemberRequest;
+import com.togedy.togedy_server_v2.domain.study.dto.PostStudyReportRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.PostStudyRequest;
 import com.togedy.togedy_server_v2.domain.study.dto.StudySearchDto;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
@@ -66,6 +67,17 @@ public class StudyController {
             @AuthenticationPrincipal AuthUser user
     ) {
         studyInternalService.registerStudyMember(request, studyId, user.getId());
+        return ApiUtil.successOnly();
+    }
+
+    @Operation(summary = "스터디 신고", description = "해당 스터디를 신고한다.")
+    @PostMapping("/studies/{studyId}/report")
+    public ApiResponse<Void> createReport(
+            @RequestBody PostStudyReportRequest request,
+            @PathVariable Long studyId,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        studyInternalService.generateReport(request, studyId, user.getId());
         return ApiUtil.successOnly();
     }
 

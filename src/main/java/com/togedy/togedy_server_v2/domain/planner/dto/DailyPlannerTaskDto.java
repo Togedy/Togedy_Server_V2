@@ -19,15 +19,15 @@ public class DailyPlannerTaskDto {
     @Schema(description = "스터디 과목 색상", type = "string", example = "1")
     private String subjectColor;
 
-    @Schema(description = "해당 과목의 일일 누적 공부 시간(초)", type = "integer", format = "int64", example = "7240")
-    private Long subjectStudyTime;
+    @Schema(description = "해당 과목의 일일 누적 공부 시간", type = "string", example = "02:00:40")
+    private String subjectStudyTime;
 
     @Schema(description = "해당 과목의 태스크 목록")
     private List<DailyPlannerTaskItemDto> taskList;
 
     public static DailyPlannerTaskDto of(
             StudySubject studySubject,
-            Long subjectStudyTime,
+            String subjectStudyTime,
             List<DailyPlannerTaskItemDto> taskList
     ) {
         return DailyPlannerTaskDto.builder()
