@@ -42,4 +42,8 @@ public interface UserStudyRepository extends JpaRepository<UserStudy, Long> {
                 WHERE us.studyId IN :studyIds
             """)
     List<UserStudy> findAllByStudyIds(List<Long> studyIds);
+
+    List<UserStudy> findAllByUserId(Long userId);
+
+    Optional<UserStudy> findFirstByStudyIdAndUserIdNotOrderByCreatedAtAsc(Long studyId, Long userId);
 }

@@ -12,8 +12,8 @@ import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
-import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameSuggestionResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.MyPageStudyDto;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileRequest;
@@ -21,9 +21,9 @@ import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingR
 import com.togedy.togedy_server_v2.domain.user.dto.PatchUserOnboardingRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.user.enums.NicknameValidationReason;
 import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
+import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.user.exception.InvalidUserProfileImageException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateNicknameException;
@@ -38,14 +38,16 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -66,6 +68,8 @@ public class UserService {
     );
     private static final int MAX_NICKNAME_SUGGESTION_ATTEMPTS = 100;
     private static final int NICKNAME_SUGGESTION_BATCH_SIZE = 10;
+    private final static int MY_PAGE_STUDY_COUNT = 2;
+
     private final S3Service s3Service;
     private final UserRepository userRepository;
     private final StudyRepository studyRepository;
@@ -74,8 +78,6 @@ public class UserService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
-
-    private final static int MY_PAGE_STUDY_COUNT = 2;
 
     @Transactional
     public Long generateUser(CreateUserRequest request) {
@@ -262,10 +264,27 @@ public class UserService {
         user.completeOnboarding(request.getNickname(), request.getBirthDate());
     }
 
+    /**
+     * 사용자를 회원 탈퇴 처리한다.
+     * <p>
+     * 사용자를 조회한 뒤, 해당 사용자가 참여 중인 모든 스터디에서 탈퇴 처리를 수행한다. 각 스터디에서는 일반 멤버 탈퇴 또는 방장 위임 후 탈퇴 로직이 적용되며, 모든 스터디 처리 이후 사용자 상태를
+     * 비활성화하고 리프레시 토큰을 삭제한다.
+     * </p>
+     *
+     * @param userId 회원 탈퇴할 사용자 ID
+     * @throws UserNotFoundException 사용자가 존재하지 않는 경우
+     */
     @Transactional
     public void withdrawUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
+
+        List<UserStudy> userStudies = userStudyRepository.findAllByUserId(userId);
+        Map<Long, Study> studyMap = findStudyMap(userStudies);
+
+        for (UserStudy userStudy : userStudies) {
+            withdrawFromStudy(userStudy, studyMap.get(userStudy.getStudyId()));
+        }
 
         user.updateStatus(UserStatus.INACTIVE);
         refreshTokenRepository.deleteByUserId(userId);
@@ -504,5 +523,71 @@ public class UserService {
             }
             throw e;
         }
+    }
+
+    /**
+     * 사용자의 참여 스터디 정보를 기반으로 스터디 ID별 스터디 엔티티를 매핑한다.
+     * <p>
+     * 사용자-스터디 매핑 목록에서 스터디 ID를 추출한 뒤 중복을 제거하고, 해당 스터디들을 조회하여 스터디 ID를 key로 갖는 Map 형태로 반환한다.
+     * </p>
+     *
+     * @param userStudies 사용자-스터디 매핑 목록
+     * @return 스터디 ID 기준 스터디 매핑 정보
+     */
+    private Map<Long, Study> findStudyMap(List<UserStudy> userStudies) {
+        List<Long> studyIds = userStudies.stream()
+                .map(UserStudy::getStudyId)
+                .distinct()
+                .toList();
+
+        return studyRepository.findAllByIds(studyIds)
+                .stream()
+                .collect(Collectors.toMap(Study::getId, Function.identity()));
+    }
+
+    /**
+     * 사용자-스터디 매핑 정보를 바탕으로 스터디 탈퇴를 처리한다.
+     * <p>
+     * 사용자가 방장인 경우 방장 전용 탈퇴 로직을 수행하고, 일반 멤버인 경우 스터디 인원을 감소시킨 뒤 참여 정보를 삭제한다.
+     * </p>
+     *
+     * @param userStudy 탈퇴 대상 사용자-스터디 매핑 정보
+     * @param study     탈퇴 대상 스터디
+     */
+    private void withdrawFromStudy(UserStudy userStudy, Study study) {
+        if (userStudy.isLeader()) {
+            withdrawLeader(userStudy, study);
+            return;
+        }
+
+        study.decreaseMemberCount();
+        userStudyRepository.delete(userStudy);
+    }
+
+    /**
+     * 방장 사용자의 스터디 탈퇴를 처리한다.
+     * <p>
+     * 같은 스터디의 다른 참여자 중 가장 먼저 가입한 사용자를 다음 방장으로 위임한다. 위임할 사용자가 없는 경우 스터디를 삭제하며, 위임할 사용자가 있는 경우 방장 권한을 넘긴 뒤 스터디 인원을 감소시키고
+     * 기존 방장의 참여 정보를 삭제한다.
+     * </p>
+     *
+     * @param userStudy 탈퇴 대상 방장의 사용자-스터디 매핑 정보
+     * @param study     탈퇴 대상 스터디
+     */
+    private void withdrawLeader(UserStudy userStudy, Study study) {
+        Optional<UserStudy> nextLeader = userStudyRepository.findFirstByStudyIdAndUserIdNotOrderByCreatedAtAsc(
+                userStudy.getStudyId(),
+                userStudy.getUserId()
+        );
+
+        if (nextLeader.isEmpty()) {
+            studyRepository.delete(study);
+            userStudyRepository.delete(userStudy);
+            return;
+        }
+
+        userStudy.delegateLeader(nextLeader.get());
+        study.decreaseMemberCount();
+        userStudyRepository.delete(userStudy);
     }
 }
