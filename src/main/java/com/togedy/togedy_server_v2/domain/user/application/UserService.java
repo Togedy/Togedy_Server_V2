@@ -289,11 +289,14 @@ public class UserService {
      */
     @Transactional
     public void withdrawUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
         deleteUserStudy(userId);
         deleteSchedule(userId);
         deletePlanner(userId);
+        deleteUser(user);
         deleteChat(userId);
-        deleteUser(userId);
     }
 
     /**
@@ -662,11 +665,12 @@ public class UserService {
      * 사용자에 종속된 인증 제공자 정보와 리프레시 토큰을 먼저 삭제한 뒤, 마지막으로 사용자 정보를 삭제한다.
      * </p>
      *
-     * @param userId 삭제할 사용자 ID
+     * @param user 삭제할 사용자 객체
      */
-    private void deleteUser(Long userId) {
-        authProviderRepository.deleteAllByUserId(userId);
-        refreshTokenRepository.deleteByUserId(userId);
-        userRepository.deleteById(userId);
+    private void deleteUser(User user) {
+        publishImageRemovedEvent(user.getProfileImageUrl());
+        authProviderRepository.deleteAllByUserId(user.getId());
+        refreshTokenRepository.deleteByUserId(user.getId());
+        userRepository.deleteById(user.getId());
     }
 }
