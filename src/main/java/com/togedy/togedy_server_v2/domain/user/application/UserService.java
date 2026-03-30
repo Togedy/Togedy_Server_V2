@@ -604,8 +604,8 @@ public class UserService {
         );
 
         if (nextLeader.isEmpty()) {
-            studyRepository.delete(study);
             userStudyRepository.delete(userStudy);
+            studyRepository.delete(study);
             return;
         }
 

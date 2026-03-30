@@ -46,7 +46,5 @@ public interface UserScheduleRepository extends JpaRepository<UserSchedule, Long
             """)
     Optional<UserSchedule> findByUserIdAndDDayTrue(Long userId);
 
-    void deleteAllById(Long id);
-
     void deleteAllByUserId(Long userId);
 }
