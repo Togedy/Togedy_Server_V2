@@ -113,4 +113,6 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
                 AND ds.date = :targetDate
             """)
     List<DailyStudySummaryRow> findAllByStudyIdsAndDate(List<Long> studyIds, LocalDate targetDate);
+
+    void deleteAllByUserId(Long userId);
 }

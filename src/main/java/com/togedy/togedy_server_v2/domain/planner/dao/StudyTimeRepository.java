@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
@@ -95,4 +96,6 @@ public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
     List<StudyTime> findRunningStudyTimesBefore(
             @Param("summaryEnd") LocalDateTime summaryEnd
     );
+
+    void deleteAllByUserId(Long userId);
 }

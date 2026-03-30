@@ -12,4 +12,6 @@ public interface PlannerDailyImageRepository extends JpaRepository<PlannerDailyI
     Optional<PlannerDailyImage> findByUserIdAndDate(Long userId, LocalDate date);
 
     Optional<PlannerDailyImage> findTopByUserIdAndDateLessThanEqualOrderByDateDesc(Long userId, LocalDate date);
+
+    void deleteAllByUserId(Long userId);
 }
