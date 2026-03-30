@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 import java.util.Optional;
 
+@Repository
 public interface StudySubjectRepository extends JpaRepository<StudySubject, Long> {
     @Query("""
             SELECT ss

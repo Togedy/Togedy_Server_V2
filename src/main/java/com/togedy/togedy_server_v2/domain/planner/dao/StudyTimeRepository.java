@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+@Repository
 public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""

@@ -4,7 +4,9 @@ import com.togedy.togedy_server_v2.domain.planner.entity.PlannerDailyImage;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface PlannerDailyImageRepository extends JpaRepository<PlannerDailyImage, Long> {
 
     Optional<PlannerDailyImage> findByUserIdAndDate(Long userId, LocalDate date);
