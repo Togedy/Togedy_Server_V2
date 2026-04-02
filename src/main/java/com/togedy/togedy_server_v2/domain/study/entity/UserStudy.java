@@ -87,6 +87,10 @@ public class UserStudy extends BaseEntity {
         return (int) ChronoUnit.DAYS.between(createdDate, now);
     }
 
+    public boolean isLeader() {
+        return StudyRole.LEADER == this.role;
+    }
+
     private void validateRemoveSelf(Long removeUserId) {
         if (this.userId.equals(removeUserId)) {
             throw new StudyLeaderCannotRemoveSelfException();

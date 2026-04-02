@@ -1,19 +1,27 @@
 package com.togedy.togedy_server_v2.domain.user.application;
 
+import com.togedy.togedy_server_v2.domain.chat.dao.ChatMessageRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.PlannerDailyImageRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
+import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
+import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.AuthProviderRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.RefreshTokenRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
-import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameSuggestionResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.MyPageStudyDto;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchProfileRequest;
@@ -21,9 +29,8 @@ import com.togedy.togedy_server_v2.domain.user.dto.PatchPushNotificationSettingR
 import com.togedy.togedy_server_v2.domain.user.dto.PatchUserOnboardingRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.user.enums.NicknameValidationReason;
-import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
+import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.user.exception.InvalidUserProfileImageException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateNicknameException;
@@ -38,14 +45,16 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -66,6 +75,8 @@ public class UserService {
     );
     private static final int MAX_NICKNAME_SUGGESTION_ATTEMPTS = 100;
     private static final int NICKNAME_SUGGESTION_BATCH_SIZE = 10;
+    private final static int MY_PAGE_STUDY_COUNT = 2;
+
     private final S3Service s3Service;
     private final UserRepository userRepository;
     private final StudyRepository studyRepository;
@@ -73,9 +84,15 @@ public class UserService {
     private final AuthProviderRepository authProviderRepository;
     private final RefreshTokenRepository refreshTokenRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
+    private final UserScheduleRepository userScheduleRepository;
+    private final UserUniversityMethodRepository userUniversityMethodRepository;
+    private final StudyTimeRepository studyTimeRepository;
+    private final PlannerDailyImageRepository plannerDailyImageRepository;
+    private final StudySubjectRepository studySubjectRepository;
+    private final StudyTaskRepository studyTaskRepository;
+    private final CategoryRepository categoryRepository;
+    private final ChatMessageRepository chatMessageRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
-
-    private final static int MY_PAGE_STUDY_COUNT = 2;
 
     @Transactional
     public Long generateUser(CreateUserRequest request) {
@@ -262,13 +279,24 @@ public class UserService {
         user.completeOnboarding(request.getNickname(), request.getBirthDate());
     }
 
+    /**
+     * 사용자를 회원 탈퇴 처리한다.
+     * <p>
+     * 사용자가 참여 중인 스터디 정보와 사용자에 종속된 일정, 플래너, 채팅, 인증 관련 데이터를 순차적으로 삭제한 뒤 마지막으로 사용자 정보를 삭제한다.
+     * </p>
+     *
+     * @param userId 회원 탈퇴할 사용자 ID
+     */
     @Transactional
     public void withdrawUser(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
-        user.updateStatus(UserStatus.INACTIVE);
-        refreshTokenRepository.deleteByUserId(userId);
+        deleteUserStudy(userId);
+        deleteSchedule(userId);
+        deletePlanner(userId);
+        deleteUser(user);
+        deleteChat(userId);
     }
 
     /**
@@ -504,5 +532,145 @@ public class UserService {
             }
             throw e;
         }
+    }
+
+    /**
+     * 사용자가 참여 중인 모든 스터디 정보를 삭제한다.
+     * <p>
+     * 사용자-스터디 매핑 정보를 조회한 뒤, 각 스터디에 대해 일반 멤버 탈퇴 또는 방장 위임 후 탈퇴 로직을 수행한다.
+     * </p>
+     *
+     * @param userId 스터디 참여 정보를 삭제할 사용자 ID
+     */
+    private void deleteUserStudy(Long userId) {
+        List<UserStudy> userStudies = userStudyRepository.findAllByUserId(userId);
+        Map<Long, Study> studyMap = findStudyMap(userStudies);
+
+        for (UserStudy userStudy : userStudies) {
+            withdrawFromStudy(userStudy, studyMap.get(userStudy.getStudyId()));
+        }
+    }
+
+    /**
+     * 사용자의 참여 스터디 정보를 기반으로 스터디 ID별 스터디 엔티티를 매핑한다.
+     * <p>
+     * 사용자-스터디 매핑 목록에서 스터디 ID를 추출한 뒤 중복을 제거하고, 해당 스터디들을 조회하여 스터디 ID를 key로 갖는 Map 형태로 반환한다.
+     * </p>
+     *
+     * @param userStudies 사용자-스터디 매핑 목록
+     * @return 스터디 ID 기준 스터디 매핑 정보
+     */
+    private Map<Long, Study> findStudyMap(List<UserStudy> userStudies) {
+        List<Long> studyIds = userStudies.stream()
+                .map(UserStudy::getStudyId)
+                .distinct()
+                .toList();
+
+        return studyRepository.findAllByIds(studyIds)
+                .stream()
+                .collect(Collectors.toMap(Study::getId, Function.identity()));
+    }
+
+    /**
+     * 사용자-스터디 매핑 정보를 바탕으로 스터디 탈퇴를 처리한다.
+     * <p>
+     * 사용자가 방장인 경우 방장 전용 탈퇴 로직을 수행하고, 일반 멤버인 경우 스터디 인원을 감소시킨 뒤 참여 정보를 삭제한다.
+     * </p>
+     *
+     * @param userStudy 탈퇴 대상 사용자-스터디 매핑 정보
+     * @param study     탈퇴 대상 스터디
+     */
+    private void withdrawFromStudy(UserStudy userStudy, Study study) {
+        if (userStudy.isLeader()) {
+            withdrawLeader(userStudy, study);
+            return;
+        }
+
+        study.decreaseMemberCount();
+        userStudyRepository.delete(userStudy);
+    }
+
+    /**
+     * 방장 사용자의 스터디 탈퇴를 처리한다.
+     * <p>
+     * 같은 스터디의 다른 참여자 중 가장 먼저 가입한 사용자를 다음 방장으로 위임한다. 위임할 사용자가 없는 경우 스터디를 삭제하며, 위임할 사용자가 있는 경우 방장 권한을 넘긴 뒤 스터디 인원을 감소시키고
+     * 기존 방장의 참여 정보를 삭제한다.
+     * </p>
+     *
+     * @param userStudy 탈퇴 대상 방장의 사용자-스터디 매핑 정보
+     * @param study     탈퇴 대상 스터디
+     */
+    private void withdrawLeader(UserStudy userStudy, Study study) {
+        Optional<UserStudy> nextLeader = userStudyRepository.findFirstByStudyIdAndUserIdNotOrderByCreatedAtAsc(
+                userStudy.getStudyId(),
+                userStudy.getUserId()
+        );
+
+        if (nextLeader.isEmpty()) {
+            userStudyRepository.delete(userStudy);
+            studyRepository.delete(study);
+            return;
+        }
+
+        userStudy.delegateLeader(nextLeader.get());
+        study.decreaseMemberCount();
+        userStudyRepository.delete(userStudy);
+    }
+
+    /**
+     * 사용자에 종속된 일정 관련 데이터를 삭제한다.
+     * <p>
+     * 사용자가 등록한 일정, 대학별 전형 정보, 카테고리 정보를 사용자 ID 기준으로 삭제한다.
+     * </p>
+     *
+     * @param userId 일정 관련 데이터를 삭제할 사용자 ID
+     */
+    private void deleteSchedule(Long userId) {
+        userScheduleRepository.deleteAllByUserId(userId);
+        userUniversityMethodRepository.deleteAllByUserId(userId);
+        categoryRepository.deleteAllByUserId(userId);
+    }
+
+    /**
+     * 사용자에 종속된 플래너 관련 데이터를 삭제한다.
+     * <p>
+     * 플래너 일일 이미지, 학습 과목, 학습 태스크, 학습 시간, 일별 학습 요약 정보를 사용자 ID 기준으로 삭제한다.
+     * </p>
+     *
+     * @param userId 플래너 관련 데이터를 삭제할 사용자 ID
+     */
+    private void deletePlanner(Long userId) {
+        plannerDailyImageRepository.deleteAllByUserId(userId);
+        studySubjectRepository.deleteAllByUserId(userId);
+        studyTaskRepository.deleteAllByUserId(userId);
+        studyTimeRepository.deleteAllByUserId(userId);
+        dailyStudySummaryRepository.deleteAllByUserId(userId);
+    }
+
+    /**
+     * 사용자에 종속된 채팅 데이터를 삭제한다.
+     * <p>
+     * 사용자가 생성한 채팅 메시지를 사용자 ID 기준으로 삭제한다.
+     * </p>
+     *
+     * @param userId 채팅 데이터를 삭제할 사용자 ID
+     */
+    private void deleteChat(Long userId) {
+        chatMessageRepository.deleteAllByUserId(userId);
+    }
+
+    /**
+     * 사용자 및 인증 관련 데이터를 삭제한다.
+     * <p>
+     * 사용자에 종속된 인증 제공자 정보와 리프레시 토큰을 먼저 삭제한 뒤, 마지막으로 사용자 정보를 삭제한다.
+     * </p>
+     *
+     * @param user 삭제할 사용자 객체
+     */
+    private void deleteUser(User user) {
+        publishImageRemovedEvent(user.getProfileImageUrl());
+        authProviderRepository.deleteAllByUserId(user.getId());
+        refreshTokenRepository.deleteByUserId(user.getId());
+        userRepository.deleteById(user.getId());
     }
 }

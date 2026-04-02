@@ -1,11 +1,12 @@
 package com.togedy.togedy_server_v2.domain.schedule.dao;
 
 import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
+@Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query("SELECT c FROM Category c where c.user.id = :userId AND c.status = 'ACTIVE'")
@@ -20,4 +21,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
                 AND c.status = 'ACTIVE'
             """)
     boolean existsByNameAndColorAndUserId(String name, String color, Long userId);
+
+    void deleteAllByUserId(Long userId);
 }
