@@ -84,7 +84,7 @@ public class KakaoApiClient {
                 log.info("Skip Kakao unlink for userId={} because user is already unlinked or unavailable.", kakaoUserId);
                 return;
             }
-            throw mapKakaoClientException(e);
+            throw new KakaoApiErrorException();
         } catch (RestClientException e) {
             throw new KakaoApiErrorException();
         }
