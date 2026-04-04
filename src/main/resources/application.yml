@@ -86,9 +86,11 @@ spring:
 
 ---
 kakao:
+  admin-key: ${KAKAO_ADMIN_KEY}
   api:
     url:
       user-info: https://kapi.kakao.com/v2/user/me
+      unlink: https://kapi.kakao.com/v1/user/unlink
 
 ---
 ai:

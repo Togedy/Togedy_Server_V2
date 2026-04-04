@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -28,6 +30,12 @@ public class KakaoApiClient {
     @Value("${kakao.api.url.user-info}")
     private String kakaoUserInfoUrl;
 
+    @Value("${kakao.api.url.unlink}")
+    private String kakaoUnlinkUrl;
+
+    @Value("${kakao.admin-key}")
+    private String kakaoAdminKey;
+
     public KakaoUserInfoResponse getUserInfo(String accessToken) {
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -43,6 +51,31 @@ public class KakaoApiClient {
                     KakaoUserInfoResponse.class
             );
             return response.getBody();
+        } catch (HttpClientErrorException e) {
+            throw mapKakaoClientException(e);
+        } catch (RestClientException e) {
+            throw new KakaoApiErrorException();
+        }
+    }
+
+    public void unlinkByAdminKey(Long kakaoUserId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "KakaoAK " + kakaoAdminKey);
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+            body.add("target_id_type", "user_id");
+            body.add("target_id", String.valueOf(kakaoUserId));
+
+            HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
+
+            restTemplate.exchange(
+                    kakaoUnlinkUrl,
+                    HttpMethod.POST,
+                    entity,
+                    String.class
+            );
         } catch (HttpClientErrorException e) {
             throw mapKakaoClientException(e);
         } catch (RestClientException e) {

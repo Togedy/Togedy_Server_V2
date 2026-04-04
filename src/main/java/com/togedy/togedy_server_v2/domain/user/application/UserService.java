@@ -30,6 +30,7 @@ import com.togedy.togedy_server_v2.domain.user.dto.PatchUserOnboardingRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.enums.NicknameValidationReason;
+import com.togedy.togedy_server_v2.domain.user.enums.ProviderType;
 import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.user.exception.InvalidUserProfileImageException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
@@ -39,6 +40,7 @@ import com.togedy.togedy_server_v2.domain.user.exception.user.NicknameContainsBa
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.enums.BadWords;
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
+import com.togedy.togedy_server_v2.global.infrastructure.kakao.KakaoApiClient;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.util.ArrayList;
@@ -78,6 +80,7 @@ public class UserService {
     private final static int MY_PAGE_STUDY_COUNT = 2;
 
     private final S3Service s3Service;
+    private final KakaoApiClient kakaoApiClient;
     private final UserRepository userRepository;
     private final StudyRepository studyRepository;
     private final UserStudyRepository userStudyRepository;
@@ -292,11 +295,12 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
+        unlinkKakaoIfNeeded(userId);
         deleteUserStudy(userId);
         deleteSchedule(userId);
         deletePlanner(userId);
-        deleteUser(user);
         deleteChat(userId);
+        deleteUser(user);
     }
 
     /**
@@ -532,6 +536,11 @@ public class UserService {
             }
             throw e;
         }
+    }
+
+    private void unlinkKakaoIfNeeded(Long userId) {
+        authProviderRepository.findByUserIdAndProvider(userId, ProviderType.KAKAO)
+                .ifPresent(provider -> kakaoApiClient.unlinkByAdminKey(Long.parseLong(provider.getProviderUserId())));
     }
 
     /**
