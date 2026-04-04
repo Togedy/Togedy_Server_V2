@@ -60,6 +60,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
@@ -97,6 +98,7 @@ public class UserService {
     private final CategoryRepository categoryRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final TransactionTemplate transactionTemplate;
 
     @Transactional
     public Long generateUser(CreateUserRequest request) {
@@ -291,17 +293,9 @@ public class UserService {
      *
      * @param userId 회원 탈퇴할 사용자 ID
      */
-    @Transactional
     public void withdrawUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
         unlinkKakaoIfNeeded(userId);
-        deleteUserStudy(userId);
-        deleteSchedule(userId);
-        deletePlanner(userId);
-        deleteChat(userId);
-        deleteUser(user);
+        transactionTemplate.executeWithoutResult(status -> withdrawUserData(userId));
     }
 
     /**
@@ -542,6 +536,17 @@ public class UserService {
     private void unlinkKakaoIfNeeded(Long userId) {
         authProviderRepository.findByUserIdAndProvider(userId, ProviderType.KAKAO)
                 .ifPresent(provider -> kakaoApiClient.unlinkByAdminKey(Long.parseLong(provider.getProviderUserId())));
+    }
+
+    protected void withdrawUserData(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        deleteUserStudy(userId);
+        deleteSchedule(userId);
+        deletePlanner(userId);
+        deleteChat(userId);
+        deleteUser(user);
     }
 
     /**
