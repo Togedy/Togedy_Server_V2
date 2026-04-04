@@ -24,6 +24,9 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class KakaoApiClient {
 
+    private static final String KAKAO_NOT_LINKED_ERROR_CODE = "-101";
+    private static final String KAKAO_INVALID_ACCOUNT_ERROR_CODE = "-103";
+
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
@@ -77,10 +80,24 @@ public class KakaoApiClient {
                     String.class
             );
         } catch (HttpClientErrorException e) {
+            if (isIgnorableUnlinkException(e)) {
+                log.info("Skip Kakao unlink for userId={} because user is already unlinked or unavailable.", kakaoUserId);
+                return;
+            }
             throw mapKakaoClientException(e);
         } catch (RestClientException e) {
             throw new KakaoApiErrorException();
         }
+    }
+
+    private boolean isIgnorableUnlinkException(HttpClientErrorException e) {
+        if (e.getStatusCode() != HttpStatus.BAD_REQUEST) {
+            return false;
+        }
+
+        KakaoErrorPayload errorPayload = parseErrorPayload(e.getResponseBodyAsString());
+        return KAKAO_NOT_LINKED_ERROR_CODE.equals(errorPayload.code())
+                || KAKAO_INVALID_ACCOUNT_ERROR_CODE.equals(errorPayload.code());
     }
 
     private RuntimeException mapKakaoClientException(HttpClientErrorException e) {
