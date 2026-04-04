@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -14,7 +15,14 @@ public interface PlannerDailyImageRepository extends JpaRepository<PlannerDailyI
 
     Optional<PlannerDailyImage> findTopByUserIdAndDateLessThanEqualOrderByDateDesc(Long userId, LocalDate date);
 
-    List<PlannerDailyImage> findAllByUserId(Long userId);
+    @Query("""
+            SELECT p.imageUrl
+            FROM PlannerDailyImage p
+            WHERE p.userId = :userId
+                AND p.imageUrl IS NOT NULL
+                AND p.imageUrl <> ''
+            """)
+    List<String> findImageUrlsByUserId(Long userId);
 
     void deleteAllByUserId(Long userId);
 }

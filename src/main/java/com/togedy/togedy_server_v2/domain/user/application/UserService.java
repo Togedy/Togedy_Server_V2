@@ -7,7 +7,6 @@ import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
-import com.togedy.togedy_server_v2.domain.planner.entity.PlannerDailyImage;
 import com.togedy.togedy_server_v2.domain.planner.event.PlannerImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
@@ -672,9 +671,7 @@ public class UserService {
     }
 
     private void publishPlannerImageRemovedEvents(Long userId) {
-        plannerDailyImageRepository.findAllByUserId(userId).stream()
-                .map(PlannerDailyImage::getImageUrl)
-                .filter(imageUrl -> imageUrl != null && !imageUrl.isBlank())
+        plannerDailyImageRepository.findImageUrlsByUserId(userId).stream()
                 .forEach(imageUrl -> applicationEventPublisher.publishEvent(new PlannerImageRemovedEvent(imageUrl)));
     }
 
