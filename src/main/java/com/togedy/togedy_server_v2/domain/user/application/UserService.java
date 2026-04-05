@@ -7,6 +7,7 @@ import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.planner.event.PlannerImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
@@ -30,6 +31,7 @@ import com.togedy.togedy_server_v2.domain.user.dto.PatchUserOnboardingRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.AuthProvider;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.enums.NicknameValidationReason;
+import com.togedy.togedy_server_v2.domain.user.enums.ProviderType;
 import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.user.exception.InvalidUserProfileImageException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
@@ -39,6 +41,7 @@ import com.togedy.togedy_server_v2.domain.user.exception.user.NicknameContainsBa
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.enums.BadWords;
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
+import com.togedy.togedy_server_v2.global.infrastructure.kakao.KakaoApiClient;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.util.ArrayList;
@@ -51,15 +54,18 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class UserService {
 
@@ -78,6 +84,7 @@ public class UserService {
     private final static int MY_PAGE_STUDY_COUNT = 2;
 
     private final S3Service s3Service;
+    private final KakaoApiClient kakaoApiClient;
     private final UserRepository userRepository;
     private final StudyRepository studyRepository;
     private final UserStudyRepository userStudyRepository;
@@ -93,6 +100,7 @@ public class UserService {
     private final CategoryRepository categoryRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final TransactionTemplate transactionTemplate;
 
     @Transactional
     public Long generateUser(CreateUserRequest request) {
@@ -287,16 +295,10 @@ public class UserService {
      *
      * @param userId 회원 탈퇴할 사용자 ID
      */
-    @Transactional
     public void withdrawUser(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
-        deleteUserStudy(userId);
-        deleteSchedule(userId);
-        deletePlanner(userId);
-        deleteUser(user);
-        deleteChat(userId);
+        Long kakaoUserId = findKakaoUserId(userId).orElse(null);
+        transactionTemplate.executeWithoutResult(status -> withdrawUserData(userId));
+        unlinkKakaoIfNeeded(kakaoUserId);
     }
 
     /**
@@ -534,6 +536,35 @@ public class UserService {
         }
     }
 
+    private Optional<Long> findKakaoUserId(Long userId) {
+        return authProviderRepository.findByUserIdAndProvider(userId, ProviderType.KAKAO)
+                .map(AuthProvider::getProviderUserId)
+                .map(Long::parseLong);
+    }
+
+    private void unlinkKakaoIfNeeded(Long kakaoUserId) {
+        if (kakaoUserId == null) {
+            return;
+        }
+
+        try {
+            kakaoApiClient.unlinkByAdminKey(kakaoUserId);
+        } catch (RuntimeException e) {
+            log.warn("Kakao unlink failed after local withdrawal completion. kakaoUserId={}", kakaoUserId, e);
+        }
+    }
+
+    protected void withdrawUserData(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        deleteUserStudy(userId);
+        deleteSchedule(userId);
+        deletePlanner(userId);
+        deleteChat(userId);
+        deleteUser(user);
+    }
+
     /**
      * 사용자가 참여 중인 모든 스터디 정보를 삭제한다.
      * <p>
@@ -640,6 +671,7 @@ public class UserService {
      * @param userId 플래너 관련 데이터를 삭제할 사용자 ID
      */
     private void deletePlanner(Long userId) {
+        publishPlannerImageRemovedEvents(userId);
         plannerDailyImageRepository.deleteAllByUserId(userId);
         studySubjectRepository.deleteAllByUserId(userId);
         studyTaskRepository.deleteAllByUserId(userId);
@@ -657,6 +689,11 @@ public class UserService {
      */
     private void deleteChat(Long userId) {
         chatMessageRepository.deleteAllByUserId(userId);
+    }
+
+    private void publishPlannerImageRemovedEvents(Long userId) {
+        plannerDailyImageRepository.findImageUrlsByUserId(userId).stream()
+                .forEach(imageUrl -> applicationEventPublisher.publishEvent(new PlannerImageRemovedEvent(imageUrl)));
     }
 
     /**

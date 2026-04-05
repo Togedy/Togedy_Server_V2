@@ -37,6 +37,9 @@ jwt:
   access-expired-in: 3600000
   refresh-expired-in: 1209600000
 
+kakao:
+  admin-key: test-admin-key
+
 ai:
   server:
     url: http://dummy-ai-server
