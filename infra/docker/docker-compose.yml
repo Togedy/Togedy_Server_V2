@@ -21,6 +21,7 @@ services:
       BUCKET_NAME: ${BUCKET_NAME}
       MONGODB_URI: ${MONGODB_URI}
       AI_SERVER_URL: ${AI_SERVER_URL}
+      KAKAO_ADMIN_KEY: ${KAKAO_ADMIN_KEY}
     depends_on:
       redis:
         condition: service_healthy
