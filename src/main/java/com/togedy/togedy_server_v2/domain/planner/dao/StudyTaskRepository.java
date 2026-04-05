@@ -1,12 +1,13 @@
 package com.togedy.togedy_server_v2.domain.planner.dao;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTask;
-
 import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface StudyTaskRepository extends JpaRepository<StudyTask, Long> {
     @Query("""
                 SELECT st
@@ -18,4 +19,6 @@ public interface StudyTaskRepository extends JpaRepository<StudyTask, Long> {
             List<Long> studySubjectIds,
             LocalDate date
     );
+
+    void deleteAllByUserId(Long userId);
 }

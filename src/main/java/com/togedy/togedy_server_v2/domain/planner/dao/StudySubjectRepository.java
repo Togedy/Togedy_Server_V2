@@ -1,12 +1,13 @@
 package com.togedy.togedy_server_v2.domain.planner.dao;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface StudySubjectRepository extends JpaRepository<StudySubject, Long> {
     @Query("""
             SELECT ss
@@ -44,4 +45,6 @@ public interface StudySubjectRepository extends JpaRepository<StudySubject, Long
     Long findMaxOrderIndex(Long userId);
 
     Optional<StudySubject> findByNameAndColorAndUserId(String name, String color, Long userId);
+
+    void deleteAllByUserId(Long userId);
 }

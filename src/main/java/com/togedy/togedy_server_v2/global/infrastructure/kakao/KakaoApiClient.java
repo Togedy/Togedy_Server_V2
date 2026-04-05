@@ -12,6 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -22,11 +24,20 @@ import org.springframework.web.client.RestTemplate;
 @RequiredArgsConstructor
 public class KakaoApiClient {
 
+    private static final String KAKAO_NOT_LINKED_ERROR_CODE = "-101";
+    private static final String KAKAO_INVALID_ACCOUNT_ERROR_CODE = "-103";
+
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
     @Value("${kakao.api.url.user-info}")
     private String kakaoUserInfoUrl;
+
+    @Value("${kakao.api.url.unlink}")
+    private String kakaoUnlinkUrl;
+
+    @Value("${kakao.admin-key}")
+    private String kakaoAdminKey;
 
     public KakaoUserInfoResponse getUserInfo(String accessToken) {
         try {
@@ -48,6 +59,45 @@ public class KakaoApiClient {
         } catch (RestClientException e) {
             throw new KakaoApiErrorException();
         }
+    }
+
+    public void unlinkByAdminKey(Long kakaoUserId) {
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", "KakaoAK " + kakaoAdminKey);
+            headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+            MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+            body.add("target_id_type", "user_id");
+            body.add("target_id", String.valueOf(kakaoUserId));
+
+            HttpEntity<MultiValueMap<String, String>> entity = new HttpEntity<>(body, headers);
+
+            restTemplate.exchange(
+                    kakaoUnlinkUrl,
+                    HttpMethod.POST,
+                    entity,
+                    String.class
+            );
+        } catch (HttpClientErrorException e) {
+            if (isIgnorableUnlinkException(e)) {
+                log.info("Skip Kakao unlink for userId={} because user is already unlinked or unavailable.", kakaoUserId);
+                return;
+            }
+            throw new KakaoApiErrorException();
+        } catch (RestClientException e) {
+            throw new KakaoApiErrorException();
+        }
+    }
+
+    private boolean isIgnorableUnlinkException(HttpClientErrorException e) {
+        if (e.getStatusCode() != HttpStatus.BAD_REQUEST) {
+            return false;
+        }
+
+        KakaoErrorPayload errorPayload = parseErrorPayload(e.getResponseBodyAsString());
+        return KAKAO_NOT_LINKED_ERROR_CODE.equals(errorPayload.code())
+                || KAKAO_INVALID_ACCOUNT_ERROR_CODE.equals(errorPayload.code());
     }
 
     private RuntimeException mapKakaoClientException(HttpClientErrorException e) {

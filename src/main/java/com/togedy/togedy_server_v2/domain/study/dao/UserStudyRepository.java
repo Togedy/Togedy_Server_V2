@@ -7,7 +7,9 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
 
+@Repository
 public interface UserStudyRepository extends JpaRepository<UserStudy, Long> {
     Optional<UserStudy> findByStudyIdAndUserId(Long studyId, Long userId);
 
@@ -42,4 +44,8 @@ public interface UserStudyRepository extends JpaRepository<UserStudy, Long> {
                 WHERE us.studyId IN :studyIds
             """)
     List<UserStudy> findAllByStudyIds(List<Long> studyIds);
+
+    List<UserStudy> findAllByUserId(Long userId);
+
+    Optional<UserStudy> findFirstByStudyIdAndUserIdNotOrderByCreatedAtAsc(Long studyId, Long userId);
 }
