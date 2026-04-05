@@ -54,6 +54,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
@@ -64,6 +65,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class UserService {
 
@@ -294,8 +296,9 @@ public class UserService {
      * @param userId 회원 탈퇴할 사용자 ID
      */
     public void withdrawUser(Long userId) {
-        unlinkKakaoIfNeeded(userId);
+        Long kakaoUserId = findKakaoUserId(userId).orElse(null);
         transactionTemplate.executeWithoutResult(status -> withdrawUserData(userId));
+        unlinkKakaoIfNeeded(kakaoUserId);
     }
 
     /**
@@ -533,9 +536,22 @@ public class UserService {
         }
     }
 
-    private void unlinkKakaoIfNeeded(Long userId) {
-        authProviderRepository.findByUserIdAndProvider(userId, ProviderType.KAKAO)
-                .ifPresent(provider -> kakaoApiClient.unlinkByAdminKey(Long.parseLong(provider.getProviderUserId())));
+    private Optional<Long> findKakaoUserId(Long userId) {
+        return authProviderRepository.findByUserIdAndProvider(userId, ProviderType.KAKAO)
+                .map(AuthProvider::getProviderUserId)
+                .map(Long::parseLong);
+    }
+
+    private void unlinkKakaoIfNeeded(Long kakaoUserId) {
+        if (kakaoUserId == null) {
+            return;
+        }
+
+        try {
+            kakaoApiClient.unlinkByAdminKey(kakaoUserId);
+        } catch (RuntimeException e) {
+            log.warn("Kakao unlink failed after local withdrawal completion. kakaoUserId={}", kakaoUserId, e);
+        }
     }
 
     protected void withdrawUserData(Long userId) {
