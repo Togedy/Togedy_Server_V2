@@ -2,8 +2,8 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-echo "Pull latest code from main"
-git pull origin main
+echo "Pull latest code from develop"
+git pull origin develop
 
 cd ../docker
 
