@@ -61,7 +61,7 @@ public class GetStudyResponse {
                 .studyDescription(study.getDescription())
                 .studyImageUrl(study.getImageUrl())
                 .studyTag(study.getTag().getDescription())
-                .studyTier(study.getTier().getName())
+                .studyTier(study.getTier() != null ? study.getTier().getName() : null)
                 .studyMemberCount(study.getMemberCount())
                 .completedMemberCount(completedMemberCount)
                 .studyMemberLimit(study.getMemberLimit())

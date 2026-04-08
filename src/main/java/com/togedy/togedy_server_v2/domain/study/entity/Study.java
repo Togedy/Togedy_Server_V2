@@ -76,7 +76,7 @@ public class Study extends BaseEntity {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "tier", nullable = false, columnDefinition = "varchar(20)")
+    @Column(name = "tier", nullable = true, columnDefinition = "varchar(20)")
     private StudyTier tier;
 
     @Builder
@@ -105,7 +105,7 @@ public class Study extends BaseEntity {
         this.tag = tag;
         this.imageUrl = imageUrl;
         this.password = password;
-        this.tier = StudyTier.BRONZE1;
+        this.tier = type == StudyType.CHALLENGE ? StudyTier.BRONZE1 : null;
     }
 
     public void updateInformation(
