@@ -52,7 +52,7 @@ public class StudyStatistics {
     }
 
     public void applyChallengeResult(Study study, int completedMemberCount, LocalDate targetDate) {
-        if (targetDate.equals(this.updatedDate)) {
+        if (targetDate.isAfter(this.updatedDate)) {
             return;
         }
 

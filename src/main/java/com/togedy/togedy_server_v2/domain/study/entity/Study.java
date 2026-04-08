@@ -221,6 +221,10 @@ public class Study extends BaseEntity {
     }
 
     public void updateTier(StudyStatistics studyStatistics) {
+        if (!isChallengeStudy()) {
+            return;
+        }
+
         StudyTier studyTier = StudyTier.fromScore(studyStatistics.getScore());
         if (!this.tier.equals(studyTier)) {
             this.tier = studyTier;
