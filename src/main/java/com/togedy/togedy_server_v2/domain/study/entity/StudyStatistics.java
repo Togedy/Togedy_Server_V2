@@ -51,12 +51,20 @@ public class StudyStatistics {
         this.updatedDate = LocalDate.MIN;
     }
 
-    public void applyChallengeSuccess(Study study, int completedMemberCount, LocalDate targetDate) {
+    public void applyChallengeResult(Study study, int completedMemberCount, LocalDate targetDate) {
+        if (targetDate.isAfter(this.updatedDate)) {
+            return;
+        }
+
+        this.updatedDate = targetDate;
+
         if (study.isChallengeSuccessful(completedMemberCount)) {
             this.streakDays++;
             this.score += calculateStudyScore(study, completedMemberCount);
+            return;
         }
-        this.updatedDate = targetDate;
+
+        this.streakDays = 0;
     }
 
     private long calculateStudyScore(Study study, int completeMemberCount) {
