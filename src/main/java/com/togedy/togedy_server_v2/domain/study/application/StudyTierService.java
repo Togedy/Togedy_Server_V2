@@ -85,7 +85,7 @@ public class StudyTierService {
                             .studyId(challengeStudy.getId())
                             .build());
 
-            studyStatistics.applyChallengeSuccess(challengeStudy, completedMembers, targetDate);
+            studyStatistics.applyChallengeResult(challengeStudy, completedMembers, targetDate);
             studyStatisticsRepository.save(studyStatistics);
         }
     }
