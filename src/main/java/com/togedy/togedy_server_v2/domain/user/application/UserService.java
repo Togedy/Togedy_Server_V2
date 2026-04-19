@@ -21,6 +21,7 @@ import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetMyStatusResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameSuggestionResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.MyPageStudyDto;
@@ -215,6 +216,23 @@ public class UserService {
                 .orElseThrow(UserNotFoundException::new);
 
         return GetMySettingsResponse.from(user);
+    }
+
+    /**
+     * 사용자 상태 정보를 조회한다.
+     * <p>
+     * 앱 재진입 시 온보딩 완료 여부를 기반으로 화면 분기할 수 있도록 현재 사용자 상태를 반환한다.
+     * </p>
+     *
+     * @param userId 조회 대상 사용자 ID
+     * @return 사용자 상태 조회 응답 DTO
+     * @throws UserNotFoundException 사용자가 존재하지 않는 경우
+     */
+    public GetMyStatusResponse findMyStatus(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        return GetMyStatusResponse.from(user);
     }
 
     /**

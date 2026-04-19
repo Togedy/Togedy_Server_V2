@@ -5,6 +5,7 @@ import com.togedy.togedy_server_v2.domain.user.dto.PatchUserOnboardingRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetMyStatusResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameSuggestionResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.PatchMarketingConsentedSettingRequest;
@@ -79,6 +80,13 @@ public class UserController {
     @GetMapping("/me/settings")
     public ApiResponse<GetMySettingsResponse> readMySettings(@AuthenticationPrincipal AuthUser user) {
         GetMySettingsResponse response = userService.findMySettings(user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "유저 상태 조회", description = "본인의 온보딩 완료 여부를 조회한다.")
+    @GetMapping("/me/status")
+    public ApiResponse<GetMyStatusResponse> readMyStatus(@AuthenticationPrincipal AuthUser user) {
+        GetMyStatusResponse response = userService.findMyStatus(user.getId());
         return ApiUtil.success(response);
     }
 
