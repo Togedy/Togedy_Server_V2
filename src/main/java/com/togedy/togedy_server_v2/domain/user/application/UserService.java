@@ -228,10 +228,9 @@ public class UserService {
      * @return 사용자 상태 조회 응답 DTO
      * @throws UserNotFoundException 사용자가 존재하지 않는 경우
      */
+    @Transactional(readOnly = true)
     public GetMyStatusResponse findMyStatus(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
+        User user = loadUserById(userId);
         return GetMyStatusResponse.from(user);
     }
 
