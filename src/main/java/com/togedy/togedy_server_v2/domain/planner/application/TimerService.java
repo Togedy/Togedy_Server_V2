@@ -143,6 +143,7 @@ public class TimerService {
                 .map(subject -> SubjectStudyTimeItemResponse.of(
                         subject.getId(),
                         subject.getName(),
+                        subject.getColor(),
                         studyTimeBySubjectId.getOrDefault(subject.getId(), 0L)
                 ))
                 .toList();

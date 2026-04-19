@@ -9,12 +9,14 @@ public class SubjectStudyTimeItemResponse {
 
     private Long subjectId;
     private String subjectName;
+    private String studyColor;
     private Long studyTime;
 
-    public static SubjectStudyTimeItemResponse of(Long subjectId, String subjectName, Long studyTime) {
+    public static SubjectStudyTimeItemResponse of(Long subjectId, String subjectName, String studyColor, Long studyTime) {
         return SubjectStudyTimeItemResponse.builder()
                 .subjectId(subjectId)
                 .subjectName(subjectName)
+                .studyColor(studyColor)
                 .studyTime(studyTime)
                 .build();
     }
