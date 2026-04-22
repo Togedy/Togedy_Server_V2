@@ -270,7 +270,7 @@ class TimerServiceTest {
         assertThat(response).hasSize(1);
         assertThat(response.get(0).getSubjectId()).isEqualTo(10L);
         assertThat(response.get(0).getSubjectName()).isEqualTo("수학");
-        assertThat(response.get(0).getStudyColor()).isEqualTo("파란색");
+        assertThat(response.get(0).getSubjectColor()).isEqualTo("파란색");
         assertThat(response.get(0).getStudyTime()).isEqualTo(2400L);
     }
 
