@@ -13,6 +13,7 @@ import com.togedy.togedy_server_v2.domain.planner.dto.PutStudyTaskRequest;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTask;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
+import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudySubjectException;
 import com.togedy.togedy_server_v2.domain.planner.exception.StudySubjectNotFoundException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -134,6 +135,18 @@ class StudyTaskServiceTest {
 
         assertThatThrownBy(() -> studyTaskService.upsertStudyTask(request, userId))
                 .isInstanceOf(StudySubjectNotFoundException.class);
+    }
+
+    @Test
+    void 스터디_태스크_생성_시_과목_id가_없으면_예외가_발생한다() {
+        Long userId = 1L;
+
+        PutStudyTaskRequest request = BeanUtils.instantiateClass(PutStudyTaskRequest.class);
+        ReflectionTestUtils.setField(request, "name", "영어단어");
+        ReflectionTestUtils.setField(request, "date", LocalDate.of(2026, 2, 17));
+
+        assertThatThrownBy(() -> studyTaskService.upsertStudyTask(request, userId))
+                .isInstanceOf(InvalidStudySubjectException.class);
     }
 
     @Test
