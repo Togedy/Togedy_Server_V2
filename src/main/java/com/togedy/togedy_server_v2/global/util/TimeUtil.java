@@ -47,8 +47,8 @@ public class TimeUtil {
         return LocalDateTime.of(date, Objects.requireNonNullElse(time, LocalTime.MIN));
     }
 
-    public static int calculateDaysUntil(LocalDate startDate) {
-        long remainingDays = ChronoUnit.DAYS.between(LocalDate.now(), startDate);
+    public static int calculateDaysUntil(LocalDate date, LocalDate startDate) {
+        long remainingDays = ChronoUnit.DAYS.between(date, startDate);
         return (int) remainingDays;
     }
 

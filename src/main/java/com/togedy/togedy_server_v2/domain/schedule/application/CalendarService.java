@@ -34,11 +34,11 @@ public class CalendarService {
     private final UserService userService;
 
     /**
-     * 유저가 해당 월에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
+     * 유저의 D-Day 일정까지 남은 일 수와 함께 해당 월에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
      *
      * @param month  년도 및 월 정보(yyyy-MM)
      * @param userId 유저ID
-     * @return 기간 순으로 정렬된 월별 개인 일정 및 대학 일정 DTO
+     * @return D-day 일정까지 남은 일 수 및 기간 순으로 정렬된 월별 개인 일정 및 대학 일정 DTO
      */
     public GetMonthlyCalendarResponse findMonthlyCalendar(YearMonth month, Long userId) {
         LocalDate startOfMonth = month.atDay(1);
@@ -59,11 +59,11 @@ public class CalendarService {
      * @return 기간 순으로 정렬된 일별 유저 및 대학 일정 DTO
      */
     public GetDailyCalendarResponse findDailyCalendar(LocalDate date, Long userId) {
+        Integer remainingDays = calculateRemainingDays(date, userId);
         List<DailyScheduleListDto> dailyScheduleList = new ArrayList<>(findDailyUserSchedule(userId, date));
         dailyScheduleList.addAll(findDailyUniversitySchedule(userId, date));
         dailyScheduleList.sort(scheduleComparator());
-
-        return GetDailyCalendarResponse.from(dailyScheduleList);
+        return GetDailyCalendarResponse.from(remainingDays, dailyScheduleList);
     }
 
     /**
@@ -77,7 +77,7 @@ public class CalendarService {
 
         if (dDaySchedule.isPresent()) {
             return GetDdayScheduleResponse.of(dDaySchedule.get(),
-                    TimeUtil.calculateDaysUntil(dDaySchedule.get().getStartDate()));
+                    TimeUtil.calculateDaysUntil(LocalDate.now(), dDaySchedule.get().getStartDate()));
         }
 
         return GetDdayScheduleResponse.temp();
@@ -183,5 +183,25 @@ public class CalendarService {
                 .thenComparing(sc ->
                         TimeUtil.toStartDateTime(sc.getStartDate(), sc.getStartTime()))
                 .reversed();
+    }
+
+    /**
+     * 해당 유저의 D-Day 일정으로부터 남은 일 수를 반환한다.
+     * <p>
+     * D-Day 일정이 존재하지 않는 경우 {@code null}을 반환한다.
+     * </p>
+     *
+     * @param date   년도, 월, 날짜 정보 (yyyy-MM-dd)
+     * @param userId 유저 ID
+     * @return D-Day 일정으로부터 남은 일 수, 일정이 존재하지 않는 경우 {@code null}
+     */
+    private Integer calculateRemainingDays(LocalDate date, Long userId) {
+        Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
+
+        if (dDaySchedule.isPresent()) {
+            return TimeUtil.calculateDaysUntil(date, dDaySchedule.get().getStartDate());
+        }
+
+        return null;
     }
 }
