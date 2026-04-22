@@ -30,11 +30,11 @@ public class CalendarService {
     private final UserUniversityMethodRepository userUniversityMethodRepository;
 
     /**
-     * 유저의 D-Day 일정까지 남은 일 수와 함께 해당 월에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
+     * 유저의 해당 월에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
      *
      * @param month  년도 및 월 정보(yyyy-MM)
      * @param userId 유저ID
-     * @return D-day 일정까지 남은 일 수 및 기간 순으로 정렬된 월별 개인 일정 및 대학 일정 DTO
+     * @return 기간 순으로 정렬된 월별 개인 일정 및 대학 일정 DTO
      */
     public GetMonthlyCalendarResponse findMonthlyCalendar(YearMonth month, Long userId) {
         LocalDate startOfMonth = month.atDay(1);
@@ -48,11 +48,11 @@ public class CalendarService {
     }
 
     /**
-     * 유저가 해당 날짜에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
+     * 유저의 D-Day 일정까지 남은 일 수와 함께 해당 날짜에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
      *
      * @param date   년도, 월, 날짜 정보 (yyyy-MM-dd)
      * @param userId 유저ID
-     * @return 기간 순으로 정렬된 일별 유저 및 대학 일정 DTO
+     * @return D-day 일정까지 남은 일 수 및 기간 순으로 정렬된 일별 유저 및 대학 일정 DTO
      */
     public GetDailyCalendarResponse findDailyCalendar(LocalDate date, Long userId) {
         Integer remainingDays = calculateRemainingDays(date, userId);
