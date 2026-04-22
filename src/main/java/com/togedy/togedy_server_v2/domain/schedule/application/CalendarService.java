@@ -9,8 +9,6 @@ import com.togedy.togedy_server_v2.domain.schedule.dto.MonthlyScheduleListDto;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
-import com.togedy.togedy_server_v2.domain.user.application.UserService;
-import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -28,10 +26,8 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CalendarService {
 
-    private final UserRepository userRepository;
     private final UserScheduleRepository userScheduleRepository;
     private final UserUniversityMethodRepository userUniversityMethodRepository;
-    private final UserService userService;
 
     /**
      * 유저의 D-Day 일정까지 남은 일 수와 함께 해당 월에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
