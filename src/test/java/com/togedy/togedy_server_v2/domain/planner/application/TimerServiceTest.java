@@ -65,7 +65,7 @@ class TimerServiceTest {
         Long studySubjectId = 10L;
 
         PostTimerStartRequest request = new PostTimerStartRequest();
-        ReflectionTestUtils.setField(request, "studySubjectId", studySubjectId);
+        ReflectionTestUtils.setField(request, "subjectId", studySubjectId);
 
         StudySubject studySubject = StudySubject.builder()
                 .userId(user.getId())
@@ -100,7 +100,7 @@ class TimerServiceTest {
                 .willReturn(Optional.of(user));
 
         PostTimerStartRequest request = new PostTimerStartRequest();
-        ReflectionTestUtils.setField(request, "studySubjectId", 10L);
+        ReflectionTestUtils.setField(request, "subjectId", 10L);
 
         StudyTime running = StudyTime.builder()
                 .userId(user.getId())
@@ -270,7 +270,7 @@ class TimerServiceTest {
         assertThat(response).hasSize(1);
         assertThat(response.get(0).getSubjectId()).isEqualTo(10L);
         assertThat(response.get(0).getSubjectName()).isEqualTo("수학");
-        assertThat(response.get(0).getStudyColor()).isEqualTo("파란색");
+        assertThat(response.get(0).getSubjectColor()).isEqualTo("파란색");
         assertThat(response.get(0).getStudyTime()).isEqualTo(2400L);
     }
 
