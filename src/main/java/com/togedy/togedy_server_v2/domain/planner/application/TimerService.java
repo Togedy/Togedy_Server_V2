@@ -56,7 +56,7 @@ public class TimerService {
             throw new TimerAlreadyRunningException();
         }
 
-        StudySubject studySubject = studySubjectRepository.findActiveById(request.getStudySubjectId())
+        StudySubject studySubject = studySubjectRepository.findActiveById(request.getSubjectId())
                 .orElseThrow(StudySubjectNotFoundException::new);
 
         if (!studySubject.getUserId().equals(userId)) {
@@ -163,7 +163,7 @@ public class TimerService {
     }
 
     private void validateStartRequest(PostTimerStartRequest request) {
-        if (request == null || request.getStudySubjectId() == null || request.getStudySubjectId() <= 0) {
+        if (request == null || request.getSubjectId() == null || request.getSubjectId() <= 0) {
             throw new InvalidStudySubjectException();
         }
     }

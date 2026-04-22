@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PutStudyTaskRequest {
     private Long taskId;
-    private Long studySubjectId;
+    private Long subjectId;
     private String name;
     private LocalDate date;
 }

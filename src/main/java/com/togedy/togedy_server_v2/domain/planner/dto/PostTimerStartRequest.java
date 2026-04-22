@@ -7,5 +7,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class PostTimerStartRequest {
 
-    private Long studySubjectId;
+    private Long subjectId;
 }

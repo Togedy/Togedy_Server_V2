@@ -126,7 +126,7 @@ class StudyTaskServiceTest {
         Long userId = 1L;
 
         PutStudyTaskRequest request = BeanUtils.instantiateClass(PutStudyTaskRequest.class);
-        ReflectionTestUtils.setField(request, "studySubjectId", 999L);
+        ReflectionTestUtils.setField(request, "subjectId", 999L);
         ReflectionTestUtils.setField(request, "name", "영어단어");
         ReflectionTestUtils.setField(request, "date", LocalDate.of(2026, 2, 17));
 

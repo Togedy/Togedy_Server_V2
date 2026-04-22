@@ -61,7 +61,7 @@ public class StudyTaskService {
         validateTaskName(request.getName());
 
         if (request.getTaskId() == null) {
-            StudySubject subject = validateSubject(request.getStudySubjectId(), userId);
+            StudySubject subject = validateSubject(request.getSubjectId(), userId);
             StudyTask task = StudyTask.builder()
                     .userId(userId)
                     .studySubjectId(subject.getId())
