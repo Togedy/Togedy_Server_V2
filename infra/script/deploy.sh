@@ -2,8 +2,10 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 
-echo "Pull latest code from develop"
-git pull origin develop
+BRANCH=${1:-develop}
+
+echo "Pull latest code from $BRANCH"
+git pull origin "$BRANCH"
 
 cd ../docker
 
