@@ -81,6 +81,8 @@ jobs:
             export REDIS_PORT='${{ secrets.REDIS_PORT }}'
             export REDIS_PASSWORD='${{ secrets.REDIS_PASSWORD }}'
 
+            export GRAFANA_ADMIN_PASSWORD='${{ secrets.GRAFANA_ADMIN_PASSWORD }}'
+
             cd ${{ secrets.PROD_PROJECT_PATH }}infra/script
             chmod +x deploy.sh
-            ./deploy.sh main
+            ./deploy.sh main monitoring

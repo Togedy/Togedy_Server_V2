@@ -3,6 +3,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 BRANCH=${1:-develop}
+PROFILE=${2:-}
 
 echo "Pull latest code from $BRANCH"
 git pull origin "$BRANCH"
@@ -13,6 +14,10 @@ echo "Stopping existing containers"
 docker compose down
 
 echo "Building & starting services"
-docker compose up -d --build
+if [ -n "$PROFILE" ]; then
+  docker compose --profile "$PROFILE" up -d --build
+else
+  docker compose up -d --build
+fi
 
 echo "Deployment complete"
