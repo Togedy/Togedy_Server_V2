@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    url: ${PROD_MYSQL_HOST}
+    username: ${PROD_MYSQL_USER}
+    password: ${PROD_MYSQL_PASSWORD}
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  data:
+    mongodb:
+      uri: ${PROD_MONGODB_URI}
+
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key: ${PROD_S3_ACCESS_KEY}
+        secret-key: ${PROD_S3_SECRET_KEY}
+      s3:
+        bucket: ${PROD_S3_BUCKET_NAME}
+
+logging:
+  level:
+    org.springframework.data.redis: DEBUG
+
+swagger:
+  server:
+    url: ${PROD_SWAGGER_URL}
+
+kakao:
+  admin-key: ${PROD_KAKAO_ADMIN_KEY}

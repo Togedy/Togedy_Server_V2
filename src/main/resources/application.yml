@@ -1,9 +1,6 @@
 spring:
   profiles:
-    group:
-      "local": "localDB"
-      "dev": "devDB"
-    active: dev
+    active: local
 
 ---
 server:
@@ -11,24 +8,11 @@ server:
 
 ---
 spring:
-  config:
-    activate:
-      on-profile: "devDB"
-
-  datasource:
-    url: ${MYSQL_HOST}
-    username: ${MYSQL_USER}
-    password: ${MYSQL_PASSWORD}
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.MySQL8Dialect
-
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+      password: ${REDIS_PASSWORD}
   jackson:
     serialization:
       write-dates-as-timestamps: false
@@ -39,10 +23,6 @@ jwt:
   access-expired-in: 2592000000    # 30일
   refresh-expired-in: 2592000000   # 30일
 
-swagger:
-  server:
-    url: ${SWAGGER_URL}
-
 springdoc:
   swagger-ui:
     path: /api-test
@@ -52,41 +32,8 @@ springdoc:
     persist-authorization: true
     display-request-duration: true
 
-
----
-spring:
-  data:
-    redis:
-      host: ${REDIS_HOST}
-      port: ${REDIS_PORT}
-      password: ${REDIS_PASSWORD}
-
-    mongodb:
-      uri: ${MONGODB_URI}
-
-logging:
-  level:
-    org.springframework.data.redis: DEBUG
-
----
-
-# AWS S3
-spring:
-  cloud:
-    aws:
-      region:
-        static: ap-northeast-2
-      credentials:
-        access-key: ${ACCESS_KEY}
-        secret-key: ${SECRET_KEY:}
-      s3:
-        bucket: ${BUCKET_NAME}
-#        endpoint: http://127.0.0.1:4566
-#        path-style-access-enabled: true
-
 ---
 kakao:
-  admin-key: ${KAKAO_ADMIN_KEY}
   api:
     url:
       user-info: https://kapi.kakao.com/v2/user/me
