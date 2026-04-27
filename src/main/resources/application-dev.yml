@@ -4,9 +4,14 @@ spring:
     username: ${DEV_MYSQL_USER}
     password: ${DEV_MYSQL_PASSWORD}
 
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 1
+
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: none
     show-sql: true
     properties:
       hibernate:
