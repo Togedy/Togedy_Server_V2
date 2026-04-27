@@ -35,9 +35,14 @@ services:
       PROD_S3_BUCKET_NAME: ${PROD_S3_BUCKET_NAME:-}
       PROD_SWAGGER_URL: ${PROD_SWAGGER_URL:-}
       PROD_KAKAO_ADMIN_KEY: ${PROD_KAKAO_ADMIN_KEY:-}
+      JAVA_OPTS: "-Xmx512m -Xms256m"
     depends_on:
       redis:
         condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 700m
 
   redis:
     image: redis:7-alpine
@@ -51,6 +56,10 @@ services:
       interval: 10s
       timeout: 3s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 100m
 
   prometheus:
     image: prom/prometheus:v2.53.0
@@ -64,6 +73,10 @@ services:
       - "9090:9090"
     depends_on:
       - togedy-server
+    deploy:
+      resources:
+        limits:
+          memory: 400m
 
   grafana:
     image: grafana/grafana:11.1.0
@@ -78,6 +91,10 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
     depends_on:
       - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 200m
 
 volumes:
   redis-data:
