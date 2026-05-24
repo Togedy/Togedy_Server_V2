@@ -73,7 +73,7 @@ public class CalendarService {
 
         if (dDaySchedule.isPresent()) {
             return GetDdayScheduleResponse.of(dDaySchedule.get(),
-                    TimeUtil.calculateDaysUntil(LocalDate.now(), dDaySchedule.get().getStartDate()));
+                    TimeUtil.calculateDaysUntil(TimeUtil.todayInStudyZone(), dDaySchedule.get().getStartDate()));
         }
 
         return GetDdayScheduleResponse.temp();
