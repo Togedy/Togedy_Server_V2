@@ -30,6 +30,7 @@ spring:
         dialect: org.hibernate.dialect.MySQL8Dialect
 
   jackson:
+    time-zone: Asia/Seoul
     serialization:
       write-dates-as-timestamps: false
 ---
