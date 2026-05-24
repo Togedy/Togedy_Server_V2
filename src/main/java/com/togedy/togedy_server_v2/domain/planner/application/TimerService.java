@@ -63,7 +63,7 @@ public class TimerService {
             throw new StudySubjectNotOwnedException();
         }
 
-        LocalDateTime startTime = LocalDateTime.now();
+        LocalDateTime startTime = TimeUtil.nowInStudyZone();
 
         StudyTime studyTime = StudyTime.builder()
                 .userId(userId)
@@ -102,10 +102,11 @@ public class TimerService {
             throw new TimerAlreadyStoppedException();
         }
 
-        LocalDateTime endTime = LocalDateTime.now();
+        LocalDateTime endTime = TimeUtil.nowInStudyZone();
         studyTime.stop(endTime);
         updateDailyStudySummaryOnStop(userId, studyTime.getStartTime(), endTime);
         user.updateStatus(UserStatus.ACTIVE);
+        user.updateLastActivatedAt(endTime);
         return PostTimerStopResponse.of(studyTime.getId(), studyTime.getStartTime(), endTime);
     }
 
@@ -127,7 +128,7 @@ public class TimerService {
             return List.of();
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TimeUtil.nowInStudyZone();
         LocalDateTime dayStart = TimeUtil.startOfStudyDay(now);
         LocalDateTime dayEnd = TimeUtil.startOfNextStudyDay(now);
 
@@ -153,7 +154,7 @@ public class TimerService {
 
     @Transactional(readOnly = true)
     public GetTimerTotalResponse findTodayTotalStudyTime(Long userId) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TimeUtil.nowInStudyZone();
         LocalDateTime dayStart = TimeUtil.startOfStudyDay(now);
         LocalDateTime dayEnd = TimeUtil.startOfNextStudyDay(now);
 

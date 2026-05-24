@@ -132,7 +132,7 @@ public class StudyMemberService {
             return GetStudyMemberPlannerResponse.of(isMyPlanner, false);
         }
 
-        LocalDate today = LocalDate.now();
+        LocalDate today = TimeUtil.currentStudyDate();
 
         List<StudySubject> studySubjects = studySubjectRepository.findAllByUserId(memberId);
 
@@ -308,7 +308,7 @@ public class StudyMemberService {
             Map<YearMonth, List<DailyStudySummary>> summariesByMonth,
             List<MonthlyStudyTimeDto> monthlyStudyTimeDtos
     ) {
-        YearMonth currentMonth = YearMonth.now();
+        YearMonth currentMonth = TimeUtil.currentYearMonthInStudyZone();
         YearMonth startMonth = currentMonth.minusMonths(MONTH_RANGE - 1);
 
         int studyTimeCount = 0;

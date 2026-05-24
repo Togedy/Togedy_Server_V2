@@ -5,12 +5,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 public class TimeUtil {
 
     private static final LocalTime STUDY_DAY_BOUNDARY_TIME = LocalTime.of(5, 0);
+    private static final ZoneId STUDY_ZONE = ZoneId.of("Asia/Seoul");
 
     private TimeUtil() {
     }
@@ -72,7 +74,7 @@ public class TimeUtil {
             return null;
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = nowInStudyZone();
         Duration duration = Duration.between(time, now);
 
         long seconds = duration.getSeconds();
@@ -142,11 +144,11 @@ public class TimeUtil {
     }
 
     public static LocalDate currentStudyDate() {
-        return startOfStudyDay(LocalDateTime.now()).toLocalDate();
+        return startOfStudyDay(nowInStudyZone()).toLocalDate();
     }
 
     public static LocalDate resolveStudyDate(LocalDate requestedDate) {
-        if (requestedDate != null && requestedDate.equals(LocalDate.now())) {
+        if (requestedDate != null && requestedDate.equals(todayInStudyZone())) {
             return currentStudyDate();
         }
         return requestedDate;
@@ -157,20 +159,31 @@ public class TimeUtil {
     }
 
     public static LocalDate startOfMonthsAgo(int monthsAgo) {
-        return YearMonth.now().minusMonths(monthsAgo).atDay(1);
+        return currentYearMonthInStudyZone().minusMonths(monthsAgo).atDay(1);
     }
 
     public static LocalDate startOfNextMonth() {
-        return YearMonth.now().plusMonths(1).atDay(1);
+        return currentYearMonthInStudyZone().plusMonths(1).atDay(1);
     }
 
     public static LocalDateTime startOfToday() {
-        return LocalDate.now().atStartOfDay();
+        return todayInStudyZone().atStartOfDay();
     }
 
     public static LocalDateTime startOfTomorrow() {
-        return LocalDate.now().plusDays(1).atStartOfDay();
+        return todayInStudyZone().plusDays(1).atStartOfDay();
     }
 
+    public static LocalDateTime nowInStudyZone() {
+        return LocalDateTime.now(STUDY_ZONE);
+    }
+
+    public static LocalDate todayInStudyZone() {
+        return LocalDate.now(STUDY_ZONE);
+    }
+
+    public static YearMonth currentYearMonthInStudyZone() {
+        return YearMonth.now(STUDY_ZONE);
+    }
 
 }
