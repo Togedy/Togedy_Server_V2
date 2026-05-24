@@ -106,6 +106,7 @@ public class TimerService {
         studyTime.stop(endTime);
         updateDailyStudySummaryOnStop(userId, studyTime.getStartTime(), endTime);
         user.updateStatus(UserStatus.ACTIVE);
+        user.updateLastActivatedAt(endTime);
         return PostTimerStopResponse.of(studyTime.getId(), studyTime.getStartTime(), endTime);
     }
 
