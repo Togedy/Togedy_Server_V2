@@ -19,6 +19,7 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
@@ -470,6 +471,7 @@ public class StudyExternalService {
                 .toList();
 
         List<ActiveMemberDto> activeMemberDtos = members.stream()
+                .filter(member -> member.getStatus() == UserStatus.STUDYING)
                 .map(ActiveMemberDto::from)
                 .toList();
 
