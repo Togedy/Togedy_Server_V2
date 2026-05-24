@@ -1,11 +1,11 @@
 package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
-import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
-import com.togedy.togedy_server_v2.domain.planner.entity.StudyTask;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
+import com.togedy.togedy_server_v2.domain.planner.entity.StudyTask;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyPlannerDto;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberPlannerResponse;
@@ -22,8 +22,8 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
@@ -219,18 +219,16 @@ public class StudyMemberService {
      * @return 계산된 학습 레벨
      */
     private int determineLevelByStudyTime(Long seconds) {
-        long hours = seconds / 3600;
-
-        if (hours == 0) {
+        if (seconds <= 0) {
             return 1;
         }
-        if (hours < 2) {
+        if (seconds < Duration.ofHours(2).toSeconds()) {
             return 2;
         }
-        if (hours < 4) {
+        if (seconds < Duration.ofHours(4).toSeconds()) {
             return 3;
         }
-        if (hours < 6) {
+        if (seconds < Duration.ofHours(6).toSeconds()) {
             return 4;
         }
         return 5;
@@ -274,7 +272,7 @@ public class StudyMemberService {
                     DailyStudySummary dailyStudySummary = summaryByDay.get(day);
                     return (dailyStudySummary != null)
                             ? determineLevelByStudyTime(dailyStudySummary.getStudyTime())
-                            : 0;
+                            : 1;
                 })
                 .toList();
     }
@@ -352,7 +350,7 @@ public class StudyMemberService {
      * 특정 과목에 테스크가 존재하지 않는 경우, 빈 테스크 목록을 포함한 DTO를 생성한다.
      * </p>
      *
-     * @param studySubjects         스터디 과목 목록
+     * @param studySubjects          스터디 과목 목록
      * @param tasksByStudySubjectIds 과목 ID 기준으로 그룹화된 테스크 맵
      * @return 과목 순서를 유지한 일일 플래너 DTO 목록
      */
