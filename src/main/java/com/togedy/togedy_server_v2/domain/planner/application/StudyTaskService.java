@@ -61,7 +61,8 @@ public class StudyTaskService {
         validateTaskName(request.getName());
 
         if (request.getTaskId() == null) {
-            StudySubject subject = validateSubject(request.getStudySubjectId(), userId);
+            validateCreateRequest(request);
+            StudySubject subject = validateSubject(request.getSubjectId(), userId);
             StudyTask task = StudyTask.builder()
                     .userId(userId)
                     .studySubjectId(subject.getId())
@@ -156,6 +157,12 @@ public class StudyTaskService {
     private void validateTaskName(String name) {
         if (name == null || name.isBlank()) {
             throw new InvalidStudyTaskNameException();
+        }
+    }
+
+    private void validateCreateRequest(PutStudyTaskRequest request) {
+        if (request.getSubjectId() == null || request.getSubjectId() <= 0) {
+            throw new InvalidStudySubjectException();
         }
     }
 

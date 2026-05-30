@@ -92,6 +92,10 @@ public class User extends BaseEntity {
         this.status = status;
     }
 
+    public void updateLastActivatedAt(LocalDateTime lastActivatedAt) {
+        this.lastActivatedAt = lastActivatedAt;
+    }
+
     public void updatePlannerVisibility(boolean plannerVisible) {
         this.plannerVisible = plannerVisible;
     }
