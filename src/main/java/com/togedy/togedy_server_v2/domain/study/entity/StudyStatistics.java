@@ -44,11 +44,11 @@ public class StudyStatistics {
     private LocalDate updatedDate;
 
     @Builder
-    public StudyStatistics(Long studyId) {
+    public StudyStatistics(Long studyId, LocalDate updatedDate) {
         this.studyId = studyId;
         this.score = 0;
         this.streakDays = 0;
-        this.updatedDate = LocalDate.MIN;
+        this.updatedDate = updatedDate;
     }
 
     public void applyChallengeResult(Study study, int completedMemberCount, LocalDate targetDate) {
