@@ -83,6 +83,7 @@ public class StudyTierService {
             StudyStatistics studyStatistics = studyStatisticsRepository.findByStudyId(challengeStudy.getId())
                     .orElseGet(() -> StudyStatistics.builder()
                             .studyId(challengeStudy.getId())
+                            .updatedDate(targetDate)
                             .build());
 
             studyStatistics.applyChallengeResult(challengeStudy, completedMembers, targetDate);
