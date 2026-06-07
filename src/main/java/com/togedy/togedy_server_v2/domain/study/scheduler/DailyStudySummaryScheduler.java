@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.study.application.scheduler;
+package com.togedy.togedy_server_v2.domain.study.scheduler;
 
 import com.togedy.togedy_server_v2.domain.study.application.StudyTierService;
 import lombok.RequiredArgsConstructor;
