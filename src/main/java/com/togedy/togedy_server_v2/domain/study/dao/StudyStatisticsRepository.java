@@ -13,6 +13,8 @@ public interface StudyStatisticsRepository extends JpaRepository<StudyStatistics
 
     Optional<StudyStatistics> findByStudyId(Long studyId);
 
+    void deleteByStudyId(Long studyId);
+
     @Query("""
             SELECT ss
             FROM StudyStatistics ss

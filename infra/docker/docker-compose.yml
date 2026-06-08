@@ -1,43 +1,60 @@
 services:
-  togedy-server:
-    container_name: togedy-server
-    restart: unless-stopped
-    build:
-      context: ../..
-      dockerfile: infra/docker/Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      MYSQL_HOST: ${MYSQL_HOST}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      SWAGGER_URL: ${SWAGGER_URL}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
-      REDIS_PASSWORD: ${REDIS_PASSWORD}
-      ACCESS_KEY: ${ACCESS_KEY}
-      SECRET_KEY: ${SECRET_KEY}
-      BUCKET_NAME: ${BUCKET_NAME}
-      MONGODB_URI: ${MONGODB_URI}
-      AI_SERVER_URL: ${AI_SERVER_URL}
-      KAKAO_ADMIN_KEY: ${KAKAO_ADMIN_KEY}
-    depends_on:
-      redis:
-        condition: service_healthy
-
   redis:
     image: redis:7-alpine
     container_name: redis
     restart: unless-stopped
-    command: [ "redis-server", "--appendonly", "yes" ]
+    command:
+      - sh
+      - -c
+      - "redis-server --appendonly yes $${REDIS_PASSWORD:+--requirepass $$REDIS_PASSWORD}"
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     volumes:
       - redis-data:/data
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD-SHELL", "redis-cli $${REDIS_PASSWORD:+--no-auth-warning -a $$REDIS_PASSWORD} ping"]
       interval: 10s
       timeout: 3s
       retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 100m
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    deploy:
+      resources:
+        limits:
+          memory: 150m
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: grafana
+    restart: unless-stopped
+    profiles: ["monitoring"]
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 150m
 
 volumes:
   redis-data:
+  prometheus-data:
+  grafana-data:

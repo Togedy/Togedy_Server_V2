@@ -44,19 +44,27 @@ public class StudyStatistics {
     private LocalDate updatedDate;
 
     @Builder
-    public StudyStatistics(Long studyId) {
+    public StudyStatistics(Long studyId, LocalDate updatedDate) {
         this.studyId = studyId;
         this.score = 0;
         this.streakDays = 0;
-        this.updatedDate = LocalDate.MIN;
+        this.updatedDate = updatedDate;
     }
 
-    public void applyChallengeSuccess(Study study, int completedMemberCount, LocalDate targetDate) {
+    public void applyChallengeResult(Study study, int completedMemberCount, LocalDate targetDate) {
+        if (!targetDate.isAfter(this.updatedDate)) {
+            return;
+        }
+
+        this.updatedDate = targetDate;
+
         if (study.isChallengeSuccessful(completedMemberCount)) {
             this.streakDays++;
             this.score += calculateStudyScore(study, completedMemberCount);
+            return;
         }
-        this.updatedDate = targetDate;
+
+        this.streakDays = 0;
     }
 
     private long calculateStudyScore(Study study, int completeMemberCount) {

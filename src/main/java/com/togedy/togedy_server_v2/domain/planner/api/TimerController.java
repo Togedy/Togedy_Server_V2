@@ -12,6 +12,7 @@ import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,7 +33,7 @@ public class TimerController {
     @Operation(summary = "타이머 시작", description = "과목 기준으로 스터디 타이머를 시작한다.")
     @PostMapping("/start")
     public ApiResponse<PostTimerStartResponse> startTimer(
-            @RequestBody PostTimerStartRequest request,
+            @Valid @RequestBody PostTimerStartRequest request,
             @AuthenticationPrincipal AuthUser user
     ) {
         PostTimerStartResponse response = timerService.startTimer(request, user.getId());

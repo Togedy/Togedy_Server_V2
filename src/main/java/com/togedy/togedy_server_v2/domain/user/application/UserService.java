@@ -21,6 +21,7 @@ import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.dto.CreateUserRequest;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMyPageResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetMySettingsResponse;
+import com.togedy.togedy_server_v2.domain.user.dto.GetMyStatusResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameSuggestionResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.GetNicknameValidationResponse;
 import com.togedy.togedy_server_v2.domain.user.dto.MyPageStudyDto;
@@ -33,7 +34,6 @@ import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.enums.NicknameValidationReason;
 import com.togedy.togedy_server_v2.domain.user.enums.ProviderType;
 import com.togedy.togedy_server_v2.domain.user.event.UserProfileImageRemovedEvent;
-import com.togedy.togedy_server_v2.domain.user.exception.InvalidUserProfileImageException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateEmailException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.DuplicateNicknameException;
 import com.togedy.togedy_server_v2.domain.user.exception.user.InvalidNicknameException;
@@ -219,6 +219,22 @@ public class UserService {
     }
 
     /**
+     * 사용자 상태 정보를 조회한다.
+     * <p>
+     * 앱 재진입 시 온보딩 완료 여부를 기반으로 화면 분기할 수 있도록 현재 사용자 상태를 반환한다.
+     * </p>
+     *
+     * @param userId 조회 대상 사용자 ID
+     * @return 사용자 상태 조회 응답 DTO
+     * @throws UserNotFoundException 사용자가 존재하지 않는 경우
+     */
+    @Transactional(readOnly = true)
+    public GetMyStatusResponse findMyStatus(Long userId) {
+        User user = loadUserById(userId);
+        return GetMyStatusResponse.from(user);
+    }
+
+    /**
      * 푸시 알림 수신 설정을 변경한다.
      * <p>
      * 요청된 값에 따라 사용자의 푸시 알림 수신 여부를 수정한다. 트랜잭션 내에서 도메인 객체의 상태를 변경하며, 별도의 반환 값은 없다.
@@ -263,8 +279,7 @@ public class UserService {
      *
      * @param request 프로필 수정 요청 DTO
      * @param userId  프로필을 수정할 사용자 ID
-     * @throws UserNotFoundException            사용자가 존재하지 않는 경우
-     * @throws InvalidUserProfileImageException 프로필 이미지 제거 요청이 아님에도 업로드 파일이 없거나 비어 있는 경우
+     * @throws UserNotFoundException 사용자가 존재하지 않는 경우
      */
     @Transactional
     public void modifyProfile(PatchProfileRequest request, Long userId) {
@@ -274,6 +289,7 @@ public class UserService {
         if (request.getNickname() != null && !request.getNickname().isBlank()) {
             validateNicknameForSave(request.getNickname(), user.getNickname());
         }
+
         user.changeNickname(request.getNickname());
         replaceUserProfileImage(request.getUserProfileImage(), request.isRemoveUserProfileImage(), user);
     }
@@ -351,7 +367,8 @@ public class UserService {
     /**
      * 사용자의 프로필 이미지를 변경한다.
      * <p>
-     * 요청 값에 따라 새 프로필 이미지 URL을 결정한 뒤, 사용자 엔티티의 프로필 이미지 URL을 변경하고 기존 이미지가 존재하면 삭제 이벤트를 발행한다.
+     * 이미지 삭제 요청이 아닐 때 이미지가 존재하지 않는 경우 종료되며 요청 값에 따라 새 프로필 이미지 URL을 결정한 뒤, 사용자 엔티티의 프로필 이미지 URL을 변경하고 기존 이미지가 존재하면 삭제
+     * 이벤트를 발행한다.
      * </p>
      *
      * @param userProfileImage       새로 업로드할 프로필 이미지 파일
@@ -359,6 +376,12 @@ public class UserService {
      * @param user                   프로필 이미지를 변경할 사용자
      */
     private void replaceUserProfileImage(MultipartFile userProfileImage, boolean removeUserProfileImage, User user) {
+        boolean hasNewImage = userProfileImage != null && !userProfileImage.isEmpty();
+
+        if (!removeUserProfileImage && !hasNewImage) {
+            return;
+        }
+
         String newImageUrl = resolveNewProfileImageUrl(userProfileImage, removeUserProfileImage);
         String oldImageUrl = user.changeProfileImageUrl(newImageUrl);
         publishImageRemovedEvent(oldImageUrl);
@@ -373,15 +396,10 @@ public class UserService {
      * @param userProfileImage       새로 업로드할 프로필 이미지 파일
      * @param removeUserProfileImage 프로필 이미지 제거 여부
      * @return 새 프로필 이미지 URL, 이미지 제거 요청인 경우 {@code null}
-     * @throws InvalidUserProfileImageException 프로필 이미지 제거 요청이 아님에도 업로드 파일이 없거나 비어 있는 경우
      */
     private String resolveNewProfileImageUrl(MultipartFile userProfileImage, boolean removeUserProfileImage) {
         if (removeUserProfileImage) {
             return null;
-        }
-
-        if (userProfileImage == null || userProfileImage.isEmpty()) {
-            throw new InvalidUserProfileImageException();
         }
 
         return s3Service.uploadFile(userProfileImage, ImageCategory.PROFILE);

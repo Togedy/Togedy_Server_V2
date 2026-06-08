@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.study.application.scheduler;
+package com.togedy.togedy_server_v2.domain.study.scheduler;
 
 import com.togedy.togedy_server_v2.domain.study.application.StudyTierService;
 import lombok.RequiredArgsConstructor;
@@ -7,12 +7,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class StudyTierScheduler {
+public class StudyStatisticsScheduler {
 
     private final StudyTierService studyTierService;
 
-    @Scheduled(cron = "0 0 6 * * *", zone = "Asia/Seoul")
-    public void updateStudyTier() {
-        studyTierService.applyStudyTier();
+    @Scheduled(cron = "0 30 5 * * *", zone = "Asia/Seoul")
+    public void calculateChallengeStudyScores() {
+        studyTierService.calculateChallengeStudyScores();
     }
+
 }

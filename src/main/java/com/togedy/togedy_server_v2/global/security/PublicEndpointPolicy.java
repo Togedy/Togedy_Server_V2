@@ -12,7 +12,8 @@ public final class PublicEndpointPolicy {
             "/swagger-ui.html",
             "/v3/api-docs/**",
             "/swagger-resources/**",
-            "/h2-console/**"
+            "/actuator/health",
+            "/actuator/prometheus"
     };
 
     public static final String[] PUBLIC_GET_PATTERNS = {

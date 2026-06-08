@@ -56,14 +56,14 @@ public class TimerService {
             throw new TimerAlreadyRunningException();
         }
 
-        StudySubject studySubject = studySubjectRepository.findActiveById(request.getStudySubjectId())
+        StudySubject studySubject = studySubjectRepository.findActiveById(request.getSubjectId())
                 .orElseThrow(StudySubjectNotFoundException::new);
 
         if (!studySubject.getUserId().equals(userId)) {
             throw new StudySubjectNotOwnedException();
         }
 
-        LocalDateTime startTime = LocalDateTime.now();
+        LocalDateTime startTime = TimeUtil.nowInStudyZone();
 
         StudyTime studyTime = StudyTime.builder()
                 .userId(userId)
@@ -102,10 +102,11 @@ public class TimerService {
             throw new TimerAlreadyStoppedException();
         }
 
-        LocalDateTime endTime = LocalDateTime.now();
+        LocalDateTime endTime = TimeUtil.nowInStudyZone();
         studyTime.stop(endTime);
         updateDailyStudySummaryOnStop(userId, studyTime.getStartTime(), endTime);
         user.updateStatus(UserStatus.ACTIVE);
+        user.updateLastActivatedAt(endTime);
         return PostTimerStopResponse.of(studyTime.getId(), studyTime.getStartTime(), endTime);
     }
 
@@ -127,7 +128,7 @@ public class TimerService {
             return List.of();
         }
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TimeUtil.nowInStudyZone();
         LocalDateTime dayStart = TimeUtil.startOfStudyDay(now);
         LocalDateTime dayEnd = TimeUtil.startOfNextStudyDay(now);
 
@@ -143,6 +144,7 @@ public class TimerService {
                 .map(subject -> SubjectStudyTimeItemResponse.of(
                         subject.getId(),
                         subject.getName(),
+                        subject.getColor(),
                         studyTimeBySubjectId.getOrDefault(subject.getId(), 0L)
                 ))
                 .toList();
@@ -152,7 +154,7 @@ public class TimerService {
 
     @Transactional(readOnly = true)
     public GetTimerTotalResponse findTodayTotalStudyTime(Long userId) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TimeUtil.nowInStudyZone();
         LocalDateTime dayStart = TimeUtil.startOfStudyDay(now);
         LocalDateTime dayEnd = TimeUtil.startOfNextStudyDay(now);
 
@@ -162,7 +164,7 @@ public class TimerService {
     }
 
     private void validateStartRequest(PostTimerStartRequest request) {
-        if (request == null || request.getStudySubjectId() == null || request.getStudySubjectId() <= 0) {
+        if (request == null || request.getSubjectId() == null || request.getSubjectId() <= 0) {
             throw new InvalidStudySubjectException();
         }
     }
