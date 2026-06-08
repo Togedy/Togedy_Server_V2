@@ -85,6 +85,6 @@ if wait_healthy "togedy-server-$NEXT"; then
   echo "=== Prod deployment complete (active: $NEXT) ==="
 else
   echo "Health check failed — rolling back, $CURRENT remains active"
-  docker compose $COMPOSE_FILES stop togedy-server-$NEXT
+  docker compose $COMPOSE_FILES rm -sf togedy-server-$NEXT
   exit 1
 fi

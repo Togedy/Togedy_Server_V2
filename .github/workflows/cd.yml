@@ -45,7 +45,7 @@ jobs:
             export MYSQL_ROOT_PASSWORD='${{ secrets.MYSQL_ROOT_PASSWORD }}'
             export MYSQL_DATABASE='${{ secrets.MYSQL_DATABASE }}'
 
-            cd ${{ secrets.DEV_PROJECT_PATH }}infra/script
+            cd "${{ secrets.DEV_PROJECT_PATH }}/infra/script"
             chmod +x deploy.sh
             ./deploy.sh develop
 
@@ -86,6 +86,6 @@ jobs:
 
             export GRAFANA_ADMIN_PASSWORD='${{ secrets.GRAFANA_ADMIN_PASSWORD }}'
 
-            cd ${{ secrets.PROD_PROJECT_PATH }}infra/script
+            cd "${{ secrets.PROD_PROJECT_PATH }}/infra/script"
             chmod +x deploy.sh
             ./deploy.sh main monitoring
