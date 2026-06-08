@@ -34,10 +34,10 @@ green_port=8081
 wait_healthy() {
   local name="$1"
   echo "Waiting for $name to be healthy..."
-  for i in $(seq 1 24); do
+  for i in $(seq 1 32); do
     STATUS=$(docker inspect --format='{{.State.Health.Status}}' "$name" 2>/dev/null || echo "starting")
     [ "$STATUS" = "healthy" ] && return 0
-    [ $i -eq 24 ] && { echo "ERROR: $name did not become healthy"; return 1; }
+    [ $i -eq 32 ] && { echo "ERROR: $name did not become healthy"; return 1; }
     sleep 5
   done
 }
