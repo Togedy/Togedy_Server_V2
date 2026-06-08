@@ -1,0 +1,46 @@
+services:
+  togedy-server:
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      DEV_MYSQL_HOST: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-togedy}
+      JAVA_OPTS: "-Xmx256m -Xms128m"
+    deploy:
+      resources:
+        limits:
+          memory: 380m
+
+  redis:
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    command:
+      - --innodb-buffer-pool-size=128M
+      - --performance-schema=OFF
+      - --max-connections=50
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-togedy}
+      MYSQL_USER: ${DEV_MYSQL_USER}
+      MYSQL_PASSWORD: ${DEV_MYSQL_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 300m
+
+volumes:
+  mysql-data:
