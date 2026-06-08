@@ -1,0 +1,69 @@
+services:
+  togedy-server:
+    container_name: togedy-server
+    restart: unless-stopped
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+      DEV_JWT_SECRET_KEY: ${DEV_JWT_SECRET_KEY}
+      AI_SERVER_URL: ${AI_SERVER_URL}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      DEV_MYSQL_HOST: jdbc:mysql://mysql:3306/${MYSQL_DATABASE:-togedy}
+      DEV_MYSQL_USER: ${DEV_MYSQL_USER}
+      DEV_MYSQL_PASSWORD: ${DEV_MYSQL_PASSWORD}
+      DEV_MONGODB_URI: ${DEV_MONGODB_URI}
+      DEV_S3_ACCESS_KEY: ${DEV_S3_ACCESS_KEY}
+      DEV_S3_SECRET_KEY: ${DEV_S3_SECRET_KEY}
+      DEV_S3_BUCKET_NAME: ${DEV_S3_BUCKET_NAME}
+      DEV_SWAGGER_URL: ${DEV_SWAGGER_URL}
+      DEV_KAKAO_ADMIN_KEY: ${DEV_KAKAO_ADMIN_KEY}
+      JAVA_OPTS: "-Xmx256m -Xms128m"
+    depends_on:
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 380m
+
+  redis:
+    deploy:
+      resources:
+        limits:
+          memory: 64m
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: unless-stopped
+    command:
+      - --innodb-buffer-pool-size=128M
+      - --performance-schema=OFF
+      - --max-connections=50
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-togedy}
+      MYSQL_USER: ${DEV_MYSQL_USER}
+      MYSQL_PASSWORD: ${DEV_MYSQL_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 300m
+
+volumes:
+  mysql-data:

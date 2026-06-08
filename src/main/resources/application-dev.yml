@@ -1,0 +1,50 @@
+spring:
+  datasource:
+    url: ${DEV_MYSQL_HOST}
+    username: ${DEV_MYSQL_USER}
+    password: ${DEV_MYSQL_PASSWORD}
+
+  flyway:
+    enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  data:
+    mongodb:
+      uri: ${DEV_MONGODB_URI}
+
+  cloud:
+    aws:
+      region:
+        static: ap-northeast-2
+      credentials:
+        access-key: ${DEV_S3_ACCESS_KEY}
+        secret-key: ${DEV_S3_SECRET_KEY}
+      s3:
+        bucket: ${DEV_S3_BUCKET_NAME}
+
+logging:
+  level:
+    org.springframework.data.redis: DEBUG
+
+swagger:
+  server:
+    url: ${DEV_SWAGGER_URL}
+
+kakao:
+  admin-key: ${DEV_KAKAO_ADMIN_KEY}
+
+jwt:
+  secret-key: ${DEV_JWT_SECRET_KEY}
+  access-expired-in: 86400000       # 24시간
+  refresh-expired-in: 2592000000   # 30일
+
+cors:
+  allowed-origins: https://togedy-dev.shop

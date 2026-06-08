@@ -1,4 +1,7 @@
 spring:
+  flyway:
+    enabled: false
+
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -18,7 +21,7 @@ spring:
       s3:
         bucket: test-bucket
       region:
-        static: ap-northeast-2E
+        static: ap-northeast-2
       credentials:
         access-key: dummy-access-key
         secret-key: dummy-secret-key
@@ -43,3 +46,6 @@ kakao:
 ai:
   server:
     url: http://dummy-ai-server
+
+cors:
+  allowed-origins: http://localhost:8080

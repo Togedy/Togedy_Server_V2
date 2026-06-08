@@ -9,7 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      write-all
+      contents: read
+      checks: write
+      pull-requests: write
 
     steps:
       - name: Checkout code
@@ -23,8 +25,6 @@ jobs:
 
       - name: Setup Gradle (with caching)
         uses: gradle/actions/setup-gradle@v3
-        with:
-          cache-read-only: true
 
       - name: Permission gradlew
         run: chmod +x gradlew
@@ -32,16 +32,6 @@ jobs:
       - name: Run tests
         env:
           SPRING_PROFILES_ACTIVE: test
-
-          JWT_SECRET_KEY: ${{ secrets.JWT_SECRET_KEY }}
-          SWAGGER_URL: ${{ secrets.SWAGGER_URL }}
-
-          SPRING_CLOUD_AWS_CREDENTIALS_ACCESS_KEY: test
-          SPRING_CLOUD_AWS_CREDENTIALS_SECRET_KEY: test
-          SPRING_CLOUD_AWS_S3_BUCKET: test
-
-          MONGODB_URI: ${{ secrets.MONGODB_URI }}
-          AI_SERVER_URL: ${{ secrets.AI_SERVER_URL }}
         run: ./gradlew clean test --no-build-cache
 
       - name: Post result

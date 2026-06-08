@@ -1,0 +1,48 @@
+x-app-common: &app-common
+  build:
+    context: ../..
+    dockerfile: infra/docker/Dockerfile
+  restart: unless-stopped
+  environment:
+    SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
+    PROD_JWT_SECRET_KEY: ${PROD_JWT_SECRET_KEY}
+    AI_SERVER_URL: ${AI_SERVER_URL}
+    REDIS_HOST: ${REDIS_HOST}
+    REDIS_PORT: ${REDIS_PORT}
+    REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+    PROD_MYSQL_HOST: ${PROD_MYSQL_HOST}
+    PROD_MYSQL_USER: ${PROD_MYSQL_USER}
+    PROD_MYSQL_PASSWORD: ${PROD_MYSQL_PASSWORD}
+    PROD_MONGODB_URI: ${PROD_MONGODB_URI}
+    PROD_S3_ACCESS_KEY: ${PROD_S3_ACCESS_KEY}
+    PROD_S3_SECRET_KEY: ${PROD_S3_SECRET_KEY}
+    PROD_S3_BUCKET_NAME: ${PROD_S3_BUCKET_NAME}
+    PROD_SWAGGER_URL: ${PROD_SWAGGER_URL}
+    PROD_KAKAO_ADMIN_KEY: ${PROD_KAKAO_ADMIN_KEY}
+    JAVA_OPTS: "-Xmx400m -Xms200m"
+  depends_on:
+    redis:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health | grep -q 'UP' || exit 1"]
+    interval: 10s
+    timeout: 5s
+    retries: 12
+    start_period: 30s
+  deploy:
+    resources:
+      limits:
+        memory: 500m
+
+services:
+  togedy-server-blue:
+    <<: *app-common
+    container_name: togedy-server-blue
+    ports:
+      - "8080:8080"
+
+  togedy-server-green:
+    <<: *app-common
+    container_name: togedy-server-green
+    ports:
+      - "8081:8080"

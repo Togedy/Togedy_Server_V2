@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'togedy-server'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['togedy-server-blue:8080', 'togedy-server-green:8080']

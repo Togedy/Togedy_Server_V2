@@ -6,6 +6,7 @@ import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyReportRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
+import com.togedy.togedy_server_v2.domain.study.dao.StudyStatisticsRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyAttendanceResponse;
@@ -59,6 +60,7 @@ public class StudyInternalService {
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final StudyReportRepository studyReportRepository;
+    private final StudyStatisticsRepository studyStatisticsRepository;
 
     /**
      * 스터디 단건 정보를 조회한다.
@@ -132,6 +134,7 @@ public class StudyInternalService {
         publishImageRemovedEvent(study.getImageUrl());
 
         userStudyRepository.deleteAllByStudyId(studyId);
+        studyStatisticsRepository.deleteByStudyId(studyId);
         studyRepository.delete(study);
     }
 
