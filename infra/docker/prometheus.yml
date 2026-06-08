@@ -5,4 +5,4 @@ scrape_configs:
   - job_name: 'togedy-server'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: [ 'togedy-server:8080' ]
+      - targets: ['togedy-server-blue:8080', 'togedy-server-green:8080']

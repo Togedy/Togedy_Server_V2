@@ -205,3 +205,6 @@ gradle-app.setting
 
 ### application-local.yml ###
 src/main/resources/application-local.yml
+
+### Runtime state ###
+infra/docker/.current_color

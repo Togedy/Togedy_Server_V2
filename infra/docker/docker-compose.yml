@@ -1,58 +1,13 @@
 services:
-  togedy-server:
-    container_name: togedy-server
-    restart: unless-stopped
-    build:
-      context: ../..
-      dockerfile: infra/docker/Dockerfile
-    ports:
-      - "8080:8080"
-    environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
-
-      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      AI_SERVER_URL: ${AI_SERVER_URL}
-      REDIS_HOST: ${REDIS_HOST}
-      REDIS_PORT: ${REDIS_PORT}
-      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
-
-      DEV_MYSQL_HOST: ${DEV_MYSQL_HOST:-}
-      DEV_MYSQL_USER: ${DEV_MYSQL_USER:-}
-      DEV_MYSQL_PASSWORD: ${DEV_MYSQL_PASSWORD:-}
-      DEV_MONGODB_URI: ${DEV_MONGODB_URI:-}
-      DEV_S3_ACCESS_KEY: ${DEV_S3_ACCESS_KEY:-}
-      DEV_S3_SECRET_KEY: ${DEV_S3_SECRET_KEY:-}
-      DEV_S3_BUCKET_NAME: ${DEV_S3_BUCKET_NAME:-}
-      DEV_SWAGGER_URL: ${DEV_SWAGGER_URL:-}
-      DEV_KAKAO_ADMIN_KEY: ${DEV_KAKAO_ADMIN_KEY:-}
-
-      PROD_MYSQL_HOST: ${PROD_MYSQL_HOST:-}
-      PROD_MYSQL_USER: ${PROD_MYSQL_USER:-}
-      PROD_MYSQL_PASSWORD: ${PROD_MYSQL_PASSWORD:-}
-      PROD_MONGODB_URI: ${PROD_MONGODB_URI:-}
-      PROD_S3_ACCESS_KEY: ${PROD_S3_ACCESS_KEY:-}
-      PROD_S3_SECRET_KEY: ${PROD_S3_SECRET_KEY:-}
-      PROD_S3_BUCKET_NAME: ${PROD_S3_BUCKET_NAME:-}
-      PROD_SWAGGER_URL: ${PROD_SWAGGER_URL:-}
-      PROD_KAKAO_ADMIN_KEY: ${PROD_KAKAO_ADMIN_KEY:-}
-      JAVA_OPTS: "-Xmx512m -Xms256m"
-    depends_on:
-      redis:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 700m
-
   redis:
     image: redis:7-alpine
     container_name: redis
     restart: unless-stopped
-    command: [ "redis-server", "--appendonly", "yes" ]
+    command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis-data:/data
     healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
+      test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -65,24 +20,22 @@ services:
     image: prom/prometheus:v2.53.0
     container_name: prometheus
     restart: unless-stopped
-    profiles: [ "monitoring" ]
+    profiles: ["monitoring"]
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"
-    depends_on:
-      - togedy-server
     deploy:
       resources:
         limits:
-          memory: 400m
+          memory: 150m
 
   grafana:
     image: grafana/grafana:11.1.0
     container_name: grafana
     restart: unless-stopped
-    profiles: [ "monitoring" ]
+    profiles: ["monitoring"]
     volumes:
       - grafana-data:/var/lib/grafana
     ports:
@@ -94,7 +47,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 200m
+          memory: 150m
 
 volumes:
   redis-data:
