@@ -45,6 +45,8 @@ jobs:
             export MYSQL_ROOT_PASSWORD='${{ secrets.MYSQL_ROOT_PASSWORD }}'
             export MYSQL_DATABASE='${{ secrets.MYSQL_DATABASE }}'
 
+            export GRAFANA_ADMIN_PASSWORD='unused-in-dev'
+
             cd ${{ secrets.DEV_PROJECT_PATH }}infra/script
             chmod +x deploy.sh
             ./deploy.sh develop
