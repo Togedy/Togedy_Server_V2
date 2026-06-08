@@ -4,6 +4,7 @@ import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepositor
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
+import com.togedy.togedy_server_v2.domain.study.dao.StudyStatisticsRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.global.service.S3Service;
@@ -31,6 +32,9 @@ public abstract class AbstractStudyServiceTest {
 
     @Mock
     protected StudyTaskRepository studyTaskRepository;
+
+    @Mock
+    protected StudyStatisticsRepository studyStatisticsRepository;
 
     @Mock
     S3Service s3Service;
