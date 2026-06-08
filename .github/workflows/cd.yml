@@ -36,11 +36,14 @@ jobs:
             export DEV_SWAGGER_URL='${{ secrets.DEV_SWAGGER_URL }}'
             export DEV_KAKAO_ADMIN_KEY='${{ secrets.DEV_KAKAO_ADMIN_KEY }}'
 
-            export JWT_SECRET_KEY='${{ secrets.JWT_SECRET_KEY }}'
+            export DEV_JWT_SECRET_KEY='${{ secrets.DEV_JWT_SECRET_KEY }}'
             export AI_SERVER_URL='${{ secrets.AI_SERVER_URL }}'
             export REDIS_HOST='${{ secrets.REDIS_HOST }}'
             export REDIS_PORT='${{ secrets.REDIS_PORT }}'
             export REDIS_PASSWORD='${{ secrets.REDIS_PASSWORD }}'
+
+            export MYSQL_ROOT_PASSWORD='${{ secrets.MYSQL_ROOT_PASSWORD }}'
+            export MYSQL_DATABASE='${{ secrets.MYSQL_DATABASE }}'
 
             cd ${{ secrets.DEV_PROJECT_PATH }}infra/script
             chmod +x deploy.sh
@@ -75,7 +78,7 @@ jobs:
             export PROD_SWAGGER_URL='${{ secrets.PROD_SWAGGER_URL }}'
             export PROD_KAKAO_ADMIN_KEY='${{ secrets.PROD_KAKAO_ADMIN_KEY }}'
 
-            export JWT_SECRET_KEY='${{ secrets.JWT_SECRET_KEY }}'
+            export PROD_JWT_SECRET_KEY='${{ secrets.PROD_JWT_SECRET_KEY }}'
             export AI_SERVER_URL='${{ secrets.AI_SERVER_URL }}'
             export REDIS_HOST='${{ secrets.REDIS_HOST }}'
             export REDIS_PORT='${{ secrets.REDIS_PORT }}'

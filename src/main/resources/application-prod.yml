@@ -12,10 +12,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: none
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
-        format_sql: true
         dialect: org.hibernate.dialect.MySQL8Dialect
 
   data:
@@ -32,9 +31,15 @@ spring:
       s3:
         bucket: ${PROD_S3_BUCKET_NAME}
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, prometheus
+
 logging:
   level:
-    org.springframework.data.redis: DEBUG
+    root: WARN
 
 swagger:
   server:
@@ -42,3 +47,8 @@ swagger:
 
 kakao:
   admin-key: ${PROD_KAKAO_ADMIN_KEY}
+
+jwt:
+  secret-key: ${PROD_JWT_SECRET_KEY}
+  access-expired-in: 604800000     # 7일
+  refresh-expired-in: 2592000000   # 30일

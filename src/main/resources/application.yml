@@ -18,11 +18,6 @@ spring:
       write-dates-as-timestamps: false
 ---
 
-jwt:
-  secret-key: ${JWT_SECRET_KEY}
-  access-expired-in: 2592000000    # 30일
-  refresh-expired-in: 2592000000   # 30일
-
 springdoc:
   swagger-ui:
     path: /api-test
@@ -49,7 +44,4 @@ management:
   endpoints:
     web:
       exposure:
-        include: health, prometheus
-  endpoint:
-    prometheus:
-      enabled: true
+        include: health

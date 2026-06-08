@@ -23,8 +23,6 @@ jobs:
 
       - name: Setup Gradle (with caching)
         uses: gradle/actions/setup-gradle@v3
-        with:
-          cache-read-only: true
 
       - name: Permission gradlew
         run: chmod +x gradlew

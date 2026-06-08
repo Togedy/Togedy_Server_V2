@@ -18,7 +18,7 @@ spring:
       s3:
         bucket: test-bucket
       region:
-        static: ap-northeast-2E
+        static: ap-northeast-2
       credentials:
         access-key: dummy-access-key
         secret-key: dummy-secret-key

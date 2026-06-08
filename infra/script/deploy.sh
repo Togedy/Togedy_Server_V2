@@ -14,10 +14,16 @@ echo "Stopping existing containers"
 docker compose down
 
 echo "Building & starting services"
-if [ -n "$PROFILE" ]; then
-  docker compose --profile "$PROFILE" up -d --build
+if [ "$BRANCH" = "develop" ]; then
+  COMPOSE_FILES="-f docker-compose.yml -f docker-compose.dev.yml"
 else
-  docker compose up -d --build
+  COMPOSE_FILES="-f docker-compose.yml"
+fi
+
+if [ -n "$PROFILE" ]; then
+  docker compose $COMPOSE_FILES --profile "$PROFILE" up -d --build
+else
+  docker compose $COMPOSE_FILES up -d --build
 fi
 
 echo "Deployment complete"
