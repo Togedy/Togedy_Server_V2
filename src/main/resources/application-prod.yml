@@ -41,6 +41,12 @@ logging:
   level:
     root: WARN
 
+springdoc:
+  swagger-ui:
+    enabled: false
+  api-docs:
+    enabled: false
+
 swagger:
   server:
     url: ${PROD_SWAGGER_URL}
@@ -52,3 +58,8 @@ jwt:
   secret-key: ${PROD_JWT_SECRET_KEY}
   access-expired-in: 604800000     # 7일
   refresh-expired-in: 2592000000   # 30일
+
+cors:
+  allowed-origins:
+    - https://togedy.site
+    - https://www.togedy.site

@@ -47,3 +47,7 @@ jwt:
   secret-key: ${DEV_JWT_SECRET_KEY}
   access-expired-in: 604800000     # 7일
   refresh-expired-in: 2592000000   # 30일
+
+cors:
+  allowed-origins:
+    - https://togedy-dev.shop

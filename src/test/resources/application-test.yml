@@ -43,3 +43,7 @@ kakao:
 ai:
   server:
     url: http://dummy-ai-server
+
+cors:
+  allowed-origins:
+    - http://localhost:8080
