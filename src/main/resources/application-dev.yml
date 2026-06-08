@@ -47,5 +47,4 @@ jwt:
   refresh-expired-in: 2592000000   # 30일
 
 cors:
-  allowed-origins:
-    - https://togedy-dev.shop
+  allowed-origins: https://togedy-dev.shop

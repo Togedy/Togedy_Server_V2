@@ -58,6 +58,4 @@ jwt:
   refresh-expired-in: 2592000000   # 30일
 
 cors:
-  allowed-origins:
-    - https://togedy.site
-    - https://www.togedy.site
+  allowed-origins: https://togedy.site,https://www.togedy.site

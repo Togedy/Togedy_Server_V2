@@ -27,7 +27,7 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
 
-    @Value("${cors.allowed-origins}")
+    @Value("#{'${cors.allowed-origins}'.split(',')}")
     private List<String> corsAllowedOrigins;
 
     @Bean
