@@ -53,6 +53,8 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-togedy}
       MYSQL_USER: ${DEV_MYSQL_USER}
       MYSQL_PASSWORD: ${DEV_MYSQL_PASSWORD}
+    ports:
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysql-data:/var/lib/mysql
     healthcheck:

@@ -1,9 +1,6 @@
 package com.togedy.togedy_server_v2.domain.user.api;
 
 import com.togedy.togedy_server_v2.domain.user.application.AuthService;
-import com.togedy.togedy_server_v2.domain.user.dto.LoginUserRequest;
-import com.togedy.togedy_server_v2.domain.user.dto.LoginUserResponse;
-import com.togedy.togedy_server_v2.domain.user.dto.TokenRequest;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtTokenInfo;
@@ -12,8 +9,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
@@ -23,18 +22,7 @@ public class AuthController {
 
     private final AuthService authService;
 
-    @Operation(summary = "간편 로그인", description = """
-            
-            이메일 기반 간편 로그인 후 JWT 토큰을 발급한다.
-            
-            """)
-    @PostMapping("/login")
-    public ApiResponse<LoginUserResponse> login(@Validated @RequestBody LoginUserRequest request) {
-        JwtTokenInfo tokenInfo = authService.signInUser(request.getEmail());
-        return ApiUtil.success(new LoginUserResponse(tokenInfo));
-    }
-
-    @Operation(summary = "토큰 재발급",description = """
+    @Operation(summary = "토큰 재발급", description = """
             
             리프레시 토큰을 이용해 새로운 액세스 토큰을 발급한다.
             
