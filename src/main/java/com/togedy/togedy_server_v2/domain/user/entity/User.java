@@ -113,7 +113,7 @@ public class User extends BaseEntity {
         if (daysBetween == 1) {
             this.studyStreak += 1;
         } else {
-            this.studyStreak = 0;
+            this.studyStreak = 1;
         }
     }
 

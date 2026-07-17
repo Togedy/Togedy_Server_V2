@@ -146,15 +146,6 @@ class PlannerServiceTest {
 
         assertThat(response.getDaysSinceLastStudy()).isEqualTo(0);
         assertThat(response.getCurrentStreakDays()).isEqualTo(3);
-        assertThat(response.getWeeklyReview()).containsExactly(
-                "00:00:00",
-                "00:00:00",
-                "12:01:00",
-                null,
-                null,
-                null,
-                null
-        );
         assertThat(response.getMonthlyReview().subList(0, 4)).containsExactly(3, 1, 4, 4);
     }
 

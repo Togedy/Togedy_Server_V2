@@ -129,8 +129,6 @@ public class StudyMemberService {
 
         boolean isMyPlanner = member.getId().equals(userId);
 
-        System.out.println(member.isPlannerVisible());
-
         if (!member.isPlannerVisible()) {
             return GetStudyMemberPlannerResponse.of(isMyPlanner, false);
         }
