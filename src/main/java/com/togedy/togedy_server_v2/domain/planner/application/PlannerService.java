@@ -10,12 +10,12 @@ import com.togedy.togedy_server_v2.domain.planner.dto.PutDailyPlannerImageReques
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.entity.PlannerDailyImage;
 import com.togedy.togedy_server_v2.domain.planner.exception.InvalidPlannerImageException;
-import com.togedy.togedy_server_v2.global.enums.ImageCategory;
-import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
-import java.time.Duration;
+import com.togedy.togedy_server_v2.global.enums.ImageCategory;
+import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
@@ -91,7 +91,9 @@ public class PlannerService {
                 context.studyDate(),
                 dDaySchedule.isPresent(),
                 dDaySchedule.map(UserSchedule::getName).orElse(null),
-                dDaySchedule.map(schedule -> (int) ChronoUnit.DAYS.between(context.studyDate(), schedule.getStartDate())).orElse(null),
+                dDaySchedule.map(
+                                schedule -> (int) ChronoUnit.DAYS.between(context.studyDate(), schedule.getStartDate()))
+                        .orElse(null),
                 TimeUtil.formatSecondsToHms(context.dailyStudyTime()),
                 context.plannerImage(),
                 studyTaskService.findDailyPlannerShareItems(context.studyDate(), userId),
@@ -107,14 +109,17 @@ public class PlannerService {
         LocalDate monthStart = YearMonth.from(studyDate).atDay(1);
         LocalDate monthEnd = YearMonth.from(studyDate).atEndOfMonth();
 
-        List<DailyStudySummary> weeklySummaries = dailyStudySummaryRepository.findAllByUserIdAndPeriod(userId, weekStart, weekEnd);
-        List<DailyStudySummary> monthlySummaries = dailyStudySummaryRepository.findAllByUserIdAndPeriod(userId, monthStart, monthEnd);
-        List<LocalDate> studyDates = dailyStudySummaryRepository.findStudyDatesByUserIdUntilDateOrderByDateDesc(userId, studyDate);
+        List<DailyStudySummary> weeklySummaries = dailyStudySummaryRepository.findAllByUserIdAndPeriod(userId,
+                weekStart, weekEnd);
+        List<DailyStudySummary> monthlySummaries = dailyStudySummaryRepository.findAllByUserIdAndPeriod(userId,
+                monthStart, monthEnd);
+        List<LocalDate> studyDates = dailyStudySummaryRepository.findStudyDatesByUserIdUntilDateOrderByDateDesc(userId,
+                studyDate);
 
         return GetDailyPlannerStatisticsResponse.of(
                 calculateDaysSinceLastStudy(studyDate, studyDates),
                 calculateCurrentStreakDays(studyDate, studyDates),
-                buildWeeklyReview(weekStart, studyDate, weeklySummaries),
+                buildWeeklyReview(weekStart, TimeUtil.currentStudyDate(), weeklySummaries),
                 buildMonthlyReview(monthStart, monthEnd, monthlySummaries)
         );
     }
@@ -161,7 +166,8 @@ public class PlannerService {
         return 5;
     }
 
-    private List<String> buildWeeklyReview(LocalDate weekStart, LocalDate studyDate, List<DailyStudySummary> weeklySummaries) {
+    private List<String> buildWeeklyReview(LocalDate weekStart, LocalDate studyDate,
+                                           List<DailyStudySummary> weeklySummaries) {
         Map<LocalDate, Long> studyTimeByDate = mapStudyTimeByDate(weeklySummaries);
 
         return weekStart.datesUntil(weekStart.plusDays(7))
@@ -174,7 +180,8 @@ public class PlannerService {
                 .toList();
     }
 
-    private List<Integer> buildMonthlyReview(LocalDate monthStart, LocalDate monthEnd, List<DailyStudySummary> monthlySummaries) {
+    private List<Integer> buildMonthlyReview(LocalDate monthStart, LocalDate monthEnd,
+                                             List<DailyStudySummary> monthlySummaries) {
         Map<LocalDate, Long> studyTimeByDate = mapStudyTimeByDate(monthlySummaries);
 
         return monthStart.datesUntil(monthEnd.plusDays(1))
@@ -195,7 +202,8 @@ public class PlannerService {
         Long dailyStudyTime = dailyStudySummaryRepository.findByUserIdAndDate(userId, studyDate)
                 .map(DailyStudySummary::getStudyTime)
                 .orElse(0L);
-        String plannerImage = plannerDailyImageRepository.findTopByUserIdAndDateLessThanEqualOrderByDateDesc(userId, studyDate)
+        String plannerImage = plannerDailyImageRepository.findTopByUserIdAndDateLessThanEqualOrderByDateDesc(userId,
+                        studyDate)
                 .map(PlannerDailyImage::getImageUrl)
                 .orElse(null);
         return new PlannerDailyContext(studyDate, dailyStudyTime, plannerImage);

@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -175,6 +176,7 @@ public class StudyMemberService {
      * @throws UserAccessDeniedException 요청한 사용자가 본인이 아닌 경우
      * @throws UserNotFoundException     변경 대상 사용자가 존재하지 않는 경우
      */
+    @Transactional
     public void modifyPlannerVisibility(
             PatchPlannerVisibilityRequest request,
             Long studyId,
