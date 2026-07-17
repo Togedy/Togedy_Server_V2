@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -94,6 +95,26 @@ public class User extends BaseEntity {
 
     public void updateLastActivatedAt(LocalDateTime lastActivatedAt) {
         this.lastActivatedAt = lastActivatedAt;
+    }
+
+    public void updateStudyStreak(LocalDateTime endTime) {
+        if (this.lastActivatedAt == null) {
+            this.studyStreak += 1;
+            return;
+        }
+
+        LocalDate lastDate = this.lastActivatedAt.toLocalDate();
+        LocalDate endDate = endTime.toLocalDate();
+        long daysBetween = ChronoUnit.DAYS.between(lastDate, endDate);
+
+        if (daysBetween == 0) {
+            return;
+        }
+        if (daysBetween == 1) {
+            this.studyStreak += 1;
+        } else {
+            this.studyStreak = 0;
+        }
     }
 
     public void updatePlannerVisibility(boolean plannerVisible) {
