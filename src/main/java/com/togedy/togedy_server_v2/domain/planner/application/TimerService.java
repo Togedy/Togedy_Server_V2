@@ -105,8 +105,7 @@ public class TimerService {
         LocalDateTime endTime = TimeUtil.nowInStudyZone();
         studyTime.stop(endTime);
         updateDailyStudySummaryOnStop(userId, studyTime.getStartTime(), endTime);
-        user.updateStatus(UserStatus.ACTIVE);
-        user.updateLastActivatedAt(endTime);
+        updateUser(user, endTime);
         return PostTimerStopResponse.of(studyTime.getId(), studyTime.getStartTime(), endTime);
     }
 
@@ -212,6 +211,12 @@ public class TimerService {
             existingSummary.addStudyTime(additionalStudyTime);
             dailyStudySummaryRepository.save(existingSummary);
         }
+    }
+
+    private void updateUser(User user, LocalDateTime endTime) {
+        user.updateStudyStreak(endTime);
+        user.updateStatus(UserStatus.ACTIVE);
+        user.updateLastActivatedAt(endTime);
     }
 
 }

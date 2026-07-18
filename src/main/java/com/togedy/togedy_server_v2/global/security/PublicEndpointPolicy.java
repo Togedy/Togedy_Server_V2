@@ -27,10 +27,10 @@ public final class PublicEndpointPolicy {
     };
 
     public static final String[] PUBLIC_POST_PATTERNS = {
-            "/api/v2/auth/login",
+            "/api/v2/dev/login",
             "/api/v2/auth/reissue",
             "/api/v2/auth/kakao",
-            "/api/v2/users/sign-up"
+            "/api/v2/dev/sign-up"
     };
 
     private PublicEndpointPolicy() {

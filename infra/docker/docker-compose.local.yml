@@ -1,0 +1,78 @@
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: redis-local
+    restart: unless-stopped
+    command:
+      - sh
+      - -c
+      - "redis-server --appendonly yes"
+    volumes:
+      - redis-local-data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 100m
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus-local
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --web.enable-remote-write-receiver
+      - --enable-feature=native-histograms
+    volumes:
+      - ./prometheus.local.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-local-data:/prometheus
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    deploy:
+      resources:
+        limits:
+          memory: 150m
+
+  grafana:
+    image: grafana/grafana:11.1.0
+    container_name: grafana-local
+    restart: unless-stopped
+    volumes:
+      - grafana-local-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+    depends_on:
+      - prometheus
+    deploy:
+      resources:
+        limits:
+          memory: 150m
+
+  k6:
+    image: grafana/k6:latest
+    container_name: k6-local
+    profiles: ["k6"]
+    volumes:
+      - ../k6/scripts:/scripts
+    environment:
+      K6_PROMETHEUS_RW_SERVER_URL: http://prometheus-local:9090/api/v1/write
+      K6_PROMETHEUS_RW_TREND_AS_NATIVE_HISTOGRAM: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - prometheus
+
+volumes:
+  redis-local-data:
+  prometheus-local-data:
+  grafana-local-data:
