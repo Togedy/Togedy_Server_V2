@@ -18,7 +18,7 @@ public class StudyTimeScheduler {
         try {
             timerService.cleanup();
         } catch (Exception e) {
-            log.error("타이머 정리 실패");
+            log.error("타이머 정리 실패", e);
         }
     }
 }

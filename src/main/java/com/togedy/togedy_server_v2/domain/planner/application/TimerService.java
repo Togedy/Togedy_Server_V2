@@ -32,10 +32,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TimerService {
@@ -45,6 +48,7 @@ public class TimerService {
     private final StudySubjectRepository studySubjectRepository;
     private final StudyTimeRepository studyTimeRepository;
     private final StudyingStatusRepository studyingStatusRepository;
+    private final TransactionTemplate transactionTemplate;
 
     @Transactional
     public PostTimerStartResponse startTimer(PostTimerStartRequest request, Long userId) {
@@ -184,33 +188,46 @@ public class TimerService {
         studyingStatusRepository.save(userId);
     }
 
-    @Transactional
     public void cleanup() {
         LocalDateTime cutoff = TimeUtil.nowInStudyZone().minusSeconds(90);
         List<Long> studyTimeIds = studyTimeRepository.findStaleRunningStudyTimeIds(cutoff);
 
         for (Long studyTimeId : studyTimeIds) {
-            StudyTime studyTime = studyTimeRepository.findByIdForUpdate(studyTimeId)
-                    .orElseThrow(TimerNotFoundException::new);
-
-            if (!studyTime.getLastHeartbeatAt().isBefore(cutoff)) {
-                continue;
+            try {
+                transactionTemplate.executeWithoutResult(status ->
+                        closeStaleTimer(studyTimeId, cutoff)
+                );
+            } catch (Exception e) {
+                log.error("타이머 정리 실패 studyTimeId={}", studyTimeId, e);
             }
-
-            User user = userRepository.findById(studyTime.getUserId())
-                    .orElseThrow(UserNotFoundException::new);
-
-            LocalDateTime effectiveEndTime = studyTime.getLastHeartbeatAt();
-            studyTime.stop(effectiveEndTime);
-
-            updateDailyStudySummaryOnStop(
-                    user.getId(),
-                    studyTime.getStartTime(),
-                    effectiveEndTime
-            );
-
-            updateUser(user, effectiveEndTime);
         }
+    }
+
+    private void closeStaleTimer(Long studyTimeId, LocalDateTime cutoff) {
+        StudyTime studyTime = studyTimeRepository.findByIdForUpdate(studyTimeId)
+                .orElseThrow(TimerNotFoundException::new);
+
+        if (!studyTime.getLastHeartbeatAt().isBefore(cutoff)) {
+            return;
+        }
+
+        if (studyTime.getEndTime() != null) {
+            return;
+        }
+
+        User user = userRepository.findById(studyTime.getUserId())
+                .orElseThrow(UserNotFoundException::new);
+
+        LocalDateTime effectiveEndTime = studyTime.getLastHeartbeatAt();
+        studyTime.stop(effectiveEndTime);
+
+        updateDailyStudySummaryOnStop(
+                user.getId(),
+                studyTime.getStartTime(),
+                effectiveEndTime
+        );
+
+        updateUser(user, effectiveEndTime);
     }
 
     private void validateStartRequest(PostTimerStartRequest request) {
