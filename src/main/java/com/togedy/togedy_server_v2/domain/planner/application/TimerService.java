@@ -184,6 +184,35 @@ public class TimerService {
         studyingStatusRepository.save(userId);
     }
 
+    @Transactional
+    public void cleanup() {
+        LocalDateTime cutoff = TimeUtil.nowInStudyZone().minusSeconds(90);
+        List<Long> studyTimeIds = studyTimeRepository.findStaleRunningStudyTimeIds(cutoff);
+
+        for (Long studyTimeId : studyTimeIds) {
+            StudyTime studyTime = studyTimeRepository.findByIdForUpdate(studyTimeId)
+                    .orElseThrow(TimerNotFoundException::new);
+
+            if (!studyTime.getLastHeartbeatAt().isBefore(cutoff)) {
+                continue;
+            }
+
+            User user = userRepository.findById(studyTime.getUserId())
+                    .orElseThrow(UserNotFoundException::new);
+
+            LocalDateTime effectiveEndTime = studyTime.getLastHeartbeatAt();
+            studyTime.stop(effectiveEndTime);
+
+            updateDailyStudySummaryOnStop(
+                    user.getId(),
+                    studyTime.getStartTime(),
+                    effectiveEndTime
+            );
+
+            updateUser(user, effectiveEndTime);
+        }
+    }
+
     private void validateStartRequest(PostTimerStartRequest request) {
         if (request == null || request.getSubjectId() == null || request.getSubjectId() <= 0) {
             throw new InvalidStudySubjectException();
