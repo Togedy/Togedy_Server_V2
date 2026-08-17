@@ -163,6 +163,27 @@ public class TimerService {
         return GetTimerTotalResponse.of(totalStudyTime);
     }
 
+    @Transactional
+    public void updateTimer(Long timerId, Long userId) {
+        if (!studyingStatusRepository.isExist(userId)) {
+            throw new TimerNotFoundException();
+        }
+
+        StudyTime studyTime = studyTimeRepository.findById(timerId)
+                .orElseThrow(TimerNotFoundException::new);
+
+        if (studyTime.getEndTime() != null) {
+            throw new TimerAlreadyStoppedException();
+        }
+
+        if (!studyTime.getUserId().equals(userId)) {
+            throw new TimerNotOwnedException();
+        }
+
+        studyTime.touch(TimeUtil.nowInStudyZone());
+        studyingStatusRepository.save(userId);
+    }
+
     private void validateStartRequest(PostTimerStartRequest request) {
         if (request == null || request.getSubjectId() == null || request.getSubjectId() <= 0) {
             throw new InvalidStudySubjectException();
