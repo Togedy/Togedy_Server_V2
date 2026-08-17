@@ -20,9 +20,9 @@ import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyRunningE
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyStoppedException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotFoundException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotOwnedException;
+import com.togedy.togedy_server_v2.domain.user.dao.StudyingStatusRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.Duration;
@@ -44,6 +44,7 @@ public class TimerService {
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final StudySubjectRepository studySubjectRepository;
     private final StudyTimeRepository studyTimeRepository;
+    private final StudyingStatusRepository studyingStatusRepository;
 
     @Transactional
     public PostTimerStartResponse startTimer(PostTimerStartRequest request, Long userId) {
@@ -80,7 +81,7 @@ public class TimerService {
             throw new TimerAlreadyRunningException();
         }
 
-        user.updateStatus(UserStatus.STUDYING);
+        studyingStatusRepository.save(userId);
 
         return PostTimerStartResponse.of(timerId, startTime);
     }
@@ -215,8 +216,7 @@ public class TimerService {
 
     private void updateUser(User user, LocalDateTime endTime) {
         user.updateStudyStreak(endTime);
-        user.updateStatus(UserStatus.ACTIVE);
         user.updateLastActivatedAt(endTime);
+        studyingStatusRepository.delete(user.getId());
     }
-
 }
