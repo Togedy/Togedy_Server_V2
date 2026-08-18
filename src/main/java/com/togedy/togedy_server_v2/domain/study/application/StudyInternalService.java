@@ -28,6 +28,7 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyAlreadyJoinedExce
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
+import com.togedy.togedy_server_v2.domain.user.dao.StudyingStatusRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
@@ -61,6 +62,7 @@ public class StudyInternalService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final StudyReportRepository studyReportRepository;
     private final StudyStatisticsRepository studyStatisticsRepository;
+    private final StudyingStatusRepository studyingStatusRepository;
 
     /**
      * 스터디 단건 정보를 조회한다.
@@ -654,13 +656,24 @@ public class StudyInternalService {
             StudyMemberRoleDto studyMemberRoleDto,
             Map<Long, DailyStudySummary> dailyStudySummaryMap
     ) {
-        DailyStudySummary todaySummary = dailyStudySummaryMap.get(studyMemberRoleDto.getUser().getId());
+        Long userId = studyMemberRoleDto.getUser().getId();
+        DailyStudySummary todaySummary = dailyStudySummaryMap.get(userId);
+        boolean isStudying = studyingStatusRepository.isExist(userId);
 
         if (todaySummary != null) {
-            return GetStudyMemberResponse.of(studyMemberRoleDto.getUser(), todaySummary,
-                    studyMemberRoleDto.getStudyRole());
+            return GetStudyMemberResponse.of(
+                    studyMemberRoleDto.getUser(),
+                    isStudying,
+                    todaySummary,
+                    studyMemberRoleDto.getStudyRole()
+            );
         }
-        return GetStudyMemberResponse.of(studyMemberRoleDto.getUser(), studyMemberRoleDto.getStudyRole());
+
+        return GetStudyMemberResponse.of(
+                studyMemberRoleDto.getUser(),
+                isStudying,
+                studyMemberRoleDto.getStudyRole()
+        );
     }
 
     /**

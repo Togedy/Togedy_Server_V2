@@ -17,6 +17,7 @@ import com.togedy.togedy_server_v2.domain.study.dto.StudyTaskDto;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
+import com.togedy.togedy_server_v2.domain.user.dao.StudyingStatusRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserAccessDeniedException;
@@ -43,6 +44,7 @@ public class StudyMemberService {
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final StudySubjectRepository studySubjectRepository;
     private final StudyTaskRepository studyTaskRepository;
+    private final StudyingStatusRepository studyingStatusRepository;
 
     private static final int MONTH_RANGE = 6;
 
@@ -70,8 +72,14 @@ public class StudyMemberService {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, memberId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        return GetStudyMemberProfileResponse.of(member, TimeUtil.formatSecondsToHms(totalStudyTime),
-                userStudy.calculateElapsedDays());
+        boolean isStudying = studyingStatusRepository.isExist(userId);
+
+        return GetStudyMemberProfileResponse.of(
+                member,
+                isStudying,
+                TimeUtil.formatSecondsToHms(totalStudyTime),
+                userStudy.calculateElapsedDays()
+        );
     }
 
     /**
