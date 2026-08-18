@@ -3,6 +3,7 @@ package com.togedy.togedy_server_v2.domain.study.application;
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyReportRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
@@ -28,7 +29,6 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyAlreadyJoinedExce
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyNotFoundException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
-import com.togedy.togedy_server_v2.domain.user.dao.StudyingStatusRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
@@ -62,7 +62,7 @@ public class StudyInternalService {
     private final ApplicationEventPublisher applicationEventPublisher;
     private final StudyReportRepository studyReportRepository;
     private final StudyStatisticsRepository studyStatisticsRepository;
-    private final StudyingStatusRepository studyingStatusRepository;
+    private final StudyTimeRepository studyTimeRepository;
 
     /**
      * 스터디 단건 정보를 조회한다.
@@ -658,7 +658,8 @@ public class StudyInternalService {
     ) {
         Long userId = studyMemberRoleDto.getUser().getId();
         DailyStudySummary todaySummary = dailyStudySummaryMap.get(userId);
-        boolean isStudying = studyingStatusRepository.isExist(userId);
+        boolean isStudying = studyTimeRepository.findByUserIdAndEndTimeIsNull(userId)
+                .isPresent();
 
         if (todaySummary != null) {
             return GetStudyMemberResponse.of(

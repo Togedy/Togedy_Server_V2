@@ -3,6 +3,7 @@ package com.togedy.togedy_server_v2.domain.study.application;
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTask;
@@ -17,7 +18,6 @@ import com.togedy.togedy_server_v2.domain.study.dto.StudyTaskDto;
 import com.togedy.togedy_server_v2.domain.study.entity.UserStudy;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyAccessDeniedException;
 import com.togedy.togedy_server_v2.domain.study.exception.UserStudyNotFoundException;
-import com.togedy.togedy_server_v2.domain.user.dao.StudyingStatusRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserAccessDeniedException;
@@ -44,7 +44,7 @@ public class StudyMemberService {
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final StudySubjectRepository studySubjectRepository;
     private final StudyTaskRepository studyTaskRepository;
-    private final StudyingStatusRepository studyingStatusRepository;
+    private final StudyTimeRepository studyTimeRepository;
 
     private static final int MONTH_RANGE = 6;
 
@@ -72,7 +72,8 @@ public class StudyMemberService {
         UserStudy userStudy = userStudyRepository.findByStudyIdAndUserId(studyId, memberId)
                 .orElseThrow(UserStudyNotFoundException::new);
 
-        boolean isStudying = studyingStatusRepository.isExist(userId);
+        boolean isStudying = studyTimeRepository.findByUserIdAndEndTimeIsNull(memberId)
+                .isPresent();
 
         return GetStudyMemberProfileResponse.of(
                 member,
