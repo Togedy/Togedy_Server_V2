@@ -54,8 +54,8 @@ public class StudyMemberServiceTest extends AbstractStudyServiceTest {
         given(userStudyRepository.findByStudyIdAndUserId(any(), any()))
                 .willReturn(Optional.of(memberUserStudy));
 
-        given(studyingStatusRepository.isExist(any()))
-                .willReturn(true);
+        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(any()))
+                .willReturn(Optional.empty());
 
         // when
         GetStudyMemberProfileResponse response = studyMemberService.findStudyMemberProfile(studyId, memberId, userId);
@@ -89,8 +89,8 @@ public class StudyMemberServiceTest extends AbstractStudyServiceTest {
         given(userStudyRepository.findByStudyIdAndUserId(any(), any()))
                 .willReturn(Optional.of(memberUserStudy));
 
-        given(studyingStatusRepository.isExist(any()))
-                .willReturn(true);
+        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(any()))
+                .willReturn(Optional.empty());
 
         // when
         GetStudyMemberProfileResponse response = studyMemberService.findStudyMemberProfile(studyId, memberId, userId);

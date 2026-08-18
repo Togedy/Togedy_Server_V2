@@ -3,6 +3,7 @@ package com.togedy.togedy_server_v2.domain.study.application;
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyStatisticsRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
@@ -36,6 +37,9 @@ public abstract class AbstractStudyServiceTest {
 
     @Mock
     protected StudyStatisticsRepository studyStatisticsRepository;
+
+    @Mock
+    protected StudyTimeRepository studyTimeRepository;
 
     @Mock
     protected StudyingStatusRepository studyingStatusRepository;

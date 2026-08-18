@@ -810,8 +810,8 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
                                 new StudyMemberRoleDto(member, StudyRole.MEMBER))
                 );
 
-        given(studyingStatusRepository.isExist(any()))
-                .willReturn(true);
+        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(any()))
+                .willReturn(Optional.empty());
 
         // when
         List<GetStudyMemberResponse> response = studyInternalService.findStudyMember(studyId, userId);
@@ -841,8 +841,8 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
                                 new StudyMemberRoleDto(member, StudyRole.MEMBER))
                 );
 
-        given(studyingStatusRepository.isExist(any()))
-                .willReturn(true);
+        given(studyTimeRepository.findByUserIdAndEndTimeIsNull(any()))
+                .willReturn(Optional.empty());
 
         // when
         List<GetStudyMemberResponse> response = studyInternalService.findStudyMember(studyId, userId);
