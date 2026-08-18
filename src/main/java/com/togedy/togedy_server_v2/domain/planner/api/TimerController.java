@@ -18,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -42,7 +43,7 @@ public class TimerController {
     }
 
     @Operation(summary = "타이머 갱신", description = "유저의 타이머 TTL을 갱신한다.")
-    @PostMapping("/{timerId}/heartbeat")
+    @PatchMapping("/{timerId}/heartbeat")
     public ApiResponse<Void> updateTimer(@PathVariable Long timerId, @AuthenticationPrincipal AuthUser user) {
         timerService.updateTimer(timerId, user.getId());
         return ApiUtil.successOnly();
