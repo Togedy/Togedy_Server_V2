@@ -98,4 +98,12 @@ public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
     );
 
     void deleteAllByUserId(Long userId);
+
+    @Query("""
+                    SELECT st.id
+                    FROM StudyTime st
+                    WHERE st.endTime IS NULL
+                        AND st.lastHeartbeatAt < :cutoff
+            """)
+    List<Long> findStaleRunningStudyTimeIds(@Param("cutoff") LocalDateTime cutoff);
 }
