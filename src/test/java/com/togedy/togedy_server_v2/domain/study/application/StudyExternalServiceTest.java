@@ -261,6 +261,9 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
                 .willReturn(List.of());
 
+        given(studyingStatusRepository.isExist(any()))
+                .willReturn(true);
+
         // when
         GetMyStudyInfoResponse response = studyExternalService.findMyStudyInfo(userId);
 
@@ -304,6 +307,9 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
 
         given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
                 .willReturn(List.of());
+
+        given(studyingStatusRepository.isExist(any()))
+                .willReturn(true);
 
         // when
         GetMyStudyInfoResponse response = studyExternalService.findMyStudyInfo(userId);
@@ -353,6 +359,9 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
                 .willReturn(List.of(dailyStudySummary));
 
+        given(studyingStatusRepository.isExist(any()))
+                .willReturn(true);
+
         // when
         GetMyStudyInfoResponse response = studyExternalService.findMyStudyInfo(userId);
 
@@ -394,6 +403,9 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
 
         given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
                 .willReturn(List.of(dailyStudySummary));
+
+        given(studyingStatusRepository.isExist(any()))
+                .willReturn(true);
 
         // when
         GetMyStudyInfoResponse response = studyExternalService.findMyStudyInfo(userId);

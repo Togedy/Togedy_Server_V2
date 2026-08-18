@@ -810,6 +810,9 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
                                 new StudyMemberRoleDto(member, StudyRole.MEMBER))
                 );
 
+        given(studyingStatusRepository.isExist(any()))
+                .willReturn(true);
+
         // when
         List<GetStudyMemberResponse> response = studyInternalService.findStudyMember(studyId, userId);
 
@@ -837,6 +840,9 @@ public class StudyInternalServiceTest extends AbstractStudyServiceTest {
                         List.of(new StudyMemberRoleDto(user, StudyRole.MEMBER),
                                 new StudyMemberRoleDto(member, StudyRole.MEMBER))
                 );
+
+        given(studyingStatusRepository.isExist(any()))
+                .willReturn(true);
 
         // when
         List<GetStudyMemberResponse> response = studyInternalService.findStudyMember(studyId, userId);

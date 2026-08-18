@@ -1,10 +1,13 @@
 package com.togedy.togedy_server_v2.domain.study.dao;
 
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
+import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
 import com.togedy.togedy_server_v2.domain.study.entity.Study;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.fixtures.StudyFixture;
+import com.togedy.togedy_server_v2.global.fixtures.StudyTimeFixture;
 import com.togedy.togedy_server_v2.global.fixtures.UserFixture;
 import com.togedy.togedy_server_v2.global.fixtures.UserStudyFixture;
 import com.togedy.togedy_server_v2.global.support.AbstractRepositoryTest;
@@ -26,6 +29,9 @@ public class StudyRepositoryTest extends AbstractRepositoryTest {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private StudyTimeRepository studyTimeRepository;
 
     @Test
     public void 스터디_이름_중복_여부를_확인한다() {
@@ -270,8 +276,10 @@ public class StudyRepositoryTest extends AbstractRepositoryTest {
         Study study1 = studyRepository.save(StudyFixture.createNormalStudy());
         Study study2 = studyRepository.save(StudyFixture.createNormalStudy());
 
-        User studyingUser = userRepository.save(UserFixture.createStudyingUser());
+        User studyingUser = userRepository.save(UserFixture.createUserWithName("공부 유저"));
         User activeUser = userRepository.save(UserFixture.createUser());
+
+        StudyTime studyTime = studyTimeRepository.save(StudyTimeFixture.createRunningStudyTime(studyingUser.getId()));
 
         userStudyRepository.save(UserStudyFixture.createLeaderUserStudy(studyingUser.getId(), study1.getId()));
         userStudyRepository.save(UserStudyFixture.createMemberUserStudy(activeUser.getId(), study2.getId()));
