@@ -11,7 +11,7 @@ public class StudyingStatusRepository {
 
     private final RedisTemplate<String, String> redisTemplate;
     private static final String STUDYING_STATUS_PREFIX = "studyingUser:";
-    private static final long STUDYING_STATUS_TTL = 60;
+    private static final long STUDYING_STATUS_TTL = 150;
 
     public void save(Long userId) {
         redisTemplate.opsForValue()

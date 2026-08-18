@@ -50,6 +50,8 @@ public class TimerService {
     private final StudyingStatusRepository studyingStatusRepository;
     private final TransactionTemplate transactionTemplate;
 
+    private static final int CUTOFF_SECONDS = 150;
+
     @Transactional
     public PostTimerStartResponse startTimer(PostTimerStartRequest request, Long userId) {
         User user = userRepository.findById(userId)
@@ -169,11 +171,7 @@ public class TimerService {
 
     @Transactional
     public void updateTimer(Long timerId, Long userId) {
-        if (!studyingStatusRepository.isExist(userId)) {
-            throw new TimerNotFoundException();
-        }
-
-        StudyTime studyTime = studyTimeRepository.findById(timerId)
+        StudyTime studyTime = studyTimeRepository.findByIdForUpdate(timerId)
                 .orElseThrow(TimerNotFoundException::new);
 
         if (studyTime.getEndTime() != null) {
@@ -189,7 +187,7 @@ public class TimerService {
     }
 
     public void cleanup() {
-        LocalDateTime cutoff = TimeUtil.nowInStudyZone().minusSeconds(90);
+        LocalDateTime cutoff = TimeUtil.nowInStudyZone().minusSeconds(CUTOFF_SECONDS);
         List<Long> studyTimeIds = studyTimeRepository.findStaleRunningStudyTimeIds(cutoff);
 
         for (Long studyTimeId : studyTimeIds) {
