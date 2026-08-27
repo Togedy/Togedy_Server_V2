@@ -18,7 +18,7 @@ public interface ChatMessageRepository extends MongoRepository<ChatMessage, Stri
 
     void deleteAllByUserId(Long userId);
 
-    @Query("{ 'userId': ?0, 'sender': ?1, 'createdAt': { $gte: ?2, $lt: ?3 } }")
+    @Query(value = "{ 'userId': ?0, 'sender': ?1, 'createdAt': { $gte: ?2, $lt: ?3 } }", count = true)
     long countTodayChat(
             Long userId,
             Sender sender,
