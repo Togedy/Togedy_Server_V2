@@ -8,6 +8,9 @@ import com.togedy.togedy_server_v2.domain.chat.dto.client.PostQuestionResponse;
 import com.togedy.togedy_server_v2.domain.chat.entity.ChatMessage;
 import com.togedy.togedy_server_v2.domain.chat.entity.NerKeyword;
 import com.togedy.togedy_server_v2.domain.chat.enums.Sender;
+import com.togedy.togedy_server_v2.domain.chat.exception.ChatLimitExceededException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,8 +22,12 @@ public class ChatService {
     private final AiChatClient aiChatClient;
     private final ChatMessageRepository chatMessageRepository;
 
+    private static final int DAILY_CHAT_LIMIT = 10;
+
     @Transactional
     public PostQuestionResponse handleQuestion(PostQuestionRequest request, Long userId) {
+        validateChatLimit(userId);
+
         String question = request.getQuestion();
         String followUpAnswer = request.getFollowUpAnswer();
         boolean isFirst = determineFirst(followUpAnswer);
@@ -80,4 +87,19 @@ public class ChatService {
         return followUpAnswer == null || followUpAnswer.isBlank();
     }
 
+    private void validateChatLimit(Long userId) {
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = startOfDay.plusDays(1);
+
+        long todayChatCount = chatMessageRepository.countTodayChat(
+                userId,
+                Sender.USER,
+                startOfDay,
+                endOfDay
+        );
+
+        if (todayChatCount >= DAILY_CHAT_LIMIT) {
+            throw new ChatLimitExceededException();
+        }
+    }
 }

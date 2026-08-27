@@ -105,7 +105,10 @@ public enum ErrorCode {
     TIMER_ALREADY_STOPPED(HttpStatus.CONFLICT, "T14003", "이미 종료된 타이머입니다."),
 
     // PLANNER(15000)
-    INVALID_PLANNER_IMAGE(HttpStatus.BAD_REQUEST, "PL15000", "플래너 이미지 요청이 올바르지 않습니다.");
+    INVALID_PLANNER_IMAGE(HttpStatus.BAD_REQUEST, "PL15000", "플래너 이미지 요청이 올바르지 않습니다."),
+
+    // CHAT(16000)
+    CHAT_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "CH16000", "하루 채팅 가능 횟수(10회)를 초과했습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;
