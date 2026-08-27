@@ -39,6 +39,9 @@ public class StudyTime {
     @Column(name = "end_time", nullable = true)
     private LocalDateTime endTime;
 
+    @Column(name = "last_heartbeat_at", nullable = false)
+    private LocalDateTime lastHeartbeatAt;
+
     @Column(name = "is_running", nullable = true)
     private Boolean isRunning;
 
@@ -53,6 +56,7 @@ public class StudyTime {
         this.userId = userId;
         this.studySubjectId = studySubjectId;
         this.startTime = startTime;
+        this.lastHeartbeatAt = startTime;
         this.endTime = endTime;
         this.isRunning = isRunning;
     }
@@ -69,5 +73,9 @@ public class StudyTime {
         }
         this.endTime = endTime;
         this.isRunning = null;
+    }
+
+    public void touch(LocalDateTime now) {
+        this.lastHeartbeatAt = now;
     }
 }

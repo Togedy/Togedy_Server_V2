@@ -17,9 +17,9 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
+import com.togedy.togedy_server_v2.domain.user.dao.StudyingStatusRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
@@ -45,6 +45,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class StudyExternalService {
 
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
+    private final StudyingStatusRepository studyingStatusRepository;
     private final UserStudyRepository userStudyRepository;
     private final StudyRepository studyRepository;
     private final UserRepository userRepository;
@@ -471,7 +472,7 @@ public class StudyExternalService {
                 .toList();
 
         List<ActiveMemberDto> activeMemberDtos = members.stream()
-                .filter(member -> member.getStatus() == UserStatus.STUDYING)
+                .filter(member -> studyingStatusRepository.isExist(member.getId()))
                 .map(ActiveMemberDto::from)
                 .toList();
 

@@ -20,9 +20,9 @@ import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyRunningE
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyStoppedException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotFoundException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotOwnedException;
+import com.togedy.togedy_server_v2.domain.user.dao.StudyingStatusRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.enums.UserStatus;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.Duration;
@@ -32,10 +32,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TimerService {
@@ -44,6 +47,10 @@ public class TimerService {
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final StudySubjectRepository studySubjectRepository;
     private final StudyTimeRepository studyTimeRepository;
+    private final StudyingStatusRepository studyingStatusRepository;
+    private final TransactionTemplate transactionTemplate;
+
+    private static final int CUTOFF_SECONDS = 150;
 
     @Transactional
     public PostTimerStartResponse startTimer(PostTimerStartRequest request, Long userId) {
@@ -80,7 +87,7 @@ public class TimerService {
             throw new TimerAlreadyRunningException();
         }
 
-        user.updateStatus(UserStatus.STUDYING);
+        studyingStatusRepository.save(userId);
 
         return PostTimerStartResponse.of(timerId, startTime);
     }
@@ -162,6 +169,65 @@ public class TimerService {
         return GetTimerTotalResponse.of(totalStudyTime);
     }
 
+    @Transactional
+    public void updateTimer(Long timerId, Long userId) {
+        StudyTime studyTime = studyTimeRepository.findByIdForUpdate(timerId)
+                .orElseThrow(TimerNotFoundException::new);
+
+        if (studyTime.getEndTime() != null) {
+            throw new TimerAlreadyStoppedException();
+        }
+
+        if (!studyTime.getUserId().equals(userId)) {
+            throw new TimerNotOwnedException();
+        }
+
+        studyTime.touch(TimeUtil.nowInStudyZone());
+        studyingStatusRepository.save(userId);
+    }
+
+    public void cleanup() {
+        LocalDateTime cutoff = TimeUtil.nowInStudyZone().minusSeconds(CUTOFF_SECONDS);
+        List<Long> studyTimeIds = studyTimeRepository.findStaleRunningStudyTimeIds(cutoff);
+
+        for (Long studyTimeId : studyTimeIds) {
+            try {
+                transactionTemplate.executeWithoutResult(status ->
+                        closeStaleTimer(studyTimeId, cutoff)
+                );
+            } catch (Exception e) {
+                log.error("타이머 정리 실패 studyTimeId={}", studyTimeId, e);
+            }
+        }
+    }
+
+    private void closeStaleTimer(Long studyTimeId, LocalDateTime cutoff) {
+        StudyTime studyTime = studyTimeRepository.findByIdForUpdate(studyTimeId)
+                .orElseThrow(TimerNotFoundException::new);
+
+        if (!studyTime.getLastHeartbeatAt().isBefore(cutoff)) {
+            return;
+        }
+
+        if (studyTime.getEndTime() != null) {
+            return;
+        }
+
+        User user = userRepository.findById(studyTime.getUserId())
+                .orElseThrow(UserNotFoundException::new);
+
+        LocalDateTime effectiveEndTime = studyTime.getLastHeartbeatAt();
+        studyTime.stop(effectiveEndTime);
+
+        updateDailyStudySummaryOnStop(
+                user.getId(),
+                studyTime.getStartTime(),
+                effectiveEndTime
+        );
+
+        updateUser(user, effectiveEndTime);
+    }
+
     private void validateStartRequest(PostTimerStartRequest request) {
         if (request == null || request.getSubjectId() == null || request.getSubjectId() <= 0) {
             throw new InvalidStudySubjectException();
@@ -215,8 +281,7 @@ public class TimerService {
 
     private void updateUser(User user, LocalDateTime endTime) {
         user.updateStudyStreak(endTime);
-        user.updateStatus(UserStatus.ACTIVE);
         user.updateLastActivatedAt(endTime);
+        studyingStatusRepository.delete(user.getId());
     }
-
 }

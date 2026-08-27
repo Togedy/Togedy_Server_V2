@@ -70,7 +70,8 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
                 FROM Study s
                 JOIN UserStudy us ON s.id = us.studyId
                 JOIN User u ON us.userId = u.id
-                WHERE u.status = 'STUDYING'
+                JOIN StudyTime st ON st.userId = u.id
+                    AND st.endTime IS NULL
                 GROUP BY s.id
                 ORDER BY COUNT(u.id) DESC
             """)
