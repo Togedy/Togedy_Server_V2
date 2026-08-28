@@ -65,33 +65,17 @@ public class UniversityService {
             int size
     ) {
         String filterType = AdmissionType.ofValue(admissionType);
-
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
         Slice<University> universityList = universityRepository.findByNameAndType(name, filterType, pageRequest);
         List<Long> universityIdList = universityList.stream()
                 .map(University::getId)
                 .toList();
 
-        Map<Long, Long> universityAdmissionCountMap = universityAdmissionMethodRepository
-                .findCountByUniversityIdsAnAndAcademicYear(universityIdList, ACADEMIC_YEAR)
-                .stream()
-                .collect(Collectors.toMap(
-                        row -> (Long) row[0],
-                        row -> (Long) row[1]
-                ));
-
-        Map<Long, List<UniversityAdmissionMethod>> addedAdmissionMethodMap =
-                universityAdmissionMethodRepository
-                        .findAllByUniversityIdsAndUserIdAndAcademicYear(universityIdList, userId, ACADEMIC_YEAR)
-                        .stream()
-                        .collect(Collectors.groupingBy(m -> m.getUniversity().getId()));
-
-        List<UniversityDto> universityDto = universityList.stream()
-                .map(university -> UniversityDto.of(
-                        university,
-                        universityAdmissionCountMap.getOrDefault(university.getId(), 0L).intValue(),
-                        addedAdmissionMethodMap.getOrDefault(university.getId(), Collections.emptyList())
-                )).toList();
+        List<UniversityDto> universityDto = buildUniversityDto(
+                universityList,
+                countAdmissionMethodByUniversity(universityIdList),
+                findAddedAdmissionMethods(userId, universityIdList)
+        );
 
         return GetUniversityResponse.of(universityList.hasNext(), universityDto);
     }
@@ -107,31 +91,11 @@ public class UniversityService {
         University university = universityRepository.findById(universityId)
                 .orElseThrow(UniversityNotFoundException::new);
 
-        List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList =
-                universityAdmissionMethodRepository.findAllByUniversityAndUserIdAndAcademicYear(
-                        university,
-                        userId,
-                        ACADEMIC_YEAR
-                );
-
-        List<UniversityAdmissionMethodDto> universityAdmissionMethodDtoList = universityAdmissionMethodRepository
-                .findAllByUniversityAndAcademicYear(university, ACADEMIC_YEAR)
-                .stream()
-                .map(method -> {
-                    List<UniversityScheduleDto> scheduleDtos = method
-                            .getUniversityAdmissionScheduleList()
-                            .stream()
-                            .map(uas -> UniversityScheduleDto.from(uas.getUniversitySchedule()))
-                            .sorted(Comparator.comparingInt(
-                                    dto -> STAGE_ORDER.indexOf(dto.getUniversityAdmissionStage())
-                            ))
-                            .collect(Collectors.toList());
-                    return UniversityAdmissionMethodDto.of(method, scheduleDtos);
-                })
-                .toList();
-
-        return GetUniversityScheduleResponse.of(university, addedUniversityAdmissionMethodList,
-                universityAdmissionMethodDtoList);
+        return GetUniversityScheduleResponse.of(
+                university,
+                findAddedAdmissionMethod(userId, university),
+                buildUniversityAdmissionMethodDto(university)
+        );
     }
 
     /***
@@ -143,17 +107,9 @@ public class UniversityService {
     @Transactional
     public void generateUserUniversityAdmissionMethod(PostUniversityAdmissionMethodRequest request, Long userId) {
         User user = userService.loadUserById(userId);
-
-        Long universityAdmissionMethodId = request.getUniversityAdmissionMethodId();
-
-        UniversityAdmissionMethod universityAdmissionMethod = universityAdmissionMethodRepository.findById(
-                        universityAdmissionMethodId)
-                .orElseThrow(UniversityAdmissionMethodNotFoundException::new);
-
-        if (userUniversityMethodRepository.existsByUniversityAdmissionMethodIdAndUserId(universityAdmissionMethodId,
-                userId)) {
-            throw new DuplicateUniversityAdmissionMethodException();
-        }
+        UniversityAdmissionMethod universityAdmissionMethod = findAdmissionMethodById(
+                request.getUniversityAdmissionMethodId());
+        validateDuplicateAdmissionMethod(userId, request.getUniversityAdmissionMethodId());
 
         UserUniversityMethod userUniversityMethod = UserUniversityMethod.builder()
                 .user(user)
@@ -161,6 +117,11 @@ public class UniversityService {
                 .build();
 
         userUniversityMethodRepository.save(userUniversityMethod);
+    }
+
+    private UniversityAdmissionMethod findAdmissionMethodById(Long universityAdmissionMethodId) {
+        return universityAdmissionMethodRepository.findById(universityAdmissionMethodId)
+                .orElseThrow(UniversityAdmissionMethodNotFoundException::new);
     }
 
     /***
@@ -180,4 +141,74 @@ public class UniversityService {
         userUniversityMethodRepository.delete(userUniversityMethod);
     }
 
+    private Map<Long, Long> countAdmissionMethodByUniversity(List<Long> universityIdList) {
+        return universityAdmissionMethodRepository
+                .findCountByUniversityIdsAnAndAcademicYear(universityIdList, ACADEMIC_YEAR)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+    }
+
+    private Map<Long, List<UniversityAdmissionMethod>> findAddedAdmissionMethods(
+            Long userId,
+            List<Long> universityIdList
+    ) {
+        return universityAdmissionMethodRepository
+                .findAllByUniversityIdsAndUserIdAndAcademicYear(universityIdList, userId, ACADEMIC_YEAR)
+                .stream()
+                .collect(Collectors.groupingBy(m -> m.getUniversity().getId()));
+    }
+
+    private List<UniversityAdmissionMethodDto> buildUniversityAdmissionMethodDto(University university) {
+        return universityAdmissionMethodRepository
+                .findAllByUniversityAndAcademicYear(university, ACADEMIC_YEAR)
+                .stream()
+                .map(method -> {
+                    List<UniversityScheduleDto> scheduleDtos = method
+                            .getUniversityAdmissionScheduleList()
+                            .stream()
+                            .map(uas -> UniversityScheduleDto.from(uas.getUniversitySchedule()))
+                            .sorted(Comparator.comparingInt(
+                                    dto -> STAGE_ORDER.indexOf(dto.getUniversityAdmissionStage())
+                            ))
+                            .collect(Collectors.toList());
+                    return UniversityAdmissionMethodDto.of(method, scheduleDtos);
+                })
+                .toList();
+    }
+
+    private List<UniversityAdmissionMethod> findAddedAdmissionMethod(
+            Long userId,
+            University university
+    ) {
+        return universityAdmissionMethodRepository.findAllByUniversityAndUserIdAndAcademicYear(
+                university,
+                userId,
+                ACADEMIC_YEAR
+        );
+    }
+
+    private List<UniversityDto> buildUniversityDto(
+            Slice<University> universityList,
+            Map<Long, Long> universityAdmissionCountMap,
+            Map<Long, List<UniversityAdmissionMethod>> addedAdmissionMethodMap
+    ) {
+        return universityList.stream()
+                .map(university -> UniversityDto.of(
+                        university,
+                        universityAdmissionCountMap.getOrDefault(university.getId(), 0L).intValue(),
+                        addedAdmissionMethodMap.getOrDefault(university.getId(), Collections.emptyList())
+                )).toList();
+    }
+
+    private void validateDuplicateAdmissionMethod(Long userId, Long universityAdmissionMethodId) {
+        if (userUniversityMethodRepository.existsByUniversityAdmissionMethodIdAndUserId(
+                universityAdmissionMethodId,
+                userId)
+        ) {
+            throw new DuplicateUniversityAdmissionMethodException();
+        }
+    }
 }

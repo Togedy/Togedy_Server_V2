@@ -1,23 +1,22 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
-import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotFoundException;
-import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotOwnedException;
-import com.togedy.togedy_server_v2.domain.schedule.exception.DuplicateCategoryException;
 import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dto.GetCategoryResponse;
 import com.togedy.togedy_server_v2.domain.schedule.dto.PatchCategoryRequest;
 import com.togedy.togedy_server_v2.domain.schedule.dto.PostCategoryRequest;
 import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
+import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotFoundException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotOwnedException;
+import com.togedy.togedy_server_v2.domain.schedule.exception.DuplicateCategoryException;
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.enums.BaseStatus;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,8 +29,8 @@ public class CategoryService {
     /**
      * 카테고리를 생성한다.
      *
-     * @param request   카테고리 생성 DTO
-     * @param userId    유저ID
+     * @param request 카테고리 생성 DTO
+     * @param userId  유저ID
      */
     @Transactional
     public void generateCategory(PostCategoryRequest request, Long userId) {
@@ -52,8 +51,8 @@ public class CategoryService {
     /**
      * 유저가 보유하고 있는 모든 카테고리를 조회한다.
      *
-     * @param userId    유저ID
-     * @return          유저가 보유한 카테고리 정보 DTO List
+     * @param userId 유저ID
+     * @return 유저가 보유한 카테고리 정보 DTO List
      */
     public List<GetCategoryResponse> findAllCategoriesByUserId(Long userId) {
         List<Category> categoryList = categoryRepository.findAllByUserId(userId);
@@ -66,40 +65,40 @@ public class CategoryService {
     /**
      * 유저가 보유 중인 카테고리의 정보를 수정한다.
      *
-     * @param request       카테고리 수정 DTO
-     * @param categoryId    수정할 카테고리ID
-     * @param userId        유저ID
+     * @param request    카테고리 수정 DTO
+     * @param categoryId 수정할 카테고리ID
+     * @param userId     유저ID
      */
     @Transactional
     public void modifyCategory(PatchCategoryRequest request, Long categoryId, Long userId) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(CategoryNotFoundException::new);
-
-        if (!category.getUser().getId().equals(userId)) {
-            throw new CategoryNotOwnedException();
-        }
-
+        Category category = findCategoryById(categoryId);
+        validateCategoryOwnership(userId, category);
         validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), userId);
-
         category.update(request);
     }
 
     /**
      * 유저가 보유 중인 카테고리를 제거한다.
      *
-     * @param categoryId    제거할 카테고리ID
-     * @param userId        유저ID
+     * @param categoryId 제거할 카테고리ID
+     * @param userId     유저ID
      */
     @Transactional
     public void removeCategory(Long categoryId, Long userId) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(CategoryNotFoundException::new);
+        Category category = findCategoryById(categoryId);
+        validateCategoryOwnership(userId, category);
+        category.delete();
+    }
 
+    private Category findCategoryById(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(CategoryNotFoundException::new);
+    }
+
+    private void validateCategoryOwnership(Long userId, Category category) {
         if (!category.getUser().getId().equals(userId)) {
             throw new CategoryNotOwnedException();
         }
-
-        category.delete();
     }
 
     /**
