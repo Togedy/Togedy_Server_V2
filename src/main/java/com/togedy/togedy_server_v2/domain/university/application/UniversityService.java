@@ -5,14 +5,14 @@ import com.togedy.togedy_server_v2.domain.university.dao.UniversityRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
-import com.togedy.togedy_server_v2.domain.university.dto.UniversityDto;
 import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodDto;
+import com.togedy.togedy_server_v2.domain.university.dto.UniversityDto;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
-import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
-import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
+import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
 import com.togedy.togedy_server_v2.domain.university.exception.DuplicateUniversityAdmissionMethodException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityAdmissionMethodNotFoundException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoundException;
@@ -20,6 +20,11 @@ import com.togedy.togedy_server_v2.domain.university.exception.UserUniversityMet
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -27,12 +32,6 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -45,10 +44,7 @@ public class UniversityService {
     private final UserUniversityMethodRepository userUniversityMethodRepository;
     private final UserService userService;
 
-    private static final List<String> STAGE_ORDER = List.of(
-            "원서접수", "서류제출", "합격발표"
-    );
-
+    private static final List<String> STAGE_ORDER = List.of("원서접수", "서류제출", "합격발표");
     private static final int ACADEMIC_YEAR = 2026;
 
     /***
@@ -90,12 +86,12 @@ public class UniversityService {
                         .stream()
                         .collect(Collectors.groupingBy(m -> m.getUniversity().getId()));
 
-        List<UniversityDto> universityDto =  universityList.stream()
+        List<UniversityDto> universityDto = universityList.stream()
                 .map(university -> UniversityDto.of(
-                       university,
-                       universityAdmissionCountMap.getOrDefault(university.getId(), 0L).intValue(),
-                       addedAdmissionMethodMap.getOrDefault(university.getId(), Collections.emptyList())
-               )).toList();
+                        university,
+                        universityAdmissionCountMap.getOrDefault(university.getId(), 0L).intValue(),
+                        addedAdmissionMethodMap.getOrDefault(university.getId(), Collections.emptyList())
+                )).toList();
 
         return GetUniversityResponse.of(universityList.hasNext(), universityDto);
     }
@@ -134,7 +130,8 @@ public class UniversityService {
                 })
                 .toList();
 
-        return GetUniversityScheduleResponse.of(university, addedUniversityAdmissionMethodList, universityAdmissionMethodDtoList);
+        return GetUniversityScheduleResponse.of(university, addedUniversityAdmissionMethodList,
+                universityAdmissionMethodDtoList);
     }
 
     /***
@@ -149,10 +146,12 @@ public class UniversityService {
 
         Long universityAdmissionMethodId = request.getUniversityAdmissionMethodId();
 
-        UniversityAdmissionMethod universityAdmissionMethod = universityAdmissionMethodRepository.findById(universityAdmissionMethodId)
+        UniversityAdmissionMethod universityAdmissionMethod = universityAdmissionMethodRepository.findById(
+                        universityAdmissionMethodId)
                 .orElseThrow(UniversityAdmissionMethodNotFoundException::new);
 
-        if (userUniversityMethodRepository.existsByUniversityAdmissionMethodIdAndUserId(universityAdmissionMethodId, userId)) {
+        if (userUniversityMethodRepository.existsByUniversityAdmissionMethodIdAndUserId(universityAdmissionMethodId,
+                userId)) {
             throw new DuplicateUniversityAdmissionMethodException();
         }
 
@@ -173,8 +172,10 @@ public class UniversityService {
     @Transactional
     public void removeUserUniversityMethod(Long universityAdmissionMethodId, Long userId) {
         UserUniversityMethod userUniversityMethod =
-                userUniversityMethodRepository.findByUniversityAdmissionMethodIdAndUserId(universityAdmissionMethodId, userId)
-                        .orElseThrow(UserUniversityMethodNotOwnedException::new);
+                userUniversityMethodRepository.findByUniversityAdmissionMethodIdAndUserId(
+                        universityAdmissionMethodId,
+                        userId
+                ).orElseThrow(UserUniversityMethodNotOwnedException::new);
 
         userUniversityMethodRepository.delete(userUniversityMethod);
     }
