@@ -12,7 +12,6 @@ import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRep
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -40,11 +39,11 @@ public class CalendarService {
         LocalDate startOfMonth = month.atDay(1);
         LocalDate endOfMonth = month.atEndOfMonth();
 
-        List<MonthlyScheduleListDto> monthlyUserSchedule = findMonthlyUserSchedule(userId, startOfMonth, endOfMonth);
-        monthlyUserSchedule.addAll(findMonthlyUniversitySchedule(userId, startOfMonth, endOfMonth));
-        monthlyUserSchedule.sort(scheduleComparator());
+        List<MonthlyScheduleListDto> monthlySchedules = findMonthlyUserSchedule(userId, startOfMonth, endOfMonth);
+        monthlySchedules.addAll(findMonthlyUniversitySchedule(userId, startOfMonth, endOfMonth));
+        monthlySchedules.sort(scheduleComparator());
 
-        return GetMonthlyCalendarResponse.from(monthlyUserSchedule);
+        return GetMonthlyCalendarResponse.from(monthlySchedules);
     }
 
     /**
@@ -55,11 +54,10 @@ public class CalendarService {
      * @return D-day 일정까지 남은 일 수 및 기간 순으로 정렬된 일별 유저 및 대학 일정 DTO
      */
     public GetDailyCalendarResponse findDailyCalendar(LocalDate date, Long userId) {
-        Integer remainingDays = calculateRemainingDays(date, userId);
-        List<DailyScheduleListDto> dailyScheduleList = new ArrayList<>(findDailyUserSchedule(userId, date));
-        dailyScheduleList.addAll(findDailyUniversitySchedule(userId, date));
-        dailyScheduleList.sort(scheduleComparator());
-        return GetDailyCalendarResponse.from(remainingDays, dailyScheduleList);
+        List<DailyScheduleListDto> dailySchedules = findDailyUserSchedule(userId, date);
+        dailySchedules.addAll(findDailyUniversitySchedule(userId, date));
+        dailySchedules.sort(scheduleComparator());
+        return GetDailyCalendarResponse.from(calculateRemainingDays(date, userId), dailySchedules);
     }
 
     /**
@@ -72,8 +70,10 @@ public class CalendarService {
         Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
 
         if (dDaySchedule.isPresent()) {
-            return GetDdayScheduleResponse.of(dDaySchedule.get(),
-                    TimeUtil.calculateDaysUntil(TimeUtil.todayInStudyZone(), dDaySchedule.get().getStartDate()));
+            return GetDdayScheduleResponse.of(
+                    dDaySchedule.get(),
+                    TimeUtil.calculateDaysUntil(TimeUtil.todayInStudyZone(), dDaySchedule.get().getStartDate())
+            );
         }
 
         return GetDdayScheduleResponse.temp();

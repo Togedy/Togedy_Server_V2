@@ -35,7 +35,6 @@ public class CategoryService {
     @Transactional
     public void generateCategory(PostCategoryRequest request, Long userId) {
         User user = userService.loadUserById(userId);
-
         validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), userId);
 
         Category category = Category.builder()
@@ -55,9 +54,8 @@ public class CategoryService {
      * @return 유저가 보유한 카테고리 정보 DTO List
      */
     public List<GetCategoryResponse> findAllCategoriesByUserId(Long userId) {
-        List<Category> categoryList = categoryRepository.findAllByUserId(userId);
-
-        return categoryList.stream()
+        return categoryRepository.findAllByUserId(userId)
+                .stream()
                 .map(GetCategoryResponse::from)
                 .collect(Collectors.toList());
     }

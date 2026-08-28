@@ -66,18 +66,16 @@ public class UniversityService {
     ) {
         String filterType = AdmissionType.ofValue(admissionType);
         PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
-        Slice<University> universityList = universityRepository.findByNameAndType(name, filterType, pageRequest);
-        List<Long> universityIdList = universityList.stream()
-                .map(University::getId)
-                .toList();
+        Slice<University> universities = universityRepository.findByNameAndType(name, filterType, pageRequest);
+        List<Long> universityIds = getUniversityIds(universities);
 
-        List<UniversityDto> universityDto = buildUniversityDto(
-                universityList,
-                countAdmissionMethodByUniversity(universityIdList),
-                findAddedAdmissionMethods(userId, universityIdList)
+        List<UniversityDto> universityDtos = buildUniversityDto(
+                universities,
+                countAdmissionMethodByUniversity(universityIds),
+                findAddedAdmissionMethods(userId, universityIds)
         );
 
-        return GetUniversityResponse.of(universityList.hasNext(), universityDto);
+        return GetUniversityResponse.of(universities.hasNext(), universityDtos);
     }
 
     /***
@@ -88,8 +86,7 @@ public class UniversityService {
      * @return              해당 대학의 전형별 일정
      */
     public GetUniversityScheduleResponse findUniversitySchedule(Long universityId, Long userId) {
-        University university = universityRepository.findById(universityId)
-                .orElseThrow(UniversityNotFoundException::new);
+        University university = findUniversityById(universityId);
 
         return GetUniversityScheduleResponse.of(
                 university,
@@ -107,43 +104,35 @@ public class UniversityService {
     @Transactional
     public void generateUserUniversityAdmissionMethod(PostUniversityAdmissionMethodRequest request, Long userId) {
         User user = userService.loadUserById(userId);
-        UniversityAdmissionMethod universityAdmissionMethod = findAdmissionMethodById(
-                request.getUniversityAdmissionMethodId());
+        UniversityAdmissionMethod admissionMethod = findAdmissionMethodById(request.getUniversityAdmissionMethodId());
         validateDuplicateAdmissionMethod(userId, request.getUniversityAdmissionMethodId());
 
         UserUniversityMethod userUniversityMethod = UserUniversityMethod.builder()
                 .user(user)
-                .universityAdmissionMethod(universityAdmissionMethod)
+                .universityAdmissionMethod(admissionMethod)
                 .build();
 
         userUniversityMethodRepository.save(userUniversityMethod);
     }
 
-    private UniversityAdmissionMethod findAdmissionMethodById(Long universityAdmissionMethodId) {
-        return universityAdmissionMethodRepository.findById(universityAdmissionMethodId)
-                .orElseThrow(UniversityAdmissionMethodNotFoundException::new);
-    }
-
     /***
      * 유저가 보유한 대학 전형을 제거한다.
      *
-     * @param universityAdmissionMethodId  대학 전형ID
+     * @param admissionMethodId  대학 전형ID
      * @param userId                           유저ID
      */
     @Transactional
-    public void removeUserUniversityMethod(Long universityAdmissionMethodId, Long userId) {
-        UserUniversityMethod userUniversityMethod =
-                userUniversityMethodRepository.findByUniversityAdmissionMethodIdAndUserId(
-                        universityAdmissionMethodId,
-                        userId
-                ).orElseThrow(UserUniversityMethodNotOwnedException::new);
+    public void removeUserUniversityMethod(Long admissionMethodId, Long userId) {
+        UserUniversityMethod userUniversityMethod = userUniversityMethodRepository
+                .findAddedUserUniversityMethod(admissionMethodId, userId)
+                .orElseThrow(UserUniversityMethodNotOwnedException::new);
 
         userUniversityMethodRepository.delete(userUniversityMethod);
     }
 
-    private Map<Long, Long> countAdmissionMethodByUniversity(List<Long> universityIdList) {
+    private Map<Long, Long> countAdmissionMethodByUniversity(List<Long> universityIds) {
         return universityAdmissionMethodRepository
-                .findCountByUniversityIdsAnAndAcademicYear(universityIdList, ACADEMIC_YEAR)
+                .findCountByUniversityIdsAnAndAcademicYear(universityIds, ACADEMIC_YEAR)
                 .stream()
                 .collect(Collectors.toMap(
                         row -> (Long) row[0],
@@ -153,10 +142,10 @@ public class UniversityService {
 
     private Map<Long, List<UniversityAdmissionMethod>> findAddedAdmissionMethods(
             Long userId,
-            List<Long> universityIdList
+            List<Long> universityIds
     ) {
         return universityAdmissionMethodRepository
-                .findAllByUniversityIdsAndUserIdAndAcademicYear(universityIdList, userId, ACADEMIC_YEAR)
+                .findAllByUniversityIdsAndUserIdAndAcademicYear(universityIds, userId, ACADEMIC_YEAR)
                 .stream()
                 .collect(Collectors.groupingBy(m -> m.getUniversity().getId()));
     }
@@ -166,8 +155,7 @@ public class UniversityService {
                 .findAllByUniversityAndAcademicYear(university, ACADEMIC_YEAR)
                 .stream()
                 .map(method -> {
-                    List<UniversityScheduleDto> scheduleDtos = method
-                            .getUniversityAdmissionScheduleList()
+                    List<UniversityScheduleDto> scheduleDtos = method.getUniversityAdmissionScheduleList()
                             .stream()
                             .map(uas -> UniversityScheduleDto.from(uas.getUniversitySchedule()))
                             .sorted(Comparator.comparingInt(
@@ -191,14 +179,14 @@ public class UniversityService {
     }
 
     private List<UniversityDto> buildUniversityDto(
-            Slice<University> universityList,
-            Map<Long, Long> universityAdmissionCountMap,
+            Slice<University> universities,
+            Map<Long, Long> admissionMethodCountMap,
             Map<Long, List<UniversityAdmissionMethod>> addedAdmissionMethodMap
     ) {
-        return universityList.stream()
+        return universities.stream()
                 .map(university -> UniversityDto.of(
                         university,
-                        universityAdmissionCountMap.getOrDefault(university.getId(), 0L).intValue(),
+                        admissionMethodCountMap.getOrDefault(university.getId(), 0L).intValue(),
                         addedAdmissionMethodMap.getOrDefault(university.getId(), Collections.emptyList())
                 )).toList();
     }
@@ -210,5 +198,21 @@ public class UniversityService {
         ) {
             throw new DuplicateUniversityAdmissionMethodException();
         }
+    }
+
+    private University findUniversityById(Long universityId) {
+        return universityRepository.findById(universityId)
+                .orElseThrow(UniversityNotFoundException::new);
+    }
+
+    private List<Long> getUniversityIds(Slice<University> universities) {
+        return universities.stream()
+                .map(University::getId)
+                .toList();
+    }
+
+    private UniversityAdmissionMethod findAdmissionMethodById(Long admissionMethodId) {
+        return universityAdmissionMethodRepository.findById(admissionMethodId)
+                .orElseThrow(UniversityAdmissionMethodNotFoundException::new);
     }
 }

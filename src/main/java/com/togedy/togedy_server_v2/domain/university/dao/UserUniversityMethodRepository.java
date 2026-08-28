@@ -41,8 +41,16 @@ public interface UserUniversityMethodRepository extends JpaRepository<UserUniver
             """)
     List<UserUniversityMethod> findByUserIdAndDate(@Param("userId") Long userId, @Param("date") LocalDate date);
 
-    Optional<UserUniversityMethod> findByUniversityAdmissionMethodIdAndUserId(Long universityAdmissionMethodId,
-                                                                              Long userId);
+    @Query(value = """
+            SELECT uum
+            FROM UserUniversityMethod uum
+            WHERE uum.universityAdmissionMethod = :universityAdmissionMethodId
+                AND uum.user.id = :userId
+            """)
+    Optional<UserUniversityMethod> findAddedUserUniversityMethod(
+            @Param("universityAdmissionMethodId") Long universityAdmissionMethodId,
+            @Param("userId") Long userId
+    );
 
     boolean existsByUniversityAdmissionMethodIdAndUserId(Long universityAdmissionMethodId, Long userId);
 

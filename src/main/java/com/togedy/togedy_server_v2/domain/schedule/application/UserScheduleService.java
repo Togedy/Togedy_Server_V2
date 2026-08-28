@@ -14,7 +14,6 @@ import com.togedy.togedy_server_v2.domain.schedule.exception.UserScheduleNotOwne
 import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,7 +36,7 @@ public class UserScheduleService {
     @Transactional
     public void generateUserSchedule(PostUserScheduleRequest request, Long userId) {
         User user = userService.loadUserById(userId);
-        Category category = findCategory(request.getCategoryId());
+        Category category = findCategoryById(request.getCategoryId());
 
         validateCategoryOwnership(category, user);
         clearDdaySchedule(request.getDDay(), userId);
@@ -100,7 +99,7 @@ public class UserScheduleService {
         userScheduleRepository.delete(userSchedule);
     }
 
-    private Category findCategory(Long categoryId) {
+    private Category findCategoryById(Long categoryId) {
         return categoryRepository.findById(categoryId)
                 .orElseThrow(CategoryNotFoundException::new);
     }
@@ -112,8 +111,8 @@ public class UserScheduleService {
      */
     private void clearDdaySchedule(Boolean isDday, Long userId) {
         if (Boolean.TRUE.equals(isDday)) {
-            Optional<UserSchedule> userSchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
-            userSchedule.ifPresent(UserSchedule::cancelDday);
+            userScheduleRepository.findByUserIdAndDDayTrue(userId)
+                    .ifPresent(UserSchedule::cancelDday);
         }
     }
 
