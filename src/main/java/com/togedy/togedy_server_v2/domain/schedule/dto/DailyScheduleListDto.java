@@ -2,15 +2,15 @@ package com.togedy.togedy_server_v2.domain.schedule.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
-import com.togedy.togedy_server_v2.domain.schedule.entity.enums.ScheduleType;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
+import com.togedy.togedy_server_v2.domain.schedule.entity.enums.ScheduleType;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionSchedule;
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Getter;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
 @Builder
@@ -24,7 +24,7 @@ public class DailyScheduleListDto implements ScheduleComparable {
 
     private String universityAdmissionStage;
 
-    private String universityAdmissionType;
+    private AdmissionType universityAdmissionType;
 
     private String universityAdmissionMethod;
 
@@ -61,7 +61,8 @@ public class DailyScheduleListDto implements ScheduleComparable {
                 .scheduleType(ScheduleType.UNIVERSITY)
                 .scheduleName(universityAdmissionSchedule.getUniversityAdmissionMethod().getUniversity().getName())
                 .universityAdmissionStage(universityAdmissionSchedule.getUniversitySchedule().getAdmissionStage())
-                .universityAdmissionType(universityAdmissionSchedule.getUniversityAdmissionMethod().getUniversity().getAdmissionType())
+                .universityAdmissionType(
+                        universityAdmissionSchedule.getUniversityAdmissionMethod().getUniversity().getAdmissionType())
                 .universityAdmissionMethod(universityAdmissionSchedule.getUniversityAdmissionMethod().getName())
                 .startDate(universityAdmissionSchedule.getUniversitySchedule().getStartDate())
                 .startTime(universityAdmissionSchedule.getUniversitySchedule().getStartTime())

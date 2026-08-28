@@ -4,6 +4,7 @@ import com.togedy.togedy_server_v2.domain.university.application.UniversityServi
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
 import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
 import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
@@ -32,13 +33,14 @@ public class UniversityController {
     @GetMapping("")
     public ApiResponse<GetUniversityResponse> readUniversityList(
             @RequestParam(name = "name", defaultValue = "대학") String name,
-            @RequestParam(name = "admission-type", defaultValue = "전체") String admissionType,
+            @RequestParam(name = "admission-type", defaultValue = "전체") AdmissionType admissionType,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
             @AuthenticationPrincipal AuthUser user
     ) {
-        GetUniversityResponse response =
-                universityService.findUniversityList(name, admissionType, user.getId(), page, size);
+        GetUniversityResponse response = universityService.findUniversityList(
+                name, admissionType, user.getId(), page, size
+        );
         return ApiUtil.success(response);
     }
 

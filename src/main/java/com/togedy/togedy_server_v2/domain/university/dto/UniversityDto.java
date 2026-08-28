@@ -2,11 +2,11 @@ package com.togedy.togedy_server_v2.domain.university.dto;
 
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
-import lombok.Builder;
-import lombok.Getter;
-
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
 import java.util.List;
 import java.util.stream.Collectors;
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
 @Builder
@@ -14,15 +14,14 @@ public class UniversityDto {
 
     private Long universityId;
     private String universityName;
-    private String universityAdmissionType;
+    private AdmissionType universityAdmissionType;
     private int universityAdmissionMethodCount;
     private List<String> addedAdmissionMethodList;
 
     public static UniversityDto of(
             University university,
             int universityAdmissionMethodCount,
-            List<UniversityAdmissionMethod> universityAdmissionMethodList)
-    {
+            List<UniversityAdmissionMethod> universityAdmissionMethodList) {
         return UniversityDto.builder()
                 .universityId(university.getId())
                 .universityName(university.getName())

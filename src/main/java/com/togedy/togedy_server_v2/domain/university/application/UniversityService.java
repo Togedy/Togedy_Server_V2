@@ -59,14 +59,12 @@ public class UniversityService {
      */
     public GetUniversityResponse findUniversityList(
             String name,
-            String admissionType,
+            AdmissionType admissionType,
             Long userId,
             int page,
             int size
     ) {
-        String filterType = AdmissionType.ofValue(admissionType);
-        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
-        Slice<University> universities = universityRepository.findByNameAndType(name, filterType, pageRequest);
+        Slice<University> universities = searchUniversity(name, admissionType, page, size);
         List<Long> universityIds = getUniversityIds(universities);
 
         List<UniversityDto> universityDtos = buildUniversityDto(
@@ -214,5 +212,14 @@ public class UniversityService {
     private UniversityAdmissionMethod findAdmissionMethodById(Long admissionMethodId) {
         return universityAdmissionMethodRepository.findById(admissionMethodId)
                 .orElseThrow(UniversityAdmissionMethodNotFoundException::new);
+    }
+
+    private Slice<University> searchUniversity(String name, AdmissionType admissionType, int page, int size) {
+        PageRequest pageRequest = PageRequest.of(Math.max(page - 1, 0), size, Sort.by("name"));
+        if (AdmissionType.전체.equals(admissionType) || admissionType == null) {
+            return universityRepository.findAllByName(name, pageRequest);
+        }
+
+        return universityRepository.findAllByNameAndAdmissionType(name, admissionType, pageRequest);
     }
 }
