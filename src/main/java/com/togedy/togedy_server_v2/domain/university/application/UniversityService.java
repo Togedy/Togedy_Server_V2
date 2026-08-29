@@ -12,6 +12,7 @@ import com.togedy.togedy_server_v2.domain.university.dto.response.UniversitySche
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionStage;
 import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
 import com.togedy.togedy_server_v2.domain.university.exception.DuplicateUniversityAdmissionMethodException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityAdmissionMethodNotFoundException;
@@ -41,7 +42,6 @@ public class UniversityService {
     private final UniversityRepository universityRepository;
     private final UserUniversityMethodRepository userUniversityMethodRepository;
 
-    private static final List<String> STAGE_ORDER = List.of("원서접수", "서류제출", "합격발표");
     private static final int ACADEMIC_YEAR = 2026;
 
     /**
@@ -164,7 +164,7 @@ public class UniversityService {
     }
 
     /**
-     * 해당 대학의 입시 전형 목록을 조회하고, 각 전형에 속한 일정을 진행 단계({@code STAGE_ORDER}: 원서접수 → 서류제출 → 합격발표) 순으로 정렬한다.
+     * 해당 대학의 입시 전형 목록을 조회하고, 각 전형에 속한 일정을 진행 단계({@link AdmissionStage#getOrder()} 기준) 순으로 정렬한다.
      *
      * @param university 대학
      * @return 전형별 일정이 단계 순으로 정렬된 대학 입시 전형 정보 리스트
@@ -178,8 +178,8 @@ public class UniversityService {
                             .stream()
                             .map(uas -> UniversityScheduleInfo.from(uas.getUniversitySchedule()))
                             .sorted(Comparator.comparingInt(
-                                    dto -> STAGE_ORDER.indexOf(dto.getUniversityAdmissionStage())
-                            )).collect(Collectors.toList());
+                                    dto -> dto.getUniversityAdmissionStage().getOrder())
+                            ).collect(Collectors.toList());
                     return UniversityAdmissionMethodInfo.of(method, scheduleDtos);
                 }).toList();
     }

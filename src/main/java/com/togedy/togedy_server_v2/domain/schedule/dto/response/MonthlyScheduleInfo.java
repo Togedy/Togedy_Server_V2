@@ -5,6 +5,7 @@ import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.domain.schedule.entity.enums.ScheduleType;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionSchedule;
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionStage;
 import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
@@ -32,7 +33,7 @@ public class MonthlyScheduleInfo implements ScheduleComparable {
 
     private ScheduleType scheduleType;
 
-    private String universityAdmissionStage;
+    private AdmissionStage universityAdmissionStage;
 
     private AdmissionType universityAdmissionType;
 

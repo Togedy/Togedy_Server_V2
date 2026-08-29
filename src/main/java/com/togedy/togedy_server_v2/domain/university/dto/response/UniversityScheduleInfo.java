@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.university.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversitySchedule;
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionStage;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -12,7 +13,7 @@ import lombok.Getter;
 @Builder
 public class UniversityScheduleInfo {
 
-    private String universityAdmissionStage;
+    private AdmissionStage universityAdmissionStage;
 
     private LocalDate startDate;
 
