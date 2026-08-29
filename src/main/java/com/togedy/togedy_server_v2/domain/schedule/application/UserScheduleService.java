@@ -11,9 +11,9 @@ import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotFoundExc
 import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotOwnedException;
 import com.togedy.togedy_server_v2.domain.schedule.exception.UserScheduleNotFoundException;
 import com.togedy.togedy_server_v2.domain.schedule.exception.UserScheduleNotOwnedException;
-import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +25,6 @@ public class UserScheduleService {
     private final UserScheduleRepository userScheduleRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
-    private final UserService userService;
 
     /**
      * 개인 일정을 생성한다. 해당 일정을 D-Day 설정하고자 한다면 기존의 D-Day 설정된 일정 상태를 변경한다.
@@ -35,7 +34,7 @@ public class UserScheduleService {
      */
     @Transactional
     public void generateUserSchedule(PostUserScheduleRequest request, Long userId) {
-        User user = userService.loadUserById(userId);
+        User user = findUserById(userId);
         Category category = findCategoryById(request.getCategoryId());
 
         validateCategoryOwnership(category, user);
@@ -139,5 +138,10 @@ public class UserScheduleService {
     private UserSchedule findUserScheduleById(Long userScheduleId) {
         return userScheduleRepository.findById(userScheduleId)
                 .orElseThrow(UserScheduleNotFoundException::new);
+    }
+
+    private User findUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
     }
 }

@@ -17,9 +17,9 @@ import com.togedy.togedy_server_v2.domain.university.exception.DuplicateUniversi
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityAdmissionMethodNotFoundException;
 import com.togedy.togedy_server_v2.domain.university.exception.UniversityNotFoundException;
 import com.togedy.togedy_server_v2.domain.university.exception.UserUniversityMethodNotOwnedException;
-import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -42,7 +42,6 @@ public class UniversityService {
     private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
     private final UserUniversityMethodRepository userUniversityMethodRepository;
-    private final UserService userService;
 
     private static final List<String> STAGE_ORDER = List.of("원서접수", "서류제출", "합격발표");
     private static final int ACADEMIC_YEAR = 2026;
@@ -101,7 +100,7 @@ public class UniversityService {
      */
     @Transactional
     public void generateUserUniversityAdmissionMethod(PostUniversityAdmissionMethodRequest request, Long userId) {
-        User user = userService.loadUserById(userId);
+        User user = findUserById(userId);
         UniversityAdmissionMethod admissionMethod = findAdmissionMethodById(request.getUniversityAdmissionMethodId());
         validateDuplicateAdmissionMethod(userId, request.getUniversityAdmissionMethodId());
 
@@ -221,5 +220,10 @@ public class UniversityService {
         }
 
         return universityRepository.findAllByNameAndAdmissionType(name, admissionType, pageRequest);
+    }
+
+    private User findUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
     }
 }

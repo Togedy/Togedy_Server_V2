@@ -8,9 +8,9 @@ import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
 import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotFoundException;
 import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotOwnedException;
 import com.togedy.togedy_server_v2.domain.schedule.exception.DuplicateCategoryException;
-import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.enums.BaseStatus;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,7 +24,6 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
 
     /**
      * 카테고리를 생성한다.
@@ -34,7 +33,7 @@ public class CategoryService {
      */
     @Transactional
     public void generateCategory(PostCategoryRequest request, Long userId) {
-        User user = userService.loadUserById(userId);
+        User user = findUserById(userId);
         validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), userId);
 
         Category category = Category.builder()
@@ -110,5 +109,10 @@ public class CategoryService {
         if (categoryRepository.existsByNameAndColorAndUserId(categoryName, categoryColor, userId)) {
             throw new DuplicateCategoryException();
         }
+    }
+
+    private User findUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
     }
 }
