@@ -9,6 +9,8 @@ import com.togedy.togedy_server_v2.domain.schedule.dto.response.MonthlyScheduleI
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
+import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionSchedule;
+import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -101,9 +103,6 @@ public class CalendarService {
 
     /**
      * 유저가 보유 중인 해당 월의 대학 일정을 조회한다.
-     * <p>
-     * 여러 전형이 동일한 대학 일정을 공유하는 경우, 대학 일정ID 기준으로 중복을 제거하여 하나만 반환한다.
-     * </p>
      *
      * @param userId       유저 ID
      * @param startOfMonth 조회할 월의 시작 날짜
@@ -115,18 +114,9 @@ public class CalendarService {
             LocalDate startOfMonth,
             LocalDate endOfMonth
     ) {
-        return userUniversityMethodRepository
-                .findByUserIdAndYearAndMonth(userId, startOfMonth, endOfMonth)
-                .stream()
-                .flatMap(uus -> uus.getUniversityAdmissionMethod().getUniversityAdmissionScheduleList().stream())
-                .collect(Collectors.toMap(
-                        uas -> uas.getUniversitySchedule().getId(),
-                        Function.identity(),
-                        (first, second) -> first,
-                        LinkedHashMap::new
-                ))
-                .values().stream()
-                .map(MonthlyScheduleInfo::from)
+        return extractUniversityAdmissionSchedules(userUniversityMethodRepository
+                .findByUserIdAndYearAndMonth(userId, startOfMonth, endOfMonth))
+                .stream().map(MonthlyScheduleInfo::from)
                 .toList();
     }
 
@@ -147,33 +137,20 @@ public class CalendarService {
 
     /**
      * 유저가 보유 중인 해당 날짜의 대학 일정을 조회한다.
-     * <p>
-     * 여러 전형이 동일한 대학 일정을 공유하는 경우, 대학 일정ID 기준으로 중복을 제거하여 하나만 반환한다.
-     * </p>
      *
      * @param userId 유저ID
      * @param date   년도, 월, 날짜 정보 (yyyy-MM-dd)
      * @return 일별 일정 DTO List
      */
     private List<DailyScheduleInfo> findDailyUniversitySchedule(Long userId, LocalDate date) {
-        return userUniversityMethodRepository
-                .findByUserIdAndDate(userId, date)
-                .stream()
-                .flatMap(uum -> uum.getUniversityAdmissionMethod().getUniversityAdmissionScheduleList().stream())
-                .collect(Collectors.toMap(
-                        as -> as.getUniversitySchedule().getId(),
-                        Function.identity(),
-                        (first, second) -> first,
-                        LinkedHashMap::new
-                ))
-                .values().stream()
-                .map(DailyScheduleInfo::from)
+        return extractUniversityAdmissionSchedules(userUniversityMethodRepository
+                .findByUserIdAndDate(userId, date))
+                .stream().map(DailyScheduleInfo::from)
                 .toList();
     }
 
     /**
-     * 일정을 기간(경과 시간)이 긴 순서대로 정렬하며, 기간이 동일한 경우 시작 일시가 늦은 일정을 먼저 정렬한다.
-     * 종료 날짜가 없는 일정은 기간이 0으로 계산되어 가장 뒤로 정렬된다.
+     * 일정을 기간(경과 시간)이 긴 순서대로 정렬하며, 기간이 동일한 경우 시작 일시가 늦은 일정을 먼저 정렬한다. 종료 날짜가 없는 일정은 기간이 0으로 계산되어 가장 뒤로 정렬된다.
      *
      * @return 기간 내림차순, 동일 기간인 경우 시작 일시 내림차순으로 정렬하는 Comparator
      */
@@ -206,5 +183,28 @@ public class CalendarService {
         }
 
         return null;
+    }
+
+    /**
+     * 유저가 추가한 대학 전형들이 가진 대학 일정을 조회한다.
+     * <p>
+     * 여러 전형이 동일한 대학 일정을 공유하는 경우, 대학 일정ID 기준으로 중복을 제거하여 하나만 반환한다.
+     * </p>
+     *
+     * @param userUniversityMethods 유저가 추가한 대학 전형 리스트
+     * @return 중복이 제거된 대학 일정 리스트
+     */
+    private List<UniversityAdmissionSchedule> extractUniversityAdmissionSchedules(
+            List<UserUniversityMethod> userUniversityMethods
+    ) {
+        return userUniversityMethods.stream()
+                .flatMap(uum -> uum.getUniversityAdmissionMethod().getUniversityAdmissionScheduleList().stream())
+                .collect(Collectors.toMap(
+                        uas -> uas.getUniversitySchedule().getId(),
+                        Function.identity(),
+                        (first, second) -> first,
+                        LinkedHashMap::new))
+                .values().stream()
+                .toList();
     }
 }
