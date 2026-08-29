@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.schedule.dto;
+package com.togedy.togedy_server_v2.domain.schedule.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
@@ -14,7 +14,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class DailyScheduleListDto implements ScheduleComparable {
+public class DailyScheduleInfo implements ScheduleComparable {
 
     private Long scheduleId;
 
@@ -40,10 +40,10 @@ public class DailyScheduleListDto implements ScheduleComparable {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime endTime;
 
-    private CategoryDto category;
+    private CategoryInfo category;
 
-    public static DailyScheduleListDto from(UserSchedule userSchedule) {
-        return DailyScheduleListDto.builder()
+    public static DailyScheduleInfo from(UserSchedule userSchedule) {
+        return DailyScheduleInfo.builder()
                 .scheduleId(userSchedule.getId())
                 .scheduleType(ScheduleType.USER)
                 .scheduleName(userSchedule.getName())
@@ -51,12 +51,12 @@ public class DailyScheduleListDto implements ScheduleComparable {
                 .startTime(userSchedule.getStartTime())
                 .endDate(userSchedule.getEndDate())
                 .endTime(userSchedule.getEndTime())
-                .category(CategoryDto.from(userSchedule.getCategory()))
+                .category(CategoryInfo.from(userSchedule.getCategory()))
                 .build();
     }
 
-    public static DailyScheduleListDto from(UniversityAdmissionSchedule universityAdmissionSchedule) {
-        return DailyScheduleListDto.builder()
+    public static DailyScheduleInfo from(UniversityAdmissionSchedule universityAdmissionSchedule) {
+        return DailyScheduleInfo.builder()
                 .scheduleId(universityAdmissionSchedule.getUniversitySchedule().getId())
                 .scheduleType(ScheduleType.UNIVERSITY)
                 .scheduleName(universityAdmissionSchedule.getUniversityAdmissionMethod().getUniversity().getName())
@@ -68,7 +68,7 @@ public class DailyScheduleListDto implements ScheduleComparable {
                 .startTime(universityAdmissionSchedule.getUniversitySchedule().getStartTime())
                 .endDate(universityAdmissionSchedule.getUniversitySchedule().getEndDate())
                 .endTime(universityAdmissionSchedule.getUniversitySchedule().getEndTime())
-                .category(CategoryDto.temp())
+                .category(CategoryInfo.temp())
                 .build();
     }
 }

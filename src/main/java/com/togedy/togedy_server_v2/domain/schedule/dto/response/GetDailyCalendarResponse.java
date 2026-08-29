@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.schedule.dto;
+package com.togedy.togedy_server_v2.domain.schedule.dto.response;
 
 import java.util.List;
 import lombok.Builder;
@@ -9,9 +9,9 @@ import lombok.Getter;
 public class GetDailyCalendarResponse {
 
     private Integer remainingDays;
-    private List<DailyScheduleListDto> dailyScheduleList;
+    private List<DailyScheduleInfo> dailyScheduleList;
 
-    public static GetDailyCalendarResponse from(Integer remainingDays, List<DailyScheduleListDto> scheduleList) {
+    public static GetDailyCalendarResponse from(Integer remainingDays, List<DailyScheduleInfo> scheduleList) {
         return GetDailyCalendarResponse.builder()
                 .remainingDays(remainingDays)
                 .dailyScheduleList(scheduleList)

@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.schedule.dto;
+package com.togedy.togedy_server_v2.domain.schedule.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
@@ -14,7 +14,7 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class MonthlyScheduleListDto implements ScheduleComparable {
+public class MonthlyScheduleInfo implements ScheduleComparable {
 
     private LocalDate startDate;
 
@@ -38,10 +38,10 @@ public class MonthlyScheduleListDto implements ScheduleComparable {
 
     private String universityAdmissionMethod;
 
-    private CategoryDto category;
+    private CategoryInfo category;
 
-    public static MonthlyScheduleListDto from(UniversityAdmissionSchedule universityAdmissionSchedule) {
-        return MonthlyScheduleListDto.builder()
+    public static MonthlyScheduleInfo from(UniversityAdmissionSchedule universityAdmissionSchedule) {
+        return MonthlyScheduleInfo.builder()
                 .startDate(universityAdmissionSchedule.getUniversitySchedule().getStartDate())
                 .startTime(universityAdmissionSchedule.getUniversitySchedule().getStartTime())
                 .endDate(universityAdmissionSchedule.getUniversitySchedule().getEndDate())
@@ -52,19 +52,19 @@ public class MonthlyScheduleListDto implements ScheduleComparable {
                 .universityAdmissionType(
                         universityAdmissionSchedule.getUniversityAdmissionMethod().getUniversity().getAdmissionType())
                 .universityAdmissionMethod(universityAdmissionSchedule.getUniversityAdmissionMethod().getName())
-                .category(CategoryDto.temp())
+                .category(CategoryInfo.temp())
                 .build();
     }
 
-    public static MonthlyScheduleListDto from(UserSchedule userSchedule) {
-        return MonthlyScheduleListDto.builder()
+    public static MonthlyScheduleInfo from(UserSchedule userSchedule) {
+        return MonthlyScheduleInfo.builder()
                 .startDate(userSchedule.getStartDate())
                 .startTime(userSchedule.getStartTime())
                 .endDate(userSchedule.getEndDate())
                 .endTime(userSchedule.getEndTime())
                 .scheduleName(userSchedule.getName())
                 .scheduleType(ScheduleType.USER)
-                .category(CategoryDto.from(userSchedule.getCategory()))
+                .category(CategoryInfo.from(userSchedule.getCategory()))
                 .build();
     }
 }

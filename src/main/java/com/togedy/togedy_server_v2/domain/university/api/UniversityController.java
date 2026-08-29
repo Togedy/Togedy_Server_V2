@@ -1,9 +1,9 @@
 package com.togedy.togedy_server_v2.domain.university.api;
 
 import com.togedy.togedy_server_v2.domain.university.application.UniversityService;
-import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
-import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
-import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
+import com.togedy.togedy_server_v2.domain.university.dto.request.PostUniversityAdmissionMethodRequest;
+import com.togedy.togedy_server_v2.domain.university.dto.response.GetUniversityResponse;
+import com.togedy.togedy_server_v2.domain.university.dto.response.GetUniversityScheduleResponse;
 import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;

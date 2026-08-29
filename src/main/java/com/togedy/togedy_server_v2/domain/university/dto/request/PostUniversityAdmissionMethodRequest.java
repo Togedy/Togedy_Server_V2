@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.university.dto;
+package com.togedy.togedy_server_v2.domain.university.dto.request;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -9,4 +9,5 @@ import lombok.NoArgsConstructor;
 public class PostUniversityAdmissionMethodRequest {
 
     Long universityAdmissionMethodId;
+
 }

@@ -1,9 +1,9 @@
 package com.togedy.togedy_server_v2.domain.schedule.api;
 
 import com.togedy.togedy_server_v2.domain.schedule.application.UserScheduleService;
-import com.togedy.togedy_server_v2.domain.schedule.dto.GetUserScheduleResponse;
-import com.togedy.togedy_server_v2.domain.schedule.dto.PatchUserScheduleRequest;
-import com.togedy.togedy_server_v2.domain.schedule.dto.PostUserScheduleRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.request.PatchUserScheduleRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.request.PostUserScheduleRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.response.GetUserScheduleResponse;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;

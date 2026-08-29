@@ -3,12 +3,12 @@ package com.togedy.togedy_server_v2.domain.university.application;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityAdmissionMethodRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
-import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
-import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
-import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
-import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodDto;
-import com.togedy.togedy_server_v2.domain.university.dto.UniversityDto;
-import com.togedy.togedy_server_v2.domain.university.dto.UniversityScheduleDto;
+import com.togedy.togedy_server_v2.domain.university.dto.request.PostUniversityAdmissionMethodRequest;
+import com.togedy.togedy_server_v2.domain.university.dto.response.GetUniversityResponse;
+import com.togedy.togedy_server_v2.domain.university.dto.response.GetUniversityScheduleResponse;
+import com.togedy.togedy_server_v2.domain.university.dto.response.UniversityAdmissionMethodInfo;
+import com.togedy.togedy_server_v2.domain.university.dto.response.UniversityInfo;
+import com.togedy.togedy_server_v2.domain.university.dto.response.UniversityScheduleInfo;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import com.togedy.togedy_server_v2.domain.university.entity.UserUniversityMethod;
@@ -67,13 +67,13 @@ public class UniversityService {
         Slice<University> universities = searchUniversity(name, admissionType, page, size);
         List<Long> universityIds = getUniversityIds(universities);
 
-        List<UniversityDto> universityDtos = buildUniversityDto(
+        List<UniversityInfo> universityInfos = buildUniversityDto(
                 universities,
                 countAdmissionMethodByUniversity(universityIds),
                 findAddedAdmissionMethods(userId, universityIds)
         );
 
-        return GetUniversityResponse.of(universities.hasNext(), universityDtos);
+        return GetUniversityResponse.of(universities.hasNext(), universityInfos);
     }
 
     /***
@@ -148,19 +148,19 @@ public class UniversityService {
                 .collect(Collectors.groupingBy(m -> m.getUniversity().getId()));
     }
 
-    private List<UniversityAdmissionMethodDto> buildUniversityAdmissionMethodDto(University university) {
+    private List<UniversityAdmissionMethodInfo> buildUniversityAdmissionMethodDto(University university) {
         return universityAdmissionMethodRepository
                 .findAllByUniversityAndAcademicYear(university, ACADEMIC_YEAR)
                 .stream()
                 .map(method -> {
-                    List<UniversityScheduleDto> scheduleDtos = method.getUniversityAdmissionScheduleList()
+                    List<UniversityScheduleInfo> scheduleDtos = method.getUniversityAdmissionScheduleList()
                             .stream()
-                            .map(uas -> UniversityScheduleDto.from(uas.getUniversitySchedule()))
+                            .map(uas -> UniversityScheduleInfo.from(uas.getUniversitySchedule()))
                             .sorted(Comparator.comparingInt(
                                     dto -> STAGE_ORDER.indexOf(dto.getUniversityAdmissionStage())
                             ))
                             .collect(Collectors.toList());
-                    return UniversityAdmissionMethodDto.of(method, scheduleDtos);
+                    return UniversityAdmissionMethodInfo.of(method, scheduleDtos);
                 })
                 .toList();
     }
@@ -176,13 +176,13 @@ public class UniversityService {
         );
     }
 
-    private List<UniversityDto> buildUniversityDto(
+    private List<UniversityInfo> buildUniversityDto(
             Slice<University> universities,
             Map<Long, Long> admissionMethodCountMap,
             Map<Long, List<UniversityAdmissionMethod>> addedAdmissionMethodMap
     ) {
         return universities.stream()
-                .map(university -> UniversityDto.of(
+                .map(university -> UniversityInfo.of(
                         university,
                         admissionMethodCountMap.getOrDefault(university.getId(), 0L).intValue(),
                         addedAdmissionMethodMap.getOrDefault(university.getId(), Collections.emptyList())

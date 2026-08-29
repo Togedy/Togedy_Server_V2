@@ -1,6 +1,6 @@
 package com.togedy.togedy_server_v2.domain.schedule.entity;
 
-import com.togedy.togedy_server_v2.domain.schedule.dto.PatchUserScheduleRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.request.PatchUserScheduleRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

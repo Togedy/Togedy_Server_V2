@@ -1,19 +1,19 @@
-package com.togedy.togedy_server_v2.domain.schedule.dto;
+package com.togedy.togedy_server_v2.domain.schedule.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
+@Builder
 @JsonIgnoreProperties({"dday"})
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-public class PostUserScheduleRequest {
+public class GetUserScheduleResponse {
 
     private String userScheduleName;
 
@@ -29,11 +29,24 @@ public class PostUserScheduleRequest {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime endTime;
 
-    private Long categoryId;
-
     private String memo;
 
     @JsonProperty("d-day")
     @Schema(name = "d-day", type = "boolean")
-    private Boolean dDay;
+    private boolean dDay;
+
+    private CategoryInfo category;
+
+    public static GetUserScheduleResponse from(UserSchedule userSchedule) {
+        return GetUserScheduleResponse.builder()
+                .userScheduleName(userSchedule.getName())
+                .startDate(userSchedule.getStartDate())
+                .startTime(userSchedule.getStartTime())
+                .endDate(userSchedule.getEndDate())
+                .endTime(userSchedule.getEndTime())
+                .category(CategoryInfo.from(userSchedule.getCategory()))
+                .memo(userSchedule.getMemo())
+                .dDay(userSchedule.isDDay())
+                .build();
+    }
 }

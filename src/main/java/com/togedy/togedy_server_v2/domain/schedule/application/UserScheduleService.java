@@ -2,9 +2,9 @@ package com.togedy.togedy_server_v2.domain.schedule.application;
 
 import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
-import com.togedy.togedy_server_v2.domain.schedule.dto.GetUserScheduleResponse;
-import com.togedy.togedy_server_v2.domain.schedule.dto.PatchUserScheduleRequest;
-import com.togedy.togedy_server_v2.domain.schedule.dto.PostUserScheduleRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.request.PatchUserScheduleRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.request.PostUserScheduleRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.response.GetUserScheduleResponse;
 import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotFoundException;

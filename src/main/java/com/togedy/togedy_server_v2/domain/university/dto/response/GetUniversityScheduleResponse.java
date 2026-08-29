@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.university.dto;
+package com.togedy.togedy_server_v2.domain.university.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
@@ -19,12 +19,13 @@ public class GetUniversityScheduleResponse {
     private String universityName;
     private AdmissionType universityAdmissionType;
     private List<String> addedUniversityAdmissionMethodList;
-    private List<UniversityAdmissionMethodDto> universityAdmissionMethodList;
+    private List<UniversityAdmissionMethodInfo> universityAdmissionMethodList;
 
     public static GetUniversityScheduleResponse of(
             University university,
             List<UniversityAdmissionMethod> addedUniversityAdmissionMethodList,
-            List<UniversityAdmissionMethodDto> admissionList) {
+            List<UniversityAdmissionMethodInfo> admissionList
+    ) {
         return GetUniversityScheduleResponse.builder()
                 .universityName(university.getName())
                 .universityAdmissionType(university.getAdmissionType())
