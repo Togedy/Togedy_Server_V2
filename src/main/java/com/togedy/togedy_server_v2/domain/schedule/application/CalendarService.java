@@ -83,8 +83,8 @@ public class CalendarService {
      * 유저가 보유 중인 해당 월의 개인 일정을 조회한다.
      *
      * @param userId       유저ID
-     * @param startOfMonth 일정 시작 날짜
-     * @param endOfMonth   일정 종료 날짜
+     * @param startOfMonth 조회할 월의 시작 날짜
+     * @param endOfMonth   조회할 월의 종료 날짜
      * @return 월별 일정 DTO List
      */
     private List<MonthlyScheduleInfo> findMonthlyUserSchedule(
@@ -101,10 +101,13 @@ public class CalendarService {
 
     /**
      * 유저가 보유 중인 해당 월의 대학 일정을 조회한다.
+     * <p>
+     * 여러 전형이 동일한 대학 일정을 공유하는 경우, 대학 일정ID 기준으로 중복을 제거하여 하나만 반환한다.
+     * </p>
      *
      * @param userId       유저 ID
-     * @param startOfMonth 일정 시작 날짜
-     * @param endOfMonth   일정 종료 날짜
+     * @param startOfMonth 조회할 월의 시작 날짜
+     * @param endOfMonth   조회할 월의 종료 날짜
      * @return 월별 일정 DTO List
      */
     private List<MonthlyScheduleInfo> findMonthlyUniversitySchedule(
@@ -144,6 +147,9 @@ public class CalendarService {
 
     /**
      * 유저가 보유 중인 해당 날짜의 대학 일정을 조회한다.
+     * <p>
+     * 여러 전형이 동일한 대학 일정을 공유하는 경우, 대학 일정ID 기준으로 중복을 제거하여 하나만 반환한다.
+     * </p>
      *
      * @param userId 유저ID
      * @param date   년도, 월, 날짜 정보 (yyyy-MM-dd)
@@ -166,9 +172,10 @@ public class CalendarService {
     }
 
     /**
-     * 일정의 시작 및 종료 날짜 혹은 시간을 기준으로 정렬한다.
+     * 일정을 기간(경과 시간)이 긴 순서대로 정렬하며, 기간이 동일한 경우 시작 일시가 늦은 일정을 먼저 정렬한다.
+     * 종료 날짜가 없는 일정은 기간이 0으로 계산되어 가장 뒤로 정렬된다.
      *
-     * @return 기간 및 시작 시간 순으로 정렬하는 Comparator
+     * @return 기간 내림차순, 동일 기간인 경우 시작 일시 내림차순으로 정렬하는 Comparator
      */
     private Comparator<ScheduleComparable> scheduleComparator() {
         return Comparator
