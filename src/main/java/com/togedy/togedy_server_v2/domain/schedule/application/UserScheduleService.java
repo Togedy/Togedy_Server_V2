@@ -121,8 +121,8 @@ public class UserScheduleService {
     }
 
     /**
-     * 새로 생성/수정되는 일정을 D-Day로 설정하려는 경우, 기존에 D-Day로 설정되어 있던 유저의 개인 일정을 D-Day 해제 상태로 변경한다.
-     * {@code isDday}가 {@code true}가 아니면 아무 동작도 하지 않는다.
+     * 새로 생성/수정되는 일정을 D-Day로 설정하려는 경우, 기존에 D-Day로 설정되어 있던 유저의 개인 일정을 D-Day 해제 상태로 변경한다. {@code isDday}가 {@code true}가
+     * 아니면 아무 동작도 하지 않는다.
      *
      * @param isDday 신규/수정 일정의 D-Day 설정 여부
      * @param userId 유저ID
@@ -142,7 +142,7 @@ public class UserScheduleService {
      * @throws CategoryNotOwnedException 해당 카테고리가 유저의 소유가 아닌 경우
      */
     private void validateCategoryOwnership(Category category, User user) {
-        if (!category.getUser().equals(user)) {
+        if (!category.getUser().getId().equals(user.getId())) {
             throw new CategoryNotOwnedException();
         }
     }
@@ -169,8 +169,7 @@ public class UserScheduleService {
      */
     private void modifyCategory(PatchUserScheduleRequest request, UserSchedule userSchedule) {
         if (request.getCategoryId() != null) {
-            Category category = categoryRepository.findById(request.getCategoryId())
-                    .orElseThrow(CategoryNotFoundException::new);
+            Category category = findCategoryById(request.getCategoryId());
             userSchedule.updateCategory(category);
         }
     }

@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
@@ -34,7 +33,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Slf4j
 @RequiredArgsConstructor
 public class UniversityService {
 
@@ -140,7 +138,7 @@ public class UniversityService {
      */
     private Map<Long, Long> countAdmissionMethodByUniversity(List<Long> universityIds) {
         return universityAdmissionMethodRepository
-                .findCountByUniversityIdsAnAndAcademicYear(universityIds, ACADEMIC_YEAR)
+                .findCountByUniversityIdsAndAcademicYear(universityIds, ACADEMIC_YEAR)
                 .stream()
                 .collect(Collectors.toMap(
                         row -> (Long) row[0],
