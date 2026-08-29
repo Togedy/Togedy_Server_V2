@@ -69,7 +69,7 @@ public class CalendarService {
      * @return D-Day 설정한 개인 일정이 존재 여부 및 일정 정보 반환
      */
     public GetDdayScheduleResponse findDdaySchedule(Long userId) {
-        Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
+        Optional<UserSchedule> dDaySchedule = findDdayUserSchedule(userId);
 
         if (dDaySchedule.isPresent()) {
             return GetDdayScheduleResponse.of(
@@ -176,13 +176,23 @@ public class CalendarService {
      * @return D-Day 일정으로부터 남은 일 수, 일정이 존재하지 않는 경우 {@code null}
      */
     private Integer calculateRemainingDays(LocalDate date, Long userId) {
-        Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
+        Optional<UserSchedule> dDaySchedule = findDdayUserSchedule(userId);
 
         if (dDaySchedule.isPresent()) {
             return TimeUtil.calculateDaysUntil(date, dDaySchedule.get().getStartDate());
         }
 
         return null;
+    }
+
+    /**
+     * 유저가 D-Day 설정한 개인 일정을 조회한다.
+     *
+     * @param userId 유저ID
+     * @return D-Day 설정된 개인 일정, 존재하지 않는 경우 {@code Optional.empty()}
+     */
+    private Optional<UserSchedule> findDdayUserSchedule(Long userId) {
+        return userScheduleRepository.findByUserIdAndDDayTrue(userId);
     }
 
     /**
