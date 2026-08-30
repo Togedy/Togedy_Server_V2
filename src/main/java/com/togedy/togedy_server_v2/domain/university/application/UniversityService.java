@@ -3,6 +3,7 @@ package com.togedy.togedy_server_v2.domain.university.application;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityAdmissionMethodRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
+import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodCountRow;
 import com.togedy.togedy_server_v2.domain.university.dto.request.PostUniversityAdmissionMethodRequest;
 import com.togedy.togedy_server_v2.domain.university.dto.response.GetUniversityResponse;
 import com.togedy.togedy_server_v2.domain.university.dto.response.GetUniversityScheduleResponse;
@@ -141,8 +142,8 @@ public class UniversityService {
                 .findCountByUniversityIdsAndAcademicYear(universityIds, ACADEMIC_YEAR)
                 .stream()
                 .collect(Collectors.toMap(
-                        row -> (Long) row[0],
-                        row -> (Long) row[1]
+                        UniversityAdmissionMethodCountRow::getUniversityId,
+                        UniversityAdmissionMethodCountRow::getAdmissionMethodCount
                 ));
     }
 

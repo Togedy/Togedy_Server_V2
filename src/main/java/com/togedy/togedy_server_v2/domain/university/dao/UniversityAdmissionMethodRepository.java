@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.university.dao;
 
+import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodCountRow;
 import com.togedy.togedy_server_v2.domain.university.entity.University;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
 import java.util.List;
@@ -52,15 +53,15 @@ public interface UniversityAdmissionMethodRepository extends JpaRepository<Unive
 
 
     @Query("""
-                SELECT u.id, COUNT(uam)
+                SELECT new com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodCountRow(u.id, COUNT(uam))
                 FROM UniversityAdmissionMethod uam
                     JOIN uam.university u
-                WHERE u.id IN :ids
+                WHERE u.id IN :universityIds
                     AND uam.academicYear = :academicYear
                 GROUP BY u.id
             """)
-    List<Object[]> findCountByUniversityIdsAndAcademicYear(
-            @Param("ids") List<Long> universityIdList,
+    List<UniversityAdmissionMethodCountRow> findCountByUniversityIdsAndAcademicYear(
+            @Param("universityIds") List<Long> universityIds,
             @Param("academicYear") int academicYear
     );
 }
