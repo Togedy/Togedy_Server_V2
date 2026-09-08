@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.university.application;
 
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityAdmissionMethodRepository;
+import com.togedy.togedy_server_v2.domain.university.dao.UniversityAdmissionScheduleRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UniversityRepository;
 import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
 import com.togedy.togedy_server_v2.domain.university.dto.UniversityAdmissionMethodCountRow;
@@ -39,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UniversityService {
 
     private final UniversityAdmissionMethodRepository universityAdmissionMethodRepository;
+    private final UniversityAdmissionScheduleRepository universityAdmissionScheduleRepository;
     private final UserRepository userRepository;
     private final UniversityRepository universityRepository;
     private final UserUniversityMethodRepository userUniversityMethodRepository;
@@ -166,23 +168,52 @@ public class UniversityService {
 
     /**
      * 해당 대학의 입시 전형 목록을 조회하고, 각 전형에 속한 일정을 진행 단계({@link AdmissionStage#getOrder()} 기준) 순으로 정렬한다.
+     * <p>
+     * 전형과 일정은 1:N 관계이므로, 전형을 루트로 일정을 FETCH JOIN하면 전형이 일정 수만큼 중복된다. 이를 방지하기 위해 전형과 일정을 각각
+     * 조회한 뒤 전형ID 기준으로 매칭한다.
+     * </p>
      *
      * @param university 대학
      * @return 전형별 일정이 단계 순으로 정렬된 대학 입시 전형 정보 리스트
      */
     private List<UniversityAdmissionMethodInfo> buildUniversityAdmissionMethodDto(University university) {
-        return universityAdmissionMethodRepository
+        List<UniversityAdmissionMethod> admissionMethods = universityAdmissionMethodRepository
+                .findAllByUniversityAndAcademicYear(university, ACADEMIC_YEAR);
+
+        Map<Long, List<UniversityScheduleInfo>> scheduleMapByAdmissionMethod =
+                groupScheduleByAdmissionMethod(university);
+
+        return admissionMethods.stream()
+                .map(method -> UniversityAdmissionMethodInfo.of(
+                        method,
+                        scheduleMapByAdmissionMethod.getOrDefault(method.getId(), Collections.emptyList())
+                ))
+                .toList();
+    }
+
+    /**
+     * 해당 대학의 전형별 일정을 조회하여, 전형ID를 기준으로 진행 단계 순으로 정렬된 일정 리스트를 그룹핑한다.
+     *
+     * @param university 대학
+     * @return 전형ID를 key로 하는, 단계 순으로 정렬된 일정 정보 리스트 Map
+     */
+    private Map<Long, List<UniversityScheduleInfo>> groupScheduleByAdmissionMethod(University university) {
+        return universityAdmissionScheduleRepository
                 .findAllByUniversityAndAcademicYear(university, ACADEMIC_YEAR)
                 .stream()
-                .map(method -> {
-                    List<UniversityScheduleInfo> scheduleDtos = method.getUniversityAdmissionScheduleList()
-                            .stream()
-                            .map(uas -> UniversityScheduleInfo.from(uas.getUniversitySchedule()))
-                            .sorted(Comparator.comparingInt(
-                                    dto -> dto.getUniversityAdmissionStage().getOrder())
-                            ).collect(Collectors.toList());
-                    return UniversityAdmissionMethodInfo.of(method, scheduleDtos);
-                }).toList();
+                .collect(Collectors.groupingBy(
+                        uas -> uas.getUniversityAdmissionMethod().getId(),
+                        Collectors.collectingAndThen(
+                                Collectors.mapping(
+                                        uas -> UniversityScheduleInfo.from(uas.getUniversitySchedule()),
+                                        Collectors.toList()
+                                ),
+                                schedules -> schedules.stream()
+                                        .sorted(Comparator.comparingInt(
+                                                dto -> dto.getUniversityAdmissionStage().getOrder()))
+                                        .toList()
+                        )
+                ));
     }
 
     /**

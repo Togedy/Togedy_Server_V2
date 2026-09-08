@@ -38,11 +38,18 @@ public interface UniversityAdmissionMethodRepository extends JpaRepository<Unive
             @Param("academicYear") int academicYear
     );
 
+    /**
+     * 해당 대학의 해당 학년도 전형 목록을 조회한다.
+     * <p>
+     * 전형이 보유한 일정({@code universityAdmissionScheduleList})은 1:N 컬렉션이므로 FETCH JOIN하지 않는다. FETCH JOIN할 경우
+     * 전형이 가진 일정 수만큼 전형 자체가 중복되어 반환되기 때문이며, 일정은
+     * {@link UniversityAdmissionScheduleRepository#findAllByUniversityAndAcademicYear}로 별도 조회하여 서비스단에서
+     * 전형ID 기준으로 그룹핑한다.
+     * </p>
+     */
     @Query("""
                 SELECT uam
                 FROM UniversityAdmissionMethod uam
-                    JOIN FETCH uam.universityAdmissionScheduleList uasl
-                    JOIN FETCH uasl.universitySchedule us
                 WHERE uam.university = :university
                     AND uam.academicYear = :academicYear
             """)
