@@ -1,4 +1,4 @@
-package com.togedy.togedy_server_v2.domain.schedule.dto;
+package com.togedy.togedy_server_v2.domain.schedule.dto.response;
 
 import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
 import lombok.Builder;
@@ -6,22 +6,17 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class CategoryDto {
+public class GetCategoryResponse {
 
     private Long categoryId;
     private String categoryName;
     private String categoryColor;
 
-    public static CategoryDto from(Category category) {
-        return CategoryDto.builder()
+    public static GetCategoryResponse from(Category category) {
+        return GetCategoryResponse.builder()
                 .categoryId(category.getId())
                 .categoryName(category.getName())
                 .categoryColor(category.getColor())
-                .build();
-    }
-
-    public static CategoryDto temp() {
-        return CategoryDto.builder()
                 .build();
     }
 }

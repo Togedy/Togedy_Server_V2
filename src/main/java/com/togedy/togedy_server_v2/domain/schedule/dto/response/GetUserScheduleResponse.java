@@ -1,15 +1,14 @@
-package com.togedy.togedy_server_v2.domain.schedule.dto;
+package com.togedy.togedy_server_v2.domain.schedule.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Getter;
-
 import java.time.LocalDate;
 import java.time.LocalTime;
+import lombok.Builder;
+import lombok.Getter;
 
 @Getter
 @Builder
@@ -36,7 +35,7 @@ public class GetUserScheduleResponse {
     @Schema(name = "d-day", type = "boolean")
     private boolean dDay;
 
-    private CategoryDto category;
+    private CategoryInfo category;
 
     public static GetUserScheduleResponse from(UserSchedule userSchedule) {
         return GetUserScheduleResponse.builder()
@@ -45,7 +44,7 @@ public class GetUserScheduleResponse {
                 .startTime(userSchedule.getStartTime())
                 .endDate(userSchedule.getEndDate())
                 .endTime(userSchedule.getEndTime())
-                .category(CategoryDto.from(userSchedule.getCategory()))
+                .category(CategoryInfo.from(userSchedule.getCategory()))
                 .memo(userSchedule.getMemo())
                 .dDay(userSchedule.isDDay())
                 .build();

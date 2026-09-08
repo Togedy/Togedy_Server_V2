@@ -1,9 +1,10 @@
 package com.togedy.togedy_server_v2.domain.university.api;
 
 import com.togedy.togedy_server_v2.domain.university.application.UniversityService;
-import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityResponse;
-import com.togedy.togedy_server_v2.domain.university.dto.GetUniversityScheduleResponse;
-import com.togedy.togedy_server_v2.domain.university.dto.PostUniversityAdmissionMethodRequest;
+import com.togedy.togedy_server_v2.domain.university.dto.request.PostUniversityAdmissionMethodRequest;
+import com.togedy.togedy_server_v2.domain.university.dto.response.GetUniversityResponse;
+import com.togedy.togedy_server_v2.domain.university.dto.response.GetUniversityScheduleResponse;
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
@@ -20,8 +21,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/v2/calendars/universities")
 @RequiredArgsConstructor
@@ -34,13 +33,14 @@ public class UniversityController {
     @GetMapping("")
     public ApiResponse<GetUniversityResponse> readUniversityList(
             @RequestParam(name = "name", defaultValue = "대학") String name,
-            @RequestParam(name = "admission-type", defaultValue = "전체") String admissionType,
+            @RequestParam(name = "admission-type", defaultValue = "전체") AdmissionType admissionType,
             @RequestParam(name = "page", defaultValue = "1") int page,
             @RequestParam(name = "size", defaultValue = "20") int size,
-            @AuthenticationPrincipal AuthUser user)
-    {
-        GetUniversityResponse response =
-                universityService.findUniversityList(name, admissionType, user.getId(), page, size);
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        GetUniversityResponse response = universityService.findUniversityList(
+                name, admissionType, user.getId(), page, size
+        );
         return ApiUtil.success(response);
     }
 
@@ -48,8 +48,8 @@ public class UniversityController {
     @GetMapping("/{universityId}/schedule")
     public ApiResponse<GetUniversityScheduleResponse> readUniversitySchedule(
             @PathVariable Long universityId,
-            @AuthenticationPrincipal AuthUser user)
-    {
+            @AuthenticationPrincipal AuthUser user
+    ) {
         GetUniversityScheduleResponse response = universityService.findUniversitySchedule(universityId, user.getId());
         return ApiUtil.success(response);
     }
@@ -58,8 +58,8 @@ public class UniversityController {
     @PostMapping("")
     public ApiResponse<Void> createUserUniversitySchedule(
             @RequestBody PostUniversityAdmissionMethodRequest request,
-            @AuthenticationPrincipal AuthUser user)
-    {
+            @AuthenticationPrincipal AuthUser user
+    ) {
         universityService.generateUserUniversityAdmissionMethod(request, user.getId());
         return ApiUtil.successOnly();
     }
@@ -68,8 +68,8 @@ public class UniversityController {
     @DeleteMapping("/{universityAdmissionMethodId}")
     public ApiResponse<Void> deleteUserUniversityMethod(
             @PathVariable Long universityAdmissionMethodId,
-            @AuthenticationPrincipal AuthUser user)
-    {
+            @AuthenticationPrincipal AuthUser user
+    ) {
         universityService.removeUserUniversityMethod(universityAdmissionMethodId, user.getId());
         return ApiUtil.successOnly();
     }

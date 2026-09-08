@@ -1,21 +1,23 @@
-package com.togedy.togedy_server_v2.domain.university.dto;
+package com.togedy.togedy_server_v2.domain.university.dto.response;
 
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionMethod;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.util.List;
-
 @Getter
 @Builder
-public class UniversityAdmissionMethodDto {
+public class UniversityAdmissionMethodInfo {
 
     private String universityAdmissionMethod;
     private Long universityAdmissionMethodId;
-    private List<UniversityScheduleDto> universityScheduleList;
+    private List<UniversityScheduleInfo> universityScheduleList;
 
-    public static UniversityAdmissionMethodDto of(UniversityAdmissionMethod universityAdmissionMethod, List<UniversityScheduleDto> universityScheduleList) {
-        return UniversityAdmissionMethodDto.builder()
+    public static UniversityAdmissionMethodInfo of(
+            UniversityAdmissionMethod universityAdmissionMethod,
+            List<UniversityScheduleInfo> universityScheduleList
+    ) {
+        return UniversityAdmissionMethodInfo.builder()
                 .universityAdmissionMethod(universityAdmissionMethod.getName())
                 .universityAdmissionMethodId(universityAdmissionMethod.getId())
                 .universityScheduleList(universityScheduleList)

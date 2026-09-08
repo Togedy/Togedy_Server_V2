@@ -1,19 +1,19 @@
-package com.togedy.togedy_server_v2.domain.university.dto;
+package com.togedy.togedy_server_v2.domain.university.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversitySchedule;
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionStage;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-
 @Getter
 @Builder
-public class UniversityScheduleDto {
+public class UniversityScheduleInfo {
 
-    private String universityAdmissionStage;
+    private AdmissionStage universityAdmissionStage;
 
     private LocalDate startDate;
 
@@ -27,8 +27,8 @@ public class UniversityScheduleDto {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime endTime;
 
-    public static UniversityScheduleDto from(UniversitySchedule universitySchedule) {
-        return UniversityScheduleDto.builder()
+    public static UniversityScheduleInfo from(UniversitySchedule universitySchedule) {
+        return UniversityScheduleInfo.builder()
                 .universityAdmissionStage(universitySchedule.getAdmissionStage())
                 .startDate(universitySchedule.getStartDate())
                 .startTime(universitySchedule.getStartTime())

@@ -1,9 +1,9 @@
 package com.togedy.togedy_server_v2.domain.schedule.api;
 
-import com.togedy.togedy_server_v2.domain.schedule.dto.PatchUserScheduleRequest;
 import com.togedy.togedy_server_v2.domain.schedule.application.UserScheduleService;
-import com.togedy.togedy_server_v2.domain.schedule.dto.GetUserScheduleResponse;
-import com.togedy.togedy_server_v2.domain.schedule.dto.PostUserScheduleRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.request.PatchUserScheduleRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.request.PostUserScheduleRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.response.GetUserScheduleResponse;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
@@ -30,33 +30,41 @@ public class UserScheduleController {
 
     @Operation(summary = "개인 일정 생성", description = "개인 일정을 생성한다.")
     @PostMapping("")
-    public ApiResponse<Void> createUserSchedule(@RequestBody PostUserScheduleRequest request,
-                                                @AuthenticationPrincipal AuthUser user) {
+    public ApiResponse<Void> createUserSchedule(
+            @RequestBody PostUserScheduleRequest request,
+            @AuthenticationPrincipal AuthUser user
+    ) {
         userScheduleService.generateUserSchedule(request, user.getId());
         return ApiUtil.successOnly();
     }
 
     @Operation(summary = "개인 일정 조회", description = "해당 개인 일정 정보를 조회한다.")
     @GetMapping("/{userScheduleId}")
-    public ApiResponse<GetUserScheduleResponse> readUserSchedule(@PathVariable Long userScheduleId,
-                                                                 @AuthenticationPrincipal AuthUser user) {
+    public ApiResponse<GetUserScheduleResponse> readUserSchedule(
+            @PathVariable Long userScheduleId,
+            @AuthenticationPrincipal AuthUser user
+    ) {
         GetUserScheduleResponse response = userScheduleService.findUserSchedule(userScheduleId, user.getId());
         return ApiUtil.success(response);
     }
 
     @Operation(summary = "개인 일정 수정", description = "해당 개인 일정 정보를 수정한다.")
     @PatchMapping("/{userScheduleId}")
-    public ApiResponse<Void> updateUserSchedule(@RequestBody PatchUserScheduleRequest request,
-                                                @PathVariable Long userScheduleId,
-                                                @AuthenticationPrincipal AuthUser user) {
+    public ApiResponse<Void> updateUserSchedule(
+            @RequestBody PatchUserScheduleRequest request,
+            @PathVariable Long userScheduleId,
+            @AuthenticationPrincipal AuthUser user
+    ) {
         userScheduleService.modifyUserSchedule(request, userScheduleId, user.getId());
         return ApiUtil.successOnly();
     }
 
     @Operation(summary = "개인 일정 제거", description = "해당 개인 일정을 제거한다.")
     @DeleteMapping("/{userScheduleId}")
-    public ApiResponse<Void> deleteUserSchedule(@PathVariable Long userScheduleId,
-                                                @AuthenticationPrincipal AuthUser user) {
+    public ApiResponse<Void> deleteUserSchedule(
+            @PathVariable Long userScheduleId,
+            @AuthenticationPrincipal AuthUser user
+    ) {
         userScheduleService.removeUserSchedule(userScheduleId, user.getId());
         return ApiUtil.successOnly();
     }

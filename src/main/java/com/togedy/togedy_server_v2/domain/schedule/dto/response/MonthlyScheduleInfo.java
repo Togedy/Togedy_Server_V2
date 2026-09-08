@@ -1,20 +1,21 @@
-package com.togedy.togedy_server_v2.domain.schedule.dto;
+package com.togedy.togedy_server_v2.domain.schedule.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
-import com.togedy.togedy_server_v2.domain.schedule.entity.enums.ScheduleType;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
+import com.togedy.togedy_server_v2.domain.schedule.entity.enums.ScheduleType;
 import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionSchedule;
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionStage;
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-
 @Getter
 @Builder
-public class MonthlyScheduleListDto implements ScheduleComparable {
+public class MonthlyScheduleInfo implements ScheduleComparable {
 
     private LocalDate startDate;
 
@@ -32,16 +33,16 @@ public class MonthlyScheduleListDto implements ScheduleComparable {
 
     private ScheduleType scheduleType;
 
-    private String universityAdmissionStage;
+    private AdmissionStage universityAdmissionStage;
 
-    private String universityAdmissionType;
+    private AdmissionType universityAdmissionType;
 
     private String universityAdmissionMethod;
 
-    private CategoryDto category;
+    private CategoryInfo category;
 
-    public static MonthlyScheduleListDto from(UniversityAdmissionSchedule universityAdmissionSchedule) {
-        return MonthlyScheduleListDto.builder()
+    public static MonthlyScheduleInfo from(UniversityAdmissionSchedule universityAdmissionSchedule) {
+        return MonthlyScheduleInfo.builder()
                 .startDate(universityAdmissionSchedule.getUniversitySchedule().getStartDate())
                 .startTime(universityAdmissionSchedule.getUniversitySchedule().getStartTime())
                 .endDate(universityAdmissionSchedule.getUniversitySchedule().getEndDate())
@@ -49,21 +50,22 @@ public class MonthlyScheduleListDto implements ScheduleComparable {
                 .scheduleName(universityAdmissionSchedule.getUniversityAdmissionMethod().getUniversity().getName())
                 .scheduleType(ScheduleType.UNIVERSITY)
                 .universityAdmissionStage(universityAdmissionSchedule.getUniversitySchedule().getAdmissionStage())
-                .universityAdmissionType(universityAdmissionSchedule.getUniversityAdmissionMethod().getUniversity().getAdmissionType())
+                .universityAdmissionType(
+                        universityAdmissionSchedule.getUniversityAdmissionMethod().getUniversity().getAdmissionType())
                 .universityAdmissionMethod(universityAdmissionSchedule.getUniversityAdmissionMethod().getName())
-                .category(CategoryDto.temp())
+                .category(CategoryInfo.temp())
                 .build();
     }
 
-    public static MonthlyScheduleListDto from(UserSchedule userSchedule) {
-        return MonthlyScheduleListDto.builder()
+    public static MonthlyScheduleInfo from(UserSchedule userSchedule) {
+        return MonthlyScheduleInfo.builder()
                 .startDate(userSchedule.getStartDate())
                 .startTime(userSchedule.getStartTime())
                 .endDate(userSchedule.getEndDate())
                 .endTime(userSchedule.getEndTime())
                 .scheduleName(userSchedule.getName())
                 .scheduleType(ScheduleType.USER)
-                .category(CategoryDto.from(userSchedule.getCategory()))
+                .category(CategoryInfo.from(userSchedule.getCategory()))
                 .build();
     }
 }

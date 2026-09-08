@@ -1,18 +1,18 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
 import com.togedy.togedy_server_v2.domain.schedule.dao.UserScheduleRepository;
-import com.togedy.togedy_server_v2.domain.schedule.dto.DailyScheduleListDto;
-import com.togedy.togedy_server_v2.domain.schedule.dto.GetDailyCalendarResponse;
-import com.togedy.togedy_server_v2.domain.schedule.dto.GetDdayScheduleResponse;
-import com.togedy.togedy_server_v2.domain.schedule.dto.GetMonthlyCalendarResponse;
-import com.togedy.togedy_server_v2.domain.schedule.dto.MonthlyScheduleListDto;
+import com.togedy.togedy_server_v2.domain.schedule.dto.response.DailyScheduleInfo;
+import com.togedy.togedy_server_v2.domain.schedule.dto.response.GetDailyCalendarResponse;
+import com.togedy.togedy_server_v2.domain.schedule.dto.response.GetDdayScheduleResponse;
+import com.togedy.togedy_server_v2.domain.schedule.dto.response.GetMonthlyCalendarResponse;
+import com.togedy.togedy_server_v2.domain.schedule.dto.response.MonthlyScheduleInfo;
 import com.togedy.togedy_server_v2.domain.schedule.entity.ScheduleComparable;
 import com.togedy.togedy_server_v2.domain.schedule.entity.UserSchedule;
-import com.togedy.togedy_server_v2.domain.university.dao.UserUniversityMethodRepository;
+import com.togedy.togedy_server_v2.domain.university.dao.UniversityAdmissionScheduleRepository;
+import com.togedy.togedy_server_v2.domain.university.entity.UniversityAdmissionSchedule;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 public class CalendarService {
 
     private final UserScheduleRepository userScheduleRepository;
-    private final UserUniversityMethodRepository userUniversityMethodRepository;
+    private final UniversityAdmissionScheduleRepository universityAdmissionScheduleRepository;
 
     /**
      * 유저의 해당 월에 보유하고 있는 개인 일정 및 대학 일정을 기간이 긴 순서대로 정렬하여 반환한다.
@@ -40,11 +40,11 @@ public class CalendarService {
         LocalDate startOfMonth = month.atDay(1);
         LocalDate endOfMonth = month.atEndOfMonth();
 
-        List<MonthlyScheduleListDto> monthlyUserSchedule = findMonthlyUserSchedule(userId, startOfMonth, endOfMonth);
-        monthlyUserSchedule.addAll(findMonthlyUniversitySchedule(userId, startOfMonth, endOfMonth));
-        monthlyUserSchedule.sort(scheduleComparator());
+        List<MonthlyScheduleInfo> monthlySchedules = findMonthlyUserSchedule(userId, startOfMonth, endOfMonth);
+        monthlySchedules.addAll(findMonthlyUniversitySchedule(userId, startOfMonth, endOfMonth));
+        monthlySchedules.sort(scheduleComparator());
 
-        return GetMonthlyCalendarResponse.from(monthlyUserSchedule);
+        return GetMonthlyCalendarResponse.from(monthlySchedules);
     }
 
     /**
@@ -55,11 +55,10 @@ public class CalendarService {
      * @return D-day 일정까지 남은 일 수 및 기간 순으로 정렬된 일별 유저 및 대학 일정 DTO
      */
     public GetDailyCalendarResponse findDailyCalendar(LocalDate date, Long userId) {
-        Integer remainingDays = calculateRemainingDays(date, userId);
-        List<DailyScheduleListDto> dailyScheduleList = new ArrayList<>(findDailyUserSchedule(userId, date));
-        dailyScheduleList.addAll(findDailyUniversitySchedule(userId, date));
-        dailyScheduleList.sort(scheduleComparator());
-        return GetDailyCalendarResponse.from(remainingDays, dailyScheduleList);
+        List<DailyScheduleInfo> dailySchedules = findDailyUserSchedule(userId, date);
+        dailySchedules.addAll(findDailyUniversitySchedule(userId, date));
+        dailySchedules.sort(scheduleComparator());
+        return GetDailyCalendarResponse.from(calculateRemainingDays(date, userId), dailySchedules);
     }
 
     /**
@@ -69,11 +68,13 @@ public class CalendarService {
      * @return D-Day 설정한 개인 일정이 존재 여부 및 일정 정보 반환
      */
     public GetDdayScheduleResponse findDdaySchedule(Long userId) {
-        Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
+        Optional<UserSchedule> dDaySchedule = findDdayUserSchedule(userId);
 
         if (dDaySchedule.isPresent()) {
-            return GetDdayScheduleResponse.of(dDaySchedule.get(),
-                    TimeUtil.calculateDaysUntil(TimeUtil.todayInStudyZone(), dDaySchedule.get().getStartDate()));
+            return GetDdayScheduleResponse.of(
+                    dDaySchedule.get(),
+                    TimeUtil.calculateDaysUntil(TimeUtil.todayInStudyZone(), dDaySchedule.get().getStartDate())
+            );
         }
 
         return GetDdayScheduleResponse.temp();
@@ -83,11 +84,11 @@ public class CalendarService {
      * 유저가 보유 중인 해당 월의 개인 일정을 조회한다.
      *
      * @param userId       유저ID
-     * @param startOfMonth 일정 시작 날짜
-     * @param endOfMonth   일정 종료 날짜
+     * @param startOfMonth 조회할 월의 시작 날짜
+     * @param endOfMonth   조회할 월의 종료 날짜
      * @return 월별 일정 DTO List
      */
-    private List<MonthlyScheduleListDto> findMonthlyUserSchedule(
+    private List<MonthlyScheduleInfo> findMonthlyUserSchedule(
             Long userId,
             LocalDate startOfMonth,
             LocalDate endOfMonth
@@ -95,7 +96,7 @@ public class CalendarService {
         return userScheduleRepository
                 .findByUserIdAndYearAndMonth(userId, startOfMonth, endOfMonth)
                 .stream()
-                .map(MonthlyScheduleListDto::from)
+                .map(MonthlyScheduleInfo::from)
                 .collect(Collectors.toList());
     }
 
@@ -103,27 +104,19 @@ public class CalendarService {
      * 유저가 보유 중인 해당 월의 대학 일정을 조회한다.
      *
      * @param userId       유저 ID
-     * @param startOfMonth 일정 시작 날짜
-     * @param endOfMonth   일정 종료 날짜
+     * @param startOfMonth 조회할 월의 시작 날짜
+     * @param endOfMonth   조회할 월의 종료 날짜
      * @return 월별 일정 DTO List
      */
-    private List<MonthlyScheduleListDto> findMonthlyUniversitySchedule(
+    private List<MonthlyScheduleInfo> findMonthlyUniversitySchedule(
             Long userId,
             LocalDate startOfMonth,
             LocalDate endOfMonth
     ) {
-        return userUniversityMethodRepository
-                .findByUserIdAndYearAndMonth(userId, startOfMonth, endOfMonth)
+        return deduplicateBySchedule(universityAdmissionScheduleRepository
+                .findByUserIdAndYearAndMonth(userId, startOfMonth, endOfMonth))
                 .stream()
-                .flatMap(uus -> uus.getUniversityAdmissionMethod().getUniversityAdmissionScheduleList().stream())
-                .collect(Collectors.toMap(
-                        uas -> uas.getUniversitySchedule().getId(),
-                        Function.identity(),
-                        (first, second) -> first,
-                        LinkedHashMap::new
-                ))
-                .values().stream()
-                .map(MonthlyScheduleListDto::from)
+                .map(MonthlyScheduleInfo::from)
                 .toList();
     }
 
@@ -134,11 +127,11 @@ public class CalendarService {
      * @param date   년도, 월, 날짜 정보 (yyyy-MM-dd)
      * @return 일별 일정 DTO List
      */
-    private List<DailyScheduleListDto> findDailyUserSchedule(Long userId, LocalDate date) {
+    private List<DailyScheduleInfo> findDailyUserSchedule(Long userId, LocalDate date) {
         return userScheduleRepository
                 .findByUserIdAndDate(userId, date)
                 .stream()
-                .map(DailyScheduleListDto::from)
+                .map(DailyScheduleInfo::from)
                 .collect(Collectors.toList());
     }
 
@@ -149,26 +142,17 @@ public class CalendarService {
      * @param date   년도, 월, 날짜 정보 (yyyy-MM-dd)
      * @return 일별 일정 DTO List
      */
-    private List<DailyScheduleListDto> findDailyUniversitySchedule(Long userId, LocalDate date) {
-        return userUniversityMethodRepository
-                .findByUserIdAndDate(userId, date)
-                .stream()
-                .flatMap(uum -> uum.getUniversityAdmissionMethod().getUniversityAdmissionScheduleList().stream())
-                .collect(Collectors.toMap(
-                        as -> as.getUniversitySchedule().getId(),
-                        Function.identity(),
-                        (first, second) -> first,
-                        LinkedHashMap::new
-                ))
-                .values().stream()
-                .map(DailyScheduleListDto::from)
+    private List<DailyScheduleInfo> findDailyUniversitySchedule(Long userId, LocalDate date) {
+        return deduplicateBySchedule(universityAdmissionScheduleRepository
+                .findByUserIdAndDate(userId, date))
+                .stream().map(DailyScheduleInfo::from)
                 .toList();
     }
 
     /**
-     * 일정의 시작 및 종료 날짜 혹은 시간을 기준으로 정렬한다.
+     * 일정을 기간(경과 시간)이 긴 순서대로 정렬하며, 기간이 동일한 경우 시작 일시가 늦은 일정을 먼저 정렬한다. 종료 날짜가 없는 일정은 기간이 0으로 계산되어 가장 뒤로 정렬된다.
      *
-     * @return 기간 및 시작 시간 순으로 정렬하는 Comparator
+     * @return 기간 내림차순, 동일 기간인 경우 시작 일시 내림차순으로 정렬하는 Comparator
      */
     private Comparator<ScheduleComparable> scheduleComparator() {
         return Comparator
@@ -192,12 +176,43 @@ public class CalendarService {
      * @return D-Day 일정으로부터 남은 일 수, 일정이 존재하지 않는 경우 {@code null}
      */
     private Integer calculateRemainingDays(LocalDate date, Long userId) {
-        Optional<UserSchedule> dDaySchedule = userScheduleRepository.findByUserIdAndDDayTrue(userId);
+        Optional<UserSchedule> dDaySchedule = findDdayUserSchedule(userId);
 
         if (dDaySchedule.isPresent()) {
             return TimeUtil.calculateDaysUntil(date, dDaySchedule.get().getStartDate());
         }
 
         return null;
+    }
+
+    /**
+     * 유저가 D-Day 설정한 개인 일정을 조회한다.
+     *
+     * @param userId 유저ID
+     * @return D-Day 설정된 개인 일정, 존재하지 않는 경우 {@code Optional.empty()}
+     */
+    private Optional<UserSchedule> findDdayUserSchedule(Long userId) {
+        return userScheduleRepository.findByUserIdAndDDayTrue(userId);
+    }
+
+    /**
+     * 서로 다른 전형이 동일한 대학 일정({@link UniversityAdmissionSchedule#getUniversitySchedule()})을 공유하는 경우, 그
+     * 대학 일정(UniversitySchedule)의 ID를 기준으로 중복을 제거하여 하나만 반환한다. {@link UniversityAdmissionSchedule} 자신의
+     * ID가 아니라, 각 전형이 참조하는 {@code UniversitySchedule}의 ID로 동일 여부를 판단한다.
+     *
+     * @param universityAdmissionSchedules 대학 전형별 일정 리스트
+     * @return 대학 일정(UniversitySchedule) ID 기준으로 중복이 제거된 대학 전형별 일정 리스트
+     */
+    private List<UniversityAdmissionSchedule> deduplicateBySchedule(
+            List<UniversityAdmissionSchedule> universityAdmissionSchedules
+    ) {
+        return universityAdmissionSchedules.stream()
+                .collect(Collectors.toMap(
+                        uas -> uas.getUniversitySchedule().getId(),
+                        Function.identity(),
+                        (first, second) -> first,
+                        LinkedHashMap::new))
+                .values().stream()
+                .toList();
     }
 }

@@ -1,16 +1,17 @@
 package com.togedy.togedy_server_v2.global.error;
 
+import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.response.ErrorResponse;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
-import java.util.stream.Collectors;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @Slf4j
 @RestControllerAdvice
@@ -41,6 +42,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiResponse<?>> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        return handleException(e, ErrorResponse.from(ErrorCode.INVALID_INPUT_VALUE));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiResponse<?>> handleMethodArgumentTypeMismatchException(
+            MethodArgumentTypeMismatchException e
+    ) {
+        if (e.getRequiredType() == AdmissionType.class) {
+            return handleException(e, ErrorResponse.from(ErrorCode.INVALID_ADMISSION_TYPE));
+        }
+
         return handleException(e, ErrorResponse.from(ErrorCode.INVALID_INPUT_VALUE));
     }
 
