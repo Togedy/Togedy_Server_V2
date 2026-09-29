@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.application;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
+import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
@@ -17,7 +18,6 @@ import com.togedy.togedy_server_v2.domain.study.enums.StudyRole;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyTag;
 import com.togedy.togedy_server_v2.domain.study.enums.StudyType;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderNotFoundException;
-import com.togedy.togedy_server_v2.domain.user.dao.StudyingStatusRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.enums.ImageCategory;
@@ -29,6 +29,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -45,7 +46,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class StudyExternalService {
 
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
-    private final StudyingStatusRepository studyingStatusRepository;
+    private final StudyTimeRepository studyTimeRepository;
     private final UserStudyRepository userStudyRepository;
     private final StudyRepository studyRepository;
     private final UserRepository userRepository;
@@ -145,6 +146,8 @@ public class StudyExternalService {
                 .distinct()
                 .toList();
 
+        Set<Long> studyingMemberIds = studyTimeRepository.findStudyingUserIds(memberIds);
+
         Map<Long, User> memberMap = userRepository.findAllById(memberIds)
                 .stream()
                 .collect(Collectors.toMap(User::getId, user -> user));
@@ -161,7 +164,7 @@ public class StudyExternalService {
                 ));
 
         List<StudyDto> studyDtos = studies.stream()
-                .map(study -> buildStudyDto(study, userStudyMap, memberMap, studyTimeMap))
+                .map(study -> buildStudyDto(study, userStudyMap, memberMap, studyTimeMap, studyingMemberIds))
                 .toList();
 
         return buildMyStudyInfoResponse(studies, studyTime, studyDtos);
@@ -463,7 +466,8 @@ public class StudyExternalService {
             Study study,
             Map<Long, List<UserStudy>> userStudyMap,
             Map<Long, User> memberMap,
-            Map<Long, Long> studyTimeMap
+            Map<Long, Long> studyTimeMap,
+            Set<Long> studyingMemberIds
     ) {
         List<UserStudy> memberStudies = userStudyMap.get(study.getId());
 
@@ -472,7 +476,7 @@ public class StudyExternalService {
                 .toList();
 
         List<ActiveMemberDto> activeMemberDtos = members.stream()
-                .filter(member -> studyingStatusRepository.isExist(member.getId()))
+                .filter(member -> studyingMemberIds.contains(member.getId()))
                 .map(ActiveMemberDto::from)
                 .toList();
 
