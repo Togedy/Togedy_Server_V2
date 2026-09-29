@@ -20,25 +20,25 @@
 
 ## 📌 주요 기능
 
-| 도메인                 | 기능                                                        |
-|---------------------|-----------------------------------------------------------|
-| **user**            | 카카오 소셜 로그인, JWT 인증/재발급, 온보딩, 닉네임 검증·추천, 회원 탈퇴             |
+| 도메인                 | 기능                                                       |
+|---------------------|----------------------------------------------------------|
+| **user**            | 카카오 소셜 로그인, JWT 인증/재발급, 온보딩, 닉네임 검증·추천, 회원 탈퇴            |
 | **study**           | 스터디 생성·가입, 챌린지 스터디(목표 시간), 공부 중 멤버 조회, 스터디 통계·티어, 스터디 신고 |
-| **planner**         | 과목·할 일 관리, 공부 타이머, 일간 타임테이블, 월간 공부시간 히트맵, 플래너 공유          |
-| **university**      | 대학·전형 검색, 입시 일정 조회, 관심 전형 등록                              |
-| **schedule**        | 개인 일정·카테고리 관리, 개인 + 대학 일정 통합 캘린더, D-Day                   |
-| **chat**            | AI 서버 연동 입시 상담 챗봇                                         |
-| **support**         | 공지사항(관리자 작성), 1:1 문의 접수·관리자 조회                              |
-| **policy / config** | 약관·정책, 앱 설정                                               |
+| **planner**         | 과목·할 일 관리, 공부 타이머, 일간 타임테이블, 월간 공부시간 히트맵, 플래너 공유         |
+| **university**      | 대학·전형 검색, 입시 일정 조회, 관심 전형 등록                             |
+| **schedule**        | 개인 일정·카테고리 관리, 개인 + 대학 일정 통합 캘린더, D-Day                  |
+| **chat**            | AI 서버 연동 입시 상담 챗봇                                        |
+| **support**         | 공지사항(관리자 작성), 1:1 문의 접수·관리자 조회                           |
+| **policy / config** | 이용약관·개인정보처리방침, 캘린더 공지                                    |
 
 ### 배치 작업
 
-| 시각 (KST) | 작업          |
-|----------|-------------|
+| 시각 (KST) | 작업                 |
+|----------|--------------------|
 | 1분 간격    | 하트비트가 끊긴 타이머 자동 종료 |
-| 05:00    | 일간 공부 요약 집계 |
-| 05:30    | 스터디 통계 집계   |
-| 06:00    | 스터디 티어 갱신   |
+| 05:00    | 일간 공부 요약 집계        |
+| 05:30    | 스터디 통계 집계          |
+| 06:00    | 스터디 티어 갱신          |
 
 ---
 
@@ -49,7 +49,7 @@
 | Language / Framework | Java 17, Spring Boot 3.4, Spring Security, Spring Data JPA, Spring WebFlux (WebClient) |
 | Database             | MySQL 8.0, Redis 7, MongoDB, Flyway                                                    |
 | Auth                 | JWT, Kakao OAuth                                                                       |
-| Infra                | AWS Lightsail, AWS S3, Docker, Nginx (Blue/Green)                                            |
+| Infra                | AWS Lightsail, AWS S3, Docker, Nginx (Blue/Green)                                      |
 | CI/CD                | GitHub Actions                                                                         |
 | Monitoring           | Spring Actuator, Prometheus, Grafana                                                   |
 | Test                 | JUnit 5, Mockito, Testcontainers, k6                                                   |
@@ -61,6 +61,7 @@
 
 <img width="100%" alt="System Architecture" src=".github/assets/architecture.png" />
 
+- `develop` 대상 PR → 테스트 자동 실행
 - `develop` push → Dev 서버 자동 배포
 - `main` push → Prod 서버 Blue/Green 무중단 배포
 - Prometheus + Grafana 기반 애플리케이션 메트릭 모니터링
@@ -104,7 +105,7 @@ com.togedy.togedy_server_v2
 ├── domain
 │   ├── user · study · planner · university · schedule
 │   ├── chat · support · policy · config
-│   └── study             # 도메인 내부 구조 예시
+│   └── <domain>          # 도메인 내부 구조
 │       ├── api           # Controller
 │       ├── application   # Service
 │       ├── dao           # Repository
