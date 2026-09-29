@@ -104,15 +104,16 @@ com.togedy.togedy_server_v2
 ├── domain
 │   ├── user · study · planner · university · schedule
 │   ├── chat · support · policy · config
-│   │   ├── api           # Controller
-│   │   ├── application   # Service
-│   │   ├── dao           # Repository
-│   │   ├── dto
-│   │   ├── entity
-│   │   ├── enums
-│   │   ├── event         # 도메인 이벤트
-│   │   ├── scheduler     # 배치 작업
-│   │   └── exception
+│   └── study             # 도메인 내부 구조 예시
+│       ├── api           # Controller
+│       ├── application   # Service
+│       ├── dao           # Repository
+│       ├── dto
+│       ├── entity
+│       ├── exception
+│       ├── enums         # (선택) 도메인 전용 enum이 있을 때
+│       ├── event         # (선택) 도메인 이벤트가 있을 때
+│       └── scheduler     # (선택) 배치 작업이 있을 때
 └── global
     ├── security          # JWT 인증/인가
     ├── config
@@ -121,6 +122,9 @@ com.togedy.togedy_server_v2
     ├── entity · enums · event · util
     └── service           # S3 업로드
 ```
+
+> 모든 도메인은 `api` · `application` · `dto`를 기본으로 두고, 나머지 디렉터리는 필요한 경우에만 둡니다.
+> (`policy`는 DB를 사용하지 않아 `dao` · `entity` · `exception`이 없습니다.)
 
 ```
 infra
