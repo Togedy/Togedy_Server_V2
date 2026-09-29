@@ -5,6 +5,7 @@ import jakarta.persistence.LockModeType;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -106,4 +107,12 @@ public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
                         AND st.lastHeartbeatAt < :cutoff
             """)
     List<Long> findStaleRunningStudyTimeIds(@Param("cutoff") LocalDateTime cutoff);
+
+    @Query("""
+            SELECT DISTINCT st.userId
+            FROM StudyTime st
+            WHERE st.userId IN :userIds
+                AND st.endTime IS NULL
+            """)
+    Set<Long> findStudyingUserIds(@Param("userIds") List<Long> userIds);
 }

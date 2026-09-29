@@ -20,7 +20,6 @@ import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyRunningE
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyStoppedException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotFoundException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotOwnedException;
-import com.togedy.togedy_server_v2.domain.user.dao.StudyingStatusRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
@@ -47,7 +46,6 @@ public class TimerService {
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final StudySubjectRepository studySubjectRepository;
     private final StudyTimeRepository studyTimeRepository;
-    private final StudyingStatusRepository studyingStatusRepository;
     private final TransactionTemplate transactionTemplate;
 
     private static final int CUTOFF_SECONDS = 150;
@@ -86,8 +84,6 @@ public class TimerService {
         } catch (DataIntegrityViolationException e) {
             throw new TimerAlreadyRunningException();
         }
-
-        studyingStatusRepository.save(userId);
 
         return PostTimerStartResponse.of(timerId, startTime);
     }
@@ -183,7 +179,6 @@ public class TimerService {
         }
 
         studyTime.touch(TimeUtil.nowInStudyZone());
-        studyingStatusRepository.save(userId);
     }
 
     public void cleanup() {
@@ -282,6 +277,5 @@ public class TimerService {
     private void updateUser(User user, LocalDateTime endTime) {
         user.updateStudyStreak(endTime);
         user.updateLastActivatedAt(endTime);
-        studyingStatusRepository.delete(user.getId());
     }
 }

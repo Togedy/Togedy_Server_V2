@@ -13,6 +13,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
+import com.togedy.togedy_server_v2.domain.study.dto.ActiveMemberDto;
 import com.togedy.togedy_server_v2.domain.study.dto.GetMyStudyInfoResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyNameDuplicateResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudySearchResponse;
@@ -33,6 +34,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.springframework.data.domain.PageRequest;
@@ -261,8 +263,8 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
                 .willReturn(List.of());
 
-        given(studyingStatusRepository.isExist(any()))
-                .willReturn(true);
+        given(studyTimeRepository.findStudyingUserIds(any()))
+                .willReturn(Set.of(userId));
 
         // when
         GetMyStudyInfoResponse response = studyExternalService.findMyStudyInfo(userId);
@@ -308,8 +310,8 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
                 .willReturn(List.of());
 
-        given(studyingStatusRepository.isExist(any()))
-                .willReturn(true);
+        given(studyTimeRepository.findStudyingUserIds(any()))
+                .willReturn(Set.of(userId));
 
         // when
         GetMyStudyInfoResponse response = studyExternalService.findMyStudyInfo(userId);
@@ -359,8 +361,8 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
                 .willReturn(List.of(dailyStudySummary));
 
-        given(studyingStatusRepository.isExist(any()))
-                .willReturn(true);
+        given(studyTimeRepository.findStudyingUserIds(any()))
+                .willReturn(Set.of(userId));
 
         // when
         GetMyStudyInfoResponse response = studyExternalService.findMyStudyInfo(userId);
@@ -404,14 +406,100 @@ public class StudyExternalServiceTest extends AbstractStudyServiceTest {
         given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
                 .willReturn(List.of(dailyStudySummary));
 
-        given(studyingStatusRepository.isExist(any()))
-                .willReturn(true);
+        given(studyTimeRepository.findStudyingUserIds(any()))
+                .willReturn(Set.of(userId));
 
         // when
         GetMyStudyInfoResponse response = studyExternalService.findMyStudyInfo(userId);
 
         // then
         assertThat(response.getStudyList().get(0).getCompletedMemberCount()).isEqualTo(1);
+    }
+
+    @Test
+    public void 본인_스터디_조회_시_공부_중인_멤버만_활성_멤버로_반환한다() {
+        // given
+        Long leaderId = 1L;
+        Long memberId = 2L;
+        Long studyId = 1L;
+
+        Study study = StudyFixture.createNormalStudy();
+        ReflectionTestUtils.setField(study, "id", studyId);
+        ReflectionTestUtils.setField(study, "memberCount", 2);
+
+        given(studyRepository.findAllByUserIdOrderByCreatedAtAsc(leaderId))
+                .willReturn(List.of(study));
+
+        given(dailyStudySummaryRepository.findByUserIdAndDate(eq(leaderId), any(LocalDate.class)))
+                .willReturn(Optional.empty());
+
+        UserStudy leaderUserStudy = UserStudyFixture.createLeaderUserStudy(leaderId, studyId);
+        UserStudy memberUserStudy = UserStudyFixture.createMemberUserStudy(memberId, studyId);
+
+        given(userStudyRepository.findAllByStudyIds(List.of(studyId)))
+                .willReturn(List.of(leaderUserStudy, memberUserStudy));
+
+        User leader = UserFixture.createLeader();
+        ReflectionTestUtils.setField(leader, "id", leaderId);
+        User member = UserFixture.createMember();
+        ReflectionTestUtils.setField(member, "id", memberId);
+
+        given(userRepository.findAllById(List.of(leaderId, memberId)))
+                .willReturn(List.of(leader, member));
+
+        given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(leaderId, memberId)), any(LocalDate.class)))
+                .willReturn(List.of());
+
+        given(studyTimeRepository.findStudyingUserIds(List.of(leaderId, memberId)))
+                .willReturn(Set.of(memberId));
+
+        // when
+        GetMyStudyInfoResponse response = studyExternalService.findMyStudyInfo(leaderId);
+
+        // then
+        assertThat(response.getStudyList().get(0).getActiveMemberList())
+                .extracting(ActiveMemberDto::getUserName)
+                .containsExactly(member.getNickname());
+    }
+
+    @Test
+    public void 본인_스터디_조회_시_공부_중인_멤버가_없는_경우_활성_멤버는_빈_리스트를_반환한다() {
+        // given
+        Long userId = 1L;
+        Long studyId = 1L;
+
+        Study study = StudyFixture.createNormalStudy();
+        ReflectionTestUtils.setField(study, "id", studyId);
+        ReflectionTestUtils.setField(study, "memberCount", 1);
+
+        given(studyRepository.findAllByUserIdOrderByCreatedAtAsc(userId))
+                .willReturn(List.of(study));
+
+        given(dailyStudySummaryRepository.findByUserIdAndDate(eq(userId), any(LocalDate.class)))
+                .willReturn(Optional.empty());
+
+        UserStudy userStudy = UserStudyFixture.createLeaderUserStudy(userId, studyId);
+
+        given(userStudyRepository.findAllByStudyIds(List.of(studyId)))
+                .willReturn(List.of(userStudy));
+
+        User user = UserFixture.createUser();
+        ReflectionTestUtils.setField(user, "id", userId);
+
+        given(userRepository.findAllById(List.of(userId)))
+                .willReturn(List.of(user));
+
+        given(dailyStudySummaryRepository.findAllByUserIdsAndDate(eq(List.of(userId)), any(LocalDate.class)))
+                .willReturn(List.of());
+
+        given(studyTimeRepository.findStudyingUserIds(List.of(userId)))
+                .willReturn(Set.of());
+
+        // when
+        GetMyStudyInfoResponse response = studyExternalService.findMyStudyInfo(userId);
+
+        // then
+        assertThat(response.getStudyList().get(0).getActiveMemberList()).isEmpty();
     }
 
     @Test
