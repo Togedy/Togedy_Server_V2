@@ -7,7 +7,6 @@ import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.StudyStatisticsRepository;
 import com.togedy.togedy_server_v2.domain.study.dao.UserStudyRepository;
-import com.togedy.togedy_server_v2.domain.user.dao.StudyingStatusRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.global.service.S3Service;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -40,9 +39,6 @@ public abstract class AbstractStudyServiceTest {
 
     @Mock
     protected StudyTimeRepository studyTimeRepository;
-
-    @Mock
-    protected StudyingStatusRepository studyingStatusRepository;
 
     @Mock
     S3Service s3Service;
