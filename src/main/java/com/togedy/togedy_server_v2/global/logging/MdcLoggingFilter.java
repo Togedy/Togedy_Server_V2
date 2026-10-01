@@ -15,8 +15,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class MdcLoggingFilter extends OncePerRequestFilter {
 
     private static final String REQUEST_ID_HEADER = "X-Request-Id";
-    private static final String REQUEST_ID = "requestId";
-    private static final String USER_ID = "userId";
+    public static final String REQUEST_ID = "requestId";
+    public static final String USER_ID = "userId";
     private static final String ANONYMOUS = "anonymous";
 
     @Override

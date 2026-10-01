@@ -2,9 +2,11 @@ package com.togedy.togedy_server_v2.global.exception;
 
 import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
 import com.togedy.togedy_server_v2.global.enums.ErrorCode;
+import com.togedy.togedy_server_v2.global.infrastructure.discord.DiscordNotifier;
 import com.togedy.togedy_server_v2.global.response.ErrorResponse;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -19,7 +21,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 @Slf4j
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    private final DiscordNotifier discordNotifier;
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<Object> handleCustomException(CustomException e) {
@@ -52,6 +57,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     private void logException(Exception e, ErrorResponse errorResponse) {
         if (errorResponse.getStatus() >= 500) {
             log.error("[{}] {}: {}", errorResponse.getCode(), e.getClass().getSimpleName(), e.getMessage(), e);
+            discordNotifier.notify(errorResponse.getCode(), e);
             return;
         }
 

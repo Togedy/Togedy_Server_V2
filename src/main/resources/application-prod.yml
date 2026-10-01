@@ -53,6 +53,10 @@ swagger:
 kakao:
   admin-key: ${PROD_KAKAO_ADMIN_KEY}
 
+discord:
+  webhook:
+    url: ${DISCORD_WEBHOOK_URL:}
+
 jwt:
   secret-key: ${PROD_JWT_SECRET_KEY}
   access-expired-in: 3600000        # 1시간
