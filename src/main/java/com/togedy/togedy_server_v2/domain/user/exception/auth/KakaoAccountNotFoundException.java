@@ -1,8 +1,10 @@
 package com.togedy.togedy_server_v2.domain.user.exception.auth;
 
-import com.togedy.togedy_server_v2.global.error.CustomException;
-import com.togedy.togedy_server_v2.global.error.ErrorCode;
+import com.togedy.togedy_server_v2.global.enums.ErrorCode;
+import com.togedy.togedy_server_v2.global.exception.CustomException;
 
 public class KakaoAccountNotFoundException extends CustomException {
-    public KakaoAccountNotFoundException() { super(ErrorCode.KAKAO_ACCOUNT_NOT_FOUND); }
+    public KakaoAccountNotFoundException() {
+        super(ErrorCode.KAKAO_ACCOUNT_NOT_FOUND);
+    }
 }

@@ -1,7 +1,7 @@
 package com.togedy.togedy_server_v2.global.security.jwt;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.togedy.togedy_server_v2.global.error.ErrorCode;
+import com.togedy.togedy_server_v2.global.enums.ErrorCode;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.response.ErrorResponse;
 import com.togedy.togedy_server_v2.global.security.jwt.exception.JwtException;
@@ -9,9 +9,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 public class JwtExceptionFilter extends OncePerRequestFilter {
 

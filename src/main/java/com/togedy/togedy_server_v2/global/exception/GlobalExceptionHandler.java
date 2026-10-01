@@ -1,6 +1,7 @@
-package com.togedy.togedy_server_v2.global.error;
+package com.togedy.togedy_server_v2.global.exception;
 
 import com.togedy.togedy_server_v2.domain.university.enums.AdmissionType;
+import com.togedy.togedy_server_v2.global.enums.ErrorCode;
 import com.togedy.togedy_server_v2.global.response.ErrorResponse;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import java.util.stream.Collectors;
