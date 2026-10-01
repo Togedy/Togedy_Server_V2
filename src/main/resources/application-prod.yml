@@ -38,6 +38,7 @@ management:
 logging:
   level:
     root: WARN
+    com.togedy.togedy_server_v2: INFO
 
 springdoc:
   swagger-ui:
