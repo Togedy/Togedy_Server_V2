@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -34,14 +35,14 @@ public class DiscordNotifier {
         this.webhookUrl = webhookUrl;
     }
 
-    public void notify(String errorCode, Exception e) {
+    public void notify(String title, Exception e) {
         if (!StringUtils.hasText(webhookUrl)) {
             return;
         }
 
         webClient.post()
                 .uri(webhookUrl)
-                .bodyValue(Map.of("content", buildContent(errorCode, e)))
+                .bodyValue(Map.of("content", buildContent(title, e)))
                 .retrieve()
                 .toBodilessEntity()
                 .timeout(TIMEOUT)
@@ -52,7 +53,7 @@ public class DiscordNotifier {
                 );
     }
 
-    private String buildContent(String errorCode, Exception e) {
+    private String buildContent(String title, Exception e) {
         String content = """
                 🚨 **[%s] %s**
                 - request: `%s`
@@ -63,11 +64,11 @@ public class DiscordNotifier {
                 %s
                 ```"""
                 .formatted(
-                        errorCode,
+                        title,
                         e.getClass().getSimpleName(),
                         resolveRequest(),
-                        MDC.get(MdcLoggingFilter.REQUEST_ID),
-                        MDC.get(MdcLoggingFilter.USER_ID),
+                        Objects.requireNonNullElse(MDC.get(MdcLoggingFilter.REQUEST_ID), "-"),
+                        Objects.requireNonNullElse(MDC.get(MdcLoggingFilter.USER_ID), "-"),
                         e.getMessage(),
                         resolveStackTrace(e)
                 );
