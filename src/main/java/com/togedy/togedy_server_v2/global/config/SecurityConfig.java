@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.global.config;
 
+import com.togedy.togedy_server_v2.global.logging.MdcLoggingFilter;
 import com.togedy.togedy_server_v2.global.security.PublicEndpointPolicy;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtAuthenticationFilter;
 import com.togedy.togedy_server_v2.global.security.jwt.JwtExceptionFilter;
@@ -56,6 +57,7 @@ public class SecurityConfig {
                 .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
                         UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JwtExceptionFilter(), JwtAuthenticationFilter.class)
+                .addFilterAfter(new MdcLoggingFilter(), JwtAuthenticationFilter.class)
                 .build();
     }
 
