@@ -79,6 +79,7 @@ jobs:
             export PROD_S3_BUCKET_NAME='${{ secrets.PROD_S3_BUCKET_NAME }}'
             export PROD_SWAGGER_URL='${{ secrets.PROD_SWAGGER_URL }}'
             export PROD_KAKAO_ADMIN_KEY='${{ secrets.PROD_KAKAO_ADMIN_KEY }}'
+            export DISCORD_WEBHOOK_URL='${{ secrets.DISCORD_WEBHOOK_URL }}'
 
             export PROD_JWT_SECRET_KEY='${{ secrets.PROD_JWT_SECRET_KEY }}'
             export AI_SERVER_URL='${{ secrets.AI_SERVER_URL }}'

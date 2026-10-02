@@ -45,3 +45,8 @@ management:
     web:
       exposure:
         include: health
+
+---
+logging:
+  pattern:
+    level: "%5p [%X{requestId:-}] [%X{userId:-}]"

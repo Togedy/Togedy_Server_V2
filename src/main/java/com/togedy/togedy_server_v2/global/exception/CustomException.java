@@ -1,5 +1,6 @@
-package com.togedy.togedy_server_v2.global.error;
+package com.togedy.togedy_server_v2.global.exception;
 
+import com.togedy.togedy_server_v2.global.enums.ErrorCode;
 import lombok.Getter;
 
 @Getter

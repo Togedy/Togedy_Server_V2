@@ -19,6 +19,7 @@ x-app-common: &app-common
     PROD_S3_BUCKET_NAME: ${PROD_S3_BUCKET_NAME}
     PROD_SWAGGER_URL: ${PROD_SWAGGER_URL}
     PROD_KAKAO_ADMIN_KEY: ${PROD_KAKAO_ADMIN_KEY}
+    DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
     JAVA_OPTS: "-Xmx400m -Xms200m"
   depends_on:
     redis:
