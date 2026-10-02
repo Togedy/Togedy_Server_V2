@@ -55,7 +55,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void 4xx_CustomException은_해당_에러코드를_반환하고_알림을_보내지_않는다() {
+    void CustomException이_4xx면_해당_에러코드를_반환하고_알림을_보내지_않는다() {
         CustomException exception = new CustomException(ErrorCode.APP_CONFIG_NOT_FOUND);
 
         ResponseEntity<Object> response = globalExceptionHandler.handleCustomException(exception);
@@ -66,7 +66,7 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void 5xx_CustomException은_해당_에러코드를_반환하고_알림을_보낸다() {
+    void CustomException이_5xx면_해당_에러코드를_반환하고_알림을_보낸다() {
         CustomException exception = new CustomException(ErrorCode.STORAGE_UPLOAD_FAILED);
 
         ResponseEntity<Object> response = globalExceptionHandler.handleCustomException(exception);
