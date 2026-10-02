@@ -2,13 +2,23 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{admin/fragments :: head('로그인')}"></head>
 <body>
-<h1>Togedy Admin</h1>
-<p class="error" th:if="${param.error}">로그인 정보가 올바르지 않습니다.</p>
-<p th:if="${param.logout}">로그아웃되었습니다.</p>
-<form th:action="@{/admin/login}" method="post">
-    <p><label>아이디 <input type="text" name="loginId" required></label></p>
-    <p><label>비밀번호 <input type="password" name="password" required></label></p>
-    <button type="submit">로그인</button>
-</form>
+<main style="max-width: 400px; padding-top: 120px;">
+    <h1 class="brand" style="font-size: 24px; text-align: center; margin-bottom: 24px;"><span>Togedy</span> Admin</h1>
+    <div class="card pad">
+        <div class="alert alert-error" th:if="${param.error}">로그인 정보가 올바르지 않습니다.</div>
+        <div class="alert alert-info" th:if="${param.logout}">로그아웃되었습니다.</div>
+        <form th:action="@{/admin/login}" method="post">
+            <div class="field">
+                <label for="loginId">아이디</label>
+                <input type="text" id="loginId" name="loginId" required autofocus>
+            </div>
+            <div class="field">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button class="btn btn-primary btn-block" type="submit">로그인</button>
+        </form>
+    </div>
+</main>
 </body>
 </html>
