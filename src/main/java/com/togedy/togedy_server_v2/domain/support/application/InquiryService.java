@@ -5,6 +5,8 @@ import com.togedy.togedy_server_v2.domain.support.dto.GetInquiryResponse;
 import com.togedy.togedy_server_v2.domain.support.dto.InquiryDto;
 import com.togedy.togedy_server_v2.domain.support.dto.PostInquiryRequest;
 import com.togedy.togedy_server_v2.domain.support.entity.Inquiry;
+import com.togedy.togedy_server_v2.domain.support.enums.InquiryStatus;
+import com.togedy.togedy_server_v2.domain.support.exception.InquiryNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -65,5 +67,20 @@ public class InquiryService {
                 .toList();
 
         return GetInquiryResponse.of(inquirySlice.hasNext(), inquiries);
+    }
+
+    /**
+     * 문의 처리 상태를 변경한다.
+     *
+     * @param inquiryId 변경 대상 문의 ID
+     * @param status    변경할 문의 상태
+     * @throws InquiryNotFoundException 해당 문의가 존재하지 않는 경우
+     */
+    @Transactional
+    public void modifyInquiryStatus(Long inquiryId, InquiryStatus status) {
+        Inquiry inquiry = inquiryRepository.findById(inquiryId)
+                .orElseThrow(InquiryNotFoundException::new);
+
+        inquiry.changeStatus(status);
     }
 }

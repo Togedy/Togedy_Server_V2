@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head('문의')}"></head>
+<body>
+<nav th:replace="~{admin/fragments :: nav}"></nav>
+<h1>문의</h1>
+<table>
+    <thead>
+    <tr><th>ID</th><th>유저 ID</th><th>유형</th><th>내용</th><th>회신 이메일</th><th>등록일시</th><th>상태</th></tr>
+    </thead>
+    <tbody>
+    <tr th:if="${#lists.isEmpty(result.inquiries)}"><td colspan="7">문의가 없습니다.</td></tr>
+    <tr th:each="inquiry : ${result.inquiries}">
+        <td th:text="${inquiry.inquiryId}"></td>
+        <td th:text="${inquiry.userId}"></td>
+        <td th:text="${inquiry.inquiryType.description}"></td>
+        <td class="content" th:text="${inquiry.inquiryContent}"></td>
+        <td th:text="${inquiry.replyEmail}"></td>
+        <td th:text="${#temporals.format(inquiry.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+        <td>
+            <form th:action="@{/admin/inquiries/{id}/status(id=${inquiry.inquiryId})}" method="post">
+                <input type="hidden" name="page" th:value="${page}">
+                <select name="status">
+                    <option th:each="status : ${statuses}"
+                            th:value="${status}"
+                            th:text="${status.description}"
+                            th:selected="${status.description == inquiry.inquiryStatus}"></option>
+                </select>
+                <button type="submit">변경</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+<p class="actions">
+    <a th:if="${page > 1}" th:href="@{/admin/inquiries(page=${page - 1})}">이전</a>
+    <span th:text="${page}"></span>
+    <a th:if="${result.hasNext}" th:href="@{/admin/inquiries(page=${page + 1})}">다음</a>
+</p>
+</body>
+</html>
