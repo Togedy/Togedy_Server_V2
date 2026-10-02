@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head('홈')}"></head>
+<body>
+<nav th:replace="~{admin/fragments :: nav}"></nav>
+<h1>Togedy Admin</h1>
+<ul>
+    <li><a th:href="@{/admin/notices}">앱 공지사항 관리</a></li>
+    <li><a th:href="@{/admin/calendar-announcements}">캘린더 공지 관리</a></li>
+    <li><a th:href="@{/admin/inquiries}">문의 관리</a></li>
+</ul>
+</body>
+</html>
