@@ -56,12 +56,12 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void CustomException이_4xx면_해당_에러코드를_반환하고_알림을_보내지_않는다() {
-        CustomException exception = new CustomException(ErrorCode.APP_CONFIG_NOT_FOUND);
+        CustomException exception = new CustomException(ErrorCode.NOTICE_NOT_FOUND);
 
         ResponseEntity<Object> response = globalExceptionHandler.handleCustomException(exception);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-        assertErrorResponse(response, ErrorCode.APP_CONFIG_NOT_FOUND);
+        assertErrorResponse(response, ErrorCode.NOTICE_NOT_FOUND);
         then(discordNotifier).should(never()).notify(anyString(), any());
     }
 
