@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head(${calendarAnnouncementId} == null ? '캘린더 공지 작성' : '캘린더 공지 수정')}"></head>
+<body>
+<nav th:replace="~{admin/fragments :: nav}"></nav>
+<h1 th:text="${calendarAnnouncementId} == null ? '캘린더 공지 작성' : '캘린더 공지 수정'"></h1>
+<form th:object="${form}" method="post"
+      th:action="${calendarAnnouncementId} == null ? @{/admin/calendar-announcements} : @{/admin/calendar-announcements/{id}/edit(id=${calendarAnnouncementId})}">
+    <p>
+        <label>내용 <textarea th:field="*{content}"></textarea></label>
+        <span class="error" th:if="${#fields.hasErrors('content')}" th:errors="*{content}"></span>
+    </p>
+    <div class="actions">
+        <button type="submit">저장</button>
+        <a th:href="@{/admin/calendar-announcements}">목록</a>
+    </div>
+</form>
+</body>
+</html>

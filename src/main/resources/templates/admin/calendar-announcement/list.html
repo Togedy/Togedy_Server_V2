@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head('캘린더 공지')}"></head>
+<body>
+<nav th:replace="~{admin/fragments :: nav}"></nav>
+<h1>캘린더 공지</h1>
+<p>앱 캘린더에는 가장 최근에 등록된 공지 1건만 노출됩니다.</p>
+<p><a th:href="@{/admin/calendar-announcements/new}">새 공지 작성</a></p>
+<table>
+    <thead>
+    <tr><th>ID</th><th>내용</th><th>등록일시</th><th>수정일시</th><th></th></tr>
+    </thead>
+    <tbody>
+    <tr th:if="${#lists.isEmpty(announcements)}"><td colspan="5">등록된 캘린더 공지가 없습니다.</td></tr>
+    <tr th:each="announcement, stat : ${announcements}">
+        <td>
+            <span th:text="${announcement.calendarAnnouncementId}"></span>
+            <strong th:if="${stat.first}">(노출 중)</strong>
+        </td>
+        <td class="content" th:text="${announcement.content}"></td>
+        <td th:text="${#temporals.format(announcement.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+        <td th:text="${#temporals.format(announcement.updatedAt, 'yyyy-MM-dd HH:mm')}"></td>
+        <td class="actions">
+            <a th:href="@{/admin/calendar-announcements/{id}/edit(id=${announcement.calendarAnnouncementId})}">수정</a>
+            <form class="inline"
+                  th:action="@{/admin/calendar-announcements/{id}/delete(id=${announcement.calendarAnnouncementId})}"
+                  method="post" onsubmit="return confirm('삭제하시겠습니까?');">
+                <button type="submit">삭제</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
