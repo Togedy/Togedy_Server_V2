@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -24,7 +26,7 @@ public class AdminSecurityConfig {
     public SecurityFilterChain adminFilterChain(HttpSecurity http) throws Exception {
         return http
                 .securityMatcher("/admin/**")
-                .userDetailsService(adminUserDetailsService)
+                .authenticationManager(adminAuthenticationManager())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login").permitAll()
                         .anyRequest().hasRole("ADMIN")
@@ -40,6 +42,19 @@ public class AdminSecurityConfig {
                         .logoutSuccessUrl("/admin/login?logout")
                 )
                 .build();
+    }
+
+    /**
+     * 전역 AuthenticationManager를 부모로 두지 않는 어드민 전용 매니저.
+     * <p>
+     * UserDetailsService 빈이 여러 개라 전역 매니저가 구성되지 않으며, 이를 부모로 두면 인증 실패 시 자기 자신을 재귀 호출한다.
+     * </p>
+     */
+    private ProviderManager adminAuthenticationManager() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(adminUserDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
+        return new ProviderManager(provider);
     }
 
     @Bean
