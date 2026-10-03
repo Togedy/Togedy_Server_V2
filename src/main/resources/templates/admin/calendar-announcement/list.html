@@ -14,16 +14,17 @@
     <div class="card">
         <table>
             <thead>
-            <tr><th>ID</th><th style="width: 100%;">내용</th><th>등록일시</th><th>수정일시</th><th></th></tr>
+            <tr><th>ID</th><th>상태</th><th style="width: 100%;">내용</th><th>등록일시</th><th>수정일시</th><th></th></tr>
             </thead>
             <tbody>
-            <tr th:if="${#lists.isEmpty(announcements)}"><td class="empty" colspan="5">등록된 캘린더 공지가 없습니다.</td></tr>
+            <tr th:if="${#lists.isEmpty(announcements)}"><td class="empty" colspan="6">등록된 캘린더 공지가 없습니다.</td></tr>
             <tr th:each="announcement, stat : ${announcements}">
                 <td class="muted" th:text="${announcement.calendarAnnouncementId}"></td>
                 <td>
-                    <span class="chip chip-green" th:if="${stat.first}">노출 중</span>
-                    <div class="content" th:text="${announcement.content}"></div>
+                    <span class="chip chip-green" th:if="${stat.first}">게시 중</span>
+                    <span class="chip" th:unless="${stat.first}">지난 공지</span>
                 </td>
+                <td class="content" th:text="${announcement.content}"></td>
                 <td class="muted" th:text="${#temporals.format(announcement.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
                 <td class="muted" th:text="${#temporals.format(announcement.updatedAt, 'yyyy-MM-dd HH:mm')}"></td>
                 <td>
