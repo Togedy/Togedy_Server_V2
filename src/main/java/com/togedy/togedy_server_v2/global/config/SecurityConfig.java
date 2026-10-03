@@ -50,7 +50,6 @@ public class SecurityConfig {
                         .requestMatchers(PublicEndpointPolicy.PUBLIC_ANY_METHOD_PATTERNS).permitAll()
                         .requestMatchers(HttpMethod.GET, PublicEndpointPolicy.PUBLIC_GET_PATTERNS).permitAll()
                         .requestMatchers(HttpMethod.POST, PublicEndpointPolicy.PUBLIC_POST_PATTERNS).permitAll()
-                        .requestMatchers("/api/v2/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/v2/**").authenticated()
                         .anyRequest().authenticated()
                 )

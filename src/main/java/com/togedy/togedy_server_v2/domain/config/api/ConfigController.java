@@ -1,6 +1,6 @@
 package com.togedy.togedy_server_v2.domain.config.api;
 
-import com.togedy.togedy_server_v2.domain.config.application.ConfigService;
+import com.togedy.togedy_server_v2.domain.config.application.CalendarAnnouncementService;
 import com.togedy.togedy_server_v2.domain.config.dto.GetAnnouncementResponse;
 import com.togedy.togedy_server_v2.global.response.ApiResponse;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
@@ -17,12 +17,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "Config", description = "앱 설정 API")
 public class ConfigController {
 
-    private final ConfigService configService;
+    private final CalendarAnnouncementService calendarAnnouncementService;
 
     @Operation(summary = "공지사항 조회", description = "공지사항을 조회한다.")
     @GetMapping("/calendars/announcement")
     public ApiResponse<GetAnnouncementResponse> readAnnouncement() {
-        GetAnnouncementResponse response = configService.findAnnouncement();
+        GetAnnouncementResponse response = calendarAnnouncementService.findAnnouncement();
         return ApiUtil.success(response);
     }
 }
