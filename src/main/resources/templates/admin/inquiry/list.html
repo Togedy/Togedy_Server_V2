@@ -14,11 +14,12 @@
             </thead>
             <tbody>
             <tr th:if="${#lists.isEmpty(result.inquiries)}"><td class="empty" colspan="7">문의가 없습니다.</td></tr>
-            <tr th:each="inquiry : ${result.inquiries}">
+            <tr th:each="inquiry : ${result.inquiries}"
+                th:data-href="@{/admin/inquiries/{id}(id=${inquiry.inquiryId}, page=${page})}">
                 <td class="muted" th:text="${inquiry.inquiryId}"></td>
                 <td class="muted" th:text="${inquiry.userId}"></td>
                 <td><span class="chip" th:text="${inquiry.inquiryType.description}"></span></td>
-                <td class="content" th:text="${inquiry.inquiryContent}"></td>
+                <td><div class="clamp" th:text="${inquiry.inquiryContent}"></div></td>
                 <td class="muted" th:text="${inquiry.replyEmail}"></td>
                 <td class="muted" th:text="${#temporals.format(inquiry.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
                 <td>

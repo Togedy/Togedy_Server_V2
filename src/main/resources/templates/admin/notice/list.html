@@ -15,7 +15,7 @@
             </thead>
             <tbody>
             <tr th:if="${#lists.isEmpty(notices)}"><td class="empty" colspan="4">등록된 공지사항이 없습니다.</td></tr>
-            <tr th:each="notice : ${notices}">
+            <tr th:each="notice : ${notices}" th:data-href="@{/admin/notices/{id}(id=${notice.noticeId})}">
                 <td class="muted" th:text="${notice.noticeId}"></td>
                 <td th:text="${notice.noticeTitle}"></td>
                 <td class="muted" th:text="${notice.publishedAt}"></td>
