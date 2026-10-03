@@ -28,11 +28,25 @@ public class AdminInquiryController {
         return "admin/inquiry/list";
     }
 
+    @GetMapping("/{inquiryId}")
+    public String inquiryDetail(@PathVariable Long inquiryId,
+                                @RequestParam(defaultValue = "1") int page,
+                                Model model) {
+        model.addAttribute("page", page);
+        model.addAttribute("inquiry", inquiryService.findInquiry(inquiryId));
+        model.addAttribute("statuses", InquiryStatus.values());
+        return "admin/inquiry/detail";
+    }
+
     @PostMapping("/{inquiryId}/status")
     public String modifyInquiryStatus(@PathVariable Long inquiryId,
                                       @RequestParam InquiryStatus status,
-                                      @RequestParam(defaultValue = "1") int page) {
+                                      @RequestParam(defaultValue = "1") int page,
+                                      @RequestParam(defaultValue = "false") boolean detail) {
         inquiryService.modifyInquiryStatus(inquiryId, status);
+        if (detail) {
+            return "redirect:/admin/inquiries/" + inquiryId + "?page=" + page;
+        }
         return "redirect:/admin/inquiries?page=" + page;
     }
 }

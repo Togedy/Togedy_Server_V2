@@ -70,6 +70,20 @@ public class InquiryService {
     }
 
     /**
+     * 단일 문의를 조회한다.
+     *
+     * @param inquiryId 조회 대상 문의 ID
+     * @return 문의 DTO
+     * @throws InquiryNotFoundException 해당 문의가 존재하지 않는 경우
+     */
+    public InquiryDto findInquiry(Long inquiryId) {
+        Inquiry inquiry = inquiryRepository.findById(inquiryId)
+                .orElseThrow(InquiryNotFoundException::new);
+
+        return InquiryDto.from(inquiry);
+    }
+
+    /**
      * 문의 처리 상태를 변경한다.
      *
      * @param inquiryId 변경 대상 문의 ID

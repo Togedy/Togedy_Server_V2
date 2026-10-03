@@ -66,6 +66,14 @@
         td.muted, .muted { color: var(--gray-500); font-size: 13px; white-space: nowrap; }
         .content { white-space: pre-wrap; word-break: break-all; }
 
+        .meta { display: grid; grid-template-columns: 120px 1fr; gap: 10px 16px; margin: 0 0 20px; }
+        .meta dt { color: var(--gray-500); font-size: 13px; }
+        .meta dd { margin: 0; color: var(--gray-800); }
+        .body {
+            padding-top: 20px; border-top: 1px solid var(--gray-200);
+            min-height: 160px; color: var(--gray-800);
+        }
+
         .btn {
             display: inline-flex; align-items: center; justify-content: center;
             height: 36px; padding: 0 16px; border: 1px solid transparent; border-radius: 8px;

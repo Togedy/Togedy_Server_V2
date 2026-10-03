@@ -41,6 +41,38 @@ public class AdminInquiryE2ETest extends AbstractE2ETest {
     }
 
     @Test
+    @DisplayName("문의 상세 페이지에서 내용과 회신 이메일을 조회한다.")
+    public void readInquiryDetail() throws Exception {
+        Inquiry inquiry = saveInquiry(777L);
+
+        mockMvc.perform(get("/admin/inquiries/{id}", inquiry.getId()).with(user(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("문의 내용")))
+                .andExpect(content().string(Matchers.containsString("reply@test.com")));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 문의의 상세 페이지를 조회하면 404를 응답한다.")
+    public void readNotFoundInquiryDetail() throws Exception {
+        mockMvc.perform(get("/admin/inquiries/{id}", 999L).with(user(ADMIN)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("상세 페이지에서 문의 상태를 변경하면 상세 페이지로 돌아간다.")
+    public void modifyInquiryStatusFromDetail() throws Exception {
+        Inquiry inquiry = saveInquiry(1L);
+
+        mockMvc.perform(post("/admin/inquiries/{id}/status", inquiry.getId())
+                        .param("status", InquiryStatus.ANSWERED.name())
+                        .param("page", "2")
+                        .param("detail", "true")
+                        .with(user(ADMIN))
+                        .with(csrf()))
+                .andExpect(redirectedUrl("/admin/inquiries/" + inquiry.getId() + "?page=2"));
+    }
+
+    @Test
     @DisplayName("문의 상태를 답변 완료로 변경한다.")
     public void modifyInquiryStatus() throws Exception {
         Inquiry inquiry = saveInquiry(1L);

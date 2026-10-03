@@ -48,6 +48,13 @@ public class AdminNoticeController {
         return "redirect:/admin/notices";
     }
 
+    @GetMapping("/{noticeId}")
+    public String noticeDetail(@PathVariable Long noticeId, Model model) {
+        model.addAttribute("noticeId", noticeId);
+        model.addAttribute("notice", noticeService.findNotice(noticeId));
+        return "admin/notice/detail";
+    }
+
     @GetMapping("/{noticeId}/edit")
     public String editForm(@PathVariable Long noticeId, Model model) {
         GetNoticeResponse notice = noticeService.findNotice(noticeId);

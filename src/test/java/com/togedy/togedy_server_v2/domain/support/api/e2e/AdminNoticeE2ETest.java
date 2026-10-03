@@ -39,6 +39,24 @@ public class AdminNoticeE2ETest extends AbstractE2ETest {
     }
 
     @Test
+    @DisplayName("앱 공지사항 상세 페이지에서 제목과 내용을 조회한다.")
+    public void readNoticeDetail() throws Exception {
+        Notice notice = saveNotice();
+
+        mockMvc.perform(get("/admin/notices/{id}", notice.getId()).with(user(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("기존 제목")))
+                .andExpect(content().string(Matchers.containsString("기존 내용")));
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 앱 공지사항의 상세 페이지를 조회하면 404를 응답한다.")
+    public void readNotFoundNoticeDetail() throws Exception {
+        mockMvc.perform(get("/admin/notices/{id}", 999L).with(user(ADMIN)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("앱 공지사항 작성 폼을 조회한다.")
     public void readCreateForm() throws Exception {
         mockMvc.perform(get("/admin/notices/new").with(user(ADMIN)))
