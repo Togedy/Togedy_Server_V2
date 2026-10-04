@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head('캘린더 공지')}"></head>
+<body>
+<header th:replace="~{admin/fragments :: nav('calendar')}"></header>
+<main>
+    <div class="page-head">
+        <div>
+            <h1>캘린더 공지</h1>
+            <p class="desc">앱 캘린더에는 가장 최근에 등록된 공지 1건만 노출됩니다.</p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/admin/calendar-announcements/new}">새 공지 작성</a>
+    </div>
+    <div class="card">
+        <table>
+            <thead>
+            <tr><th>ID</th><th>상태</th><th style="width: 100%;">내용</th><th>등록일시</th><th>수정일시</th><th></th></tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(announcements)}"><td class="empty" colspan="6">등록된 캘린더 공지가 없습니다.</td></tr>
+            <tr th:each="announcement, stat : ${announcements}">
+                <td class="muted" th:text="${announcement.calendarAnnouncementId}"></td>
+                <td>
+                    <span class="chip chip-green" th:if="${stat.first}">게시 중</span>
+                    <span class="chip" th:unless="${stat.first}">지난 공지</span>
+                </td>
+                <td class="content" th:text="${announcement.content}"></td>
+                <td class="muted" th:text="${#temporals.format(announcement.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+                <td class="muted" th:text="${#temporals.format(announcement.updatedAt, 'yyyy-MM-dd HH:mm')}"></td>
+                <td>
+                    <div class="actions">
+                        <a class="btn btn-outline btn-sm"
+                           th:href="@{/admin/calendar-announcements/{id}/edit(id=${announcement.calendarAnnouncementId})}">수정</a>
+                        <form class="inline"
+                              th:action="@{/admin/calendar-announcements/{id}/delete(id=${announcement.calendarAnnouncementId})}"
+                              method="post" onsubmit="return confirm('삭제하시겠습니까?');">
+                            <button class="btn btn-danger btn-sm" type="submit">삭제</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

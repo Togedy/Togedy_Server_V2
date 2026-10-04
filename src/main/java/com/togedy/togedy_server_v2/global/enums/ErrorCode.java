@@ -11,7 +11,6 @@ public enum ErrorCode {
     // GLOBAL(0000)
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "G0000", "서버 내부에 문제가 발생했습니다."),
     INVALID_INPUT_VALUE(HttpStatus.BAD_REQUEST, "G0001", "올바르지 않은 값 또는 형식입니다."),
-    APP_CONFIG_NOT_FOUND(HttpStatus.NOT_FOUND, "G0002", "앱 설정이 존재하지 않습니다."),
     STORAGE_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "G0003", "파일 업로드가 실패하였습니다."),
     NOT_FOUND_RESOURCE(HttpStatus.NOT_FOUND, "G0004", "존재하지 않는 API입니다."),
     METHOD_NOT_ALLOWED(HttpStatus.METHOD_NOT_ALLOWED, "G0005", "지원하지 않는 HTTP 메서드입니다."),
@@ -110,7 +109,13 @@ public enum ErrorCode {
     INVALID_PLANNER_IMAGE(HttpStatus.BAD_REQUEST, "PL15000", "플래너 이미지 요청이 올바르지 않습니다."),
 
     // CHAT(16000)
-    CHAT_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "CH16000", "하루 채팅 가능 횟수(10회)를 초과했습니다.");
+    CHAT_LIMIT_EXCEEDED(HttpStatus.TOO_MANY_REQUESTS, "CH16000", "하루 채팅 가능 횟수(10회)를 초과했습니다."),
+
+    // INQUIRY(17000)
+    INQUIRY_NOT_FOUND(HttpStatus.NOT_FOUND, "I17000", "해당 문의를 찾을 수 없습니다."),
+
+    // CALENDAR_ANNOUNCEMENT(18000)
+    CALENDAR_ANNOUNCEMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "CA18000", "해당 캘린더 공지를 찾을 수 없습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

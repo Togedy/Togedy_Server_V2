@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head('공지 상세')}"></head>
+<body>
+<header th:replace="~{admin/fragments :: nav('notice')}"></header>
+<main>
+    <div class="page-head">
+        <div>
+            <h1 th:text="${notice.noticeTitle}"></h1>
+            <p class="desc" th:text="${notice.publishedAt}"></p>
+        </div>
+        <div class="actions">
+            <a class="btn btn-secondary" th:href="@{/admin/notices}">목록</a>
+            <a class="btn btn-outline" th:href="@{/admin/notices/{id}/edit(id=${noticeId})}">수정</a>
+            <form class="inline" th:action="@{/admin/notices/{id}/delete(id=${noticeId})}"
+                  method="post" onsubmit="return confirm('삭제하시겠습니까?');">
+                <button class="btn btn-danger" type="submit">삭제</button>
+            </form>
+        </div>
+    </div>
+    <div class="card pad">
+        <div class="content" th:text="${notice.noticeContent}"></div>
+    </div>
+</main>
+</body>
+</html>
