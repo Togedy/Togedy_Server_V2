@@ -17,6 +17,7 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordMismatchE
 import com.togedy.togedy_server_v2.domain.study.exception.StudyPasswordRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import com.togedy.togedy_server_v2.global.enums.BadWords;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -162,7 +163,7 @@ public class Study extends BaseEntity {
     }
 
     public boolean isNewlyCreated() {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = TimeUtil.nowInStudyZone();
         LocalDateTime current = now.minusDays(7);
 
         return this.getCreatedAt().isAfter(current) && this.getCreatedAt().isBefore(now);
