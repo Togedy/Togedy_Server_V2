@@ -8,6 +8,10 @@ server:
 
 ---
 spring:
+  datasource:
+    hikari:
+      keepalive-time: 120000
+      max-lifetime: 1800000
   data:
     redis:
       host: ${REDIS_HOST}
