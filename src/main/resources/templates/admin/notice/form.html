@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head(${noticeId} == null ? '공지 작성' : '공지 수정')}"></head>
+<body>
+<header th:replace="~{admin/fragments :: nav('notice')}"></header>
+<main>
+    <div class="page-head">
+        <h1 th:text="${noticeId} == null ? '공지 작성' : '공지 수정'"></h1>
+    </div>
+    <form class="card pad" th:object="${form}" method="post"
+          th:action="${noticeId} == null ? @{/admin/notices} : @{/admin/notices/{id}/edit(id=${noticeId})}">
+        <div class="field">
+            <label for="noticeTitle">제목</label>
+            <input type="text" th:field="*{noticeTitle}" th:errorclass="invalid">
+            <span class="error" th:if="${#fields.hasErrors('noticeTitle')}" th:errors="*{noticeTitle}"></span>
+        </div>
+        <div class="field">
+            <label for="noticeContent">내용</label>
+            <textarea th:field="*{noticeContent}" th:errorclass="invalid"></textarea>
+            <span class="error" th:if="${#fields.hasErrors('noticeContent')}" th:errors="*{noticeContent}"></span>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary" th:href="@{/admin/notices}">목록</a>
+            <button class="btn btn-primary" type="submit">저장</button>
+        </div>
+    </form>
+</main>
+</body>
+</html>

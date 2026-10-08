@@ -3,7 +3,7 @@ package com.togedy.togedy_server_v2.global.response;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import com.togedy.togedy_server_v2.global.error.ErrorCode;
+import com.togedy.togedy_server_v2.global.enums.ErrorCode;
 import lombok.Builder;
 import lombok.Getter;
 

@@ -52,4 +52,8 @@ public class Inquiry extends BaseEntity {
         this.replyEmail = replyEmail;
         this.status = InquiryStatus.WAITING;
     }
+
+    public void changeStatus(InquiryStatus status) {
+        this.status = status;
+    }
 }

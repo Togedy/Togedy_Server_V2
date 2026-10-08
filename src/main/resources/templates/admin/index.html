@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head('홈')}"></head>
+<body>
+<header th:replace="~{admin/fragments :: nav('home')}"></header>
+<main>
+    <div class="page-head">
+        <h1>대시보드</h1>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+        <a class="card pad" th:href="@{/admin/notices}">
+            <strong style="font-size: 16px; color: var(--gray-900);">앱 공지사항</strong>
+            <p class="desc">앱 공지사항을 작성·수정·삭제합니다.</p>
+        </a>
+        <a class="card pad" th:href="@{/admin/calendar-announcements}">
+            <strong style="font-size: 16px; color: var(--gray-900);">캘린더 공지</strong>
+            <p class="desc">앱 캘린더 상단에 노출할 공지를 관리합니다.</p>
+        </a>
+        <a class="card pad" th:href="@{/admin/inquiries}">
+            <strong style="font-size: 16px; color: var(--gray-900);">문의</strong>
+            <p class="desc">사용자 문의를 확인하고 처리 상태를 변경합니다.</p>
+        </a>
+    </div>
+</main>
+</body>
+</html>

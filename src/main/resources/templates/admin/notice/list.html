@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head('앱 공지사항')}"></head>
+<body>
+<header th:replace="~{admin/fragments :: nav('notice')}"></header>
+<main>
+    <div class="page-head">
+        <h1>앱 공지사항</h1>
+        <a class="btn btn-primary" th:href="@{/admin/notices/new}">새 공지 작성</a>
+    </div>
+    <div class="card">
+        <table>
+            <thead>
+            <tr><th>ID</th><th style="width: 100%;">제목</th><th>등록일</th><th></th></tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(notices)}"><td class="empty" colspan="4">등록된 공지사항이 없습니다.</td></tr>
+            <tr th:each="notice : ${notices}" th:data-href="@{/admin/notices/{id}(id=${notice.noticeId})}">
+                <td class="muted" th:text="${notice.noticeId}"></td>
+                <td th:text="${notice.noticeTitle}"></td>
+                <td class="muted" th:text="${notice.publishedAt}"></td>
+                <td>
+                    <div class="actions">
+                        <a class="btn btn-outline btn-sm"
+                           th:href="@{/admin/notices/{id}/edit(id=${notice.noticeId})}">수정</a>
+                        <form class="inline" th:action="@{/admin/notices/{id}/delete(id=${notice.noticeId})}"
+                              method="post" onsubmit="return confirm('삭제하시겠습니까?');">
+                            <button class="btn btn-danger btn-sm" type="submit">삭제</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

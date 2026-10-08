@@ -1,23 +1,22 @@
 package com.togedy.togedy_server_v2.domain.schedule.application;
 
+import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
+import com.togedy.togedy_server_v2.domain.schedule.dto.request.PatchCategoryRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.request.PostCategoryRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.response.GetCategoryResponse;
+import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
 import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotFoundException;
 import com.togedy.togedy_server_v2.domain.schedule.exception.CategoryNotOwnedException;
 import com.togedy.togedy_server_v2.domain.schedule.exception.DuplicateCategoryException;
-import com.togedy.togedy_server_v2.domain.schedule.dao.CategoryRepository;
-import com.togedy.togedy_server_v2.domain.schedule.dto.GetCategoryResponse;
-import com.togedy.togedy_server_v2.domain.schedule.dto.PatchCategoryRequest;
-import com.togedy.togedy_server_v2.domain.schedule.dto.PostCategoryRequest;
-import com.togedy.togedy_server_v2.domain.schedule.entity.Category;
-import com.togedy.togedy_server_v2.domain.user.application.UserService;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import com.togedy.togedy_server_v2.global.enums.BaseStatus;
+import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,18 +24,18 @@ public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
-    private final UserService userService;
 
     /**
      * 카테고리를 생성한다.
      *
-     * @param request   카테고리 생성 DTO
-     * @param userId    유저ID
+     * @param request 카테고리 생성 DTO
+     * @param userId  유저ID
+     * @throws UserNotFoundException      해당 유저가 존재하지 않는 경우
+     * @throws DuplicateCategoryException 해당 유저에게 이름 및 색상이 동일한 카테고리가 이미 존재하는 경우
      */
     @Transactional
     public void generateCategory(PostCategoryRequest request, Long userId) {
-        User user = userService.loadUserById(userId);
-
+        User user = findUserById(userId);
         validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), userId);
 
         Category category = Category.builder()
@@ -52,13 +51,12 @@ public class CategoryService {
     /**
      * 유저가 보유하고 있는 모든 카테고리를 조회한다.
      *
-     * @param userId    유저ID
-     * @return          유저가 보유한 카테고리 정보 DTO List
+     * @param userId 유저ID
+     * @return 유저가 보유한 카테고리 정보 DTO List
      */
     public List<GetCategoryResponse> findAllCategoriesByUserId(Long userId) {
-        List<Category> categoryList = categoryRepository.findAllByUserId(userId);
-
-        return categoryList.stream()
+        return categoryRepository.findAllByUserId(userId)
+                .stream()
                 .map(GetCategoryResponse::from)
                 .collect(Collectors.toList());
     }
@@ -66,52 +64,84 @@ public class CategoryService {
     /**
      * 유저가 보유 중인 카테고리의 정보를 수정한다.
      *
-     * @param request       카테고리 수정 DTO
-     * @param categoryId    수정할 카테고리ID
-     * @param userId        유저ID
+     * @param request    카테고리 수정 DTO
+     * @param categoryId 수정할 카테고리ID
+     * @param userId     유저ID
+     * @throws CategoryNotFoundException  해당 카테고리가 존재하지 않는 경우
+     * @throws CategoryNotOwnedException  해당 카테고리 소유자가 아닌 경우
+     * @throws DuplicateCategoryException 해당 유저에게 이름 및 색상이 동일한 카테고리가 이미 존재하는 경우
      */
     @Transactional
     public void modifyCategory(PatchCategoryRequest request, Long categoryId, Long userId) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(CategoryNotFoundException::new);
-
-        if (!category.getUser().getId().equals(userId)) {
-            throw new CategoryNotOwnedException();
-        }
-
+        Category category = findCategoryById(categoryId);
+        validateCategoryOwnership(userId, category);
         validateDuplicateCategory(request.getCategoryName(), request.getCategoryColor(), userId);
-
         category.update(request);
     }
 
     /**
      * 유저가 보유 중인 카테고리를 제거한다.
      *
-     * @param categoryId    제거할 카테고리ID
-     * @param userId        유저ID
+     * @param categoryId 제거할 카테고리ID
+     * @param userId     유저ID
+     * @throws CategoryNotFoundException 해당 카테고리가 존재하지 않는 경우
+     * @throws CategoryNotOwnedException 해당 카테고리 소유자가 아닌 경우
      */
     @Transactional
     public void removeCategory(Long categoryId, Long userId) {
-        Category category = categoryRepository.findById(categoryId)
-                .orElseThrow(CategoryNotFoundException::new);
-
-        if (!category.getUser().getId().equals(userId)) {
-            throw new CategoryNotOwnedException();
-        }
-
+        Category category = findCategoryById(categoryId);
+        validateCategoryOwnership(userId, category);
         category.delete();
     }
 
     /**
-     * 이름 및 색상이 동일한 카테고리가 이미 존재하는지 검증한다.
+     * 카테고리를 조회한다.
+     *
+     * @param categoryId 카테고리ID
+     * @return 카테고리
+     * @throws CategoryNotFoundException 해당 카테고리가 존재하지 않는 경우
+     */
+    private Category findCategoryById(Long categoryId) {
+        return categoryRepository.findById(categoryId)
+                .orElseThrow(CategoryNotFoundException::new);
+    }
+
+    /**
+     * 카테고리 소유를 검증한다.
+     *
+     * @param userId   유저ID
+     * @param category 카테고리
+     * @throws CategoryNotOwnedException 해당 카테고리 소유자가 아닌 경우
+     */
+    private void validateCategoryOwnership(Long userId, Category category) {
+        if (!category.getUser().getId().equals(userId)) {
+            throw new CategoryNotOwnedException();
+        }
+    }
+
+    /**
+     * 해당 유저에게 이름 및 색상이 동일한 카테고리가 존재하는지 검증한다.
      *
      * @param categoryName  카테고리명
      * @param categoryColor 카테고리 색상
      * @param userId        유저ID
+     * @throws DuplicateCategoryException 해당 유저에게 이름 및 색상이 동일한 카테고리가 존재하는 경우
      */
     private void validateDuplicateCategory(String categoryName, String categoryColor, Long userId) {
         if (categoryRepository.existsByNameAndColorAndUserId(categoryName, categoryColor, userId)) {
             throw new DuplicateCategoryException();
         }
+    }
+
+    /**
+     * 유저를 조회한다.
+     *
+     * @param userId 유저ID
+     * @return 유저
+     * @throws UserNotFoundException 해당 유저가 존재하지 않는 경우
+     */
+    private User findUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
     }
 }

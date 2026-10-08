@@ -8,6 +8,10 @@ server:
 
 ---
 spring:
+  datasource:
+    hikari:
+      keepalive-time: 120000
+      max-lifetime: 1800000
   data:
     redis:
       host: ${REDIS_HOST}
@@ -45,3 +49,14 @@ management:
     web:
       exposure:
         include: health
+  metrics:
+    tags:
+      application: togedy-server
+    distribution:
+      slo:
+        http.server.requests: 100ms,300ms,500ms,1s,3s
+
+---
+logging:
+  pattern:
+    level: "%5p [%X{requestId:-}] [%X{userId:-}]"

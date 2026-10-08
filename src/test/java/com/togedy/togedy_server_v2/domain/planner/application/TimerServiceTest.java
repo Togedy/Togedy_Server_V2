@@ -23,7 +23,6 @@ import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudySubjectE
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyRunningException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyStoppedException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerNotOwnedException;
-import com.togedy.togedy_server_v2.domain.user.dao.StudyingStatusRepository;
 import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import com.togedy.togedy_server_v2.global.fixtures.UserFixture;
@@ -51,9 +50,6 @@ class TimerServiceTest {
 
     @Mock
     private UserRepository userRepository;
-
-    @Mock
-    private StudyingStatusRepository studyingStatusRepository;
 
     @InjectMocks
     private TimerService timerService;

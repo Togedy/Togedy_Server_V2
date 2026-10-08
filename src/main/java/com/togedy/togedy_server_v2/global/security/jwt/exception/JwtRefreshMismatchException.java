@@ -1,7 +1,9 @@
 package com.togedy.togedy_server_v2.global.security.jwt.exception;
 
-import com.togedy.togedy_server_v2.global.error.ErrorCode;
+import com.togedy.togedy_server_v2.global.enums.ErrorCode;
 
 public class JwtRefreshMismatchException extends JwtException {
-    public JwtRefreshMismatchException() { super(ErrorCode.JWT_REFRESH_MISMATCH); }
+    public JwtRefreshMismatchException() {
+        super(ErrorCode.JWT_REFRESH_MISMATCH);
+    }
 }

@@ -1,6 +1,6 @@
 package com.togedy.togedy_server_v2.domain.schedule.entity;
 
-import com.togedy.togedy_server_v2.domain.schedule.dto.PatchUserScheduleRequest;
+import com.togedy.togedy_server_v2.domain.schedule.dto.request.PatchUserScheduleRequest;
 import com.togedy.togedy_server_v2.domain.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,13 +11,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
-import java.time.LocalTime;
 
 @Entity
 @Table(name = "user_schedule")
@@ -104,7 +103,7 @@ public class UserSchedule {
         }
     }
 
-    public void update(Category category) {
+    public void updateCategory(Category category) {
         this.category = category;
     }
 

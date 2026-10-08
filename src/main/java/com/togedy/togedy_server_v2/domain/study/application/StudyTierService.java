@@ -14,7 +14,6 @@ import jakarta.transaction.Transactional;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -33,7 +32,7 @@ public class StudyTierService {
 
     @Transactional
     public void aggregateRunningStudyTimes() {
-        LocalDateTime summaryEnd = TimeUtil.startOfStudyDay(LocalDateTime.now(ZoneId.of("Asia/Seoul")));
+        LocalDateTime summaryEnd = TimeUtil.startOfStudyDay(TimeUtil.nowInStudyZone());
         LocalDateTime summaryStart = summaryEnd.minusDays(1);
         LocalDate targetDate = summaryStart.toLocalDate();
 
@@ -63,7 +62,7 @@ public class StudyTierService {
 
     @Transactional
     public void calculateChallengeStudyScores() {
-        LocalDate targetDate = LocalDate.now(ZoneId.of("Asia/Seoul")).minusDays(1);
+        LocalDate targetDate = TimeUtil.todayInStudyZone().minusDays(1);
         List<Study> challengeStudies = studyRepository.findChallengeStudy();
         List<Long> studyIds = challengeStudies.stream()
                 .map(Study::getId)
@@ -94,7 +93,7 @@ public class StudyTierService {
     @Transactional
     public void applyStudyTier() {
         List<StudyStatistics> statistics = studyStatisticsRepository.findUpdatedToday(
-                LocalDate.now(ZoneId.of("Asia/Seoul")));
+                TimeUtil.todayInStudyZone());
 
         if (statistics.isEmpty()) {
             return;
