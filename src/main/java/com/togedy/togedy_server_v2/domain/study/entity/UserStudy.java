@@ -5,6 +5,7 @@ import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderCannotRemov
 import com.togedy.togedy_server_v2.domain.study.exception.StudyLeaderRequiredException;
 import com.togedy.togedy_server_v2.domain.study.exception.StudyMemberRequiredException;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -81,7 +82,7 @@ public class UserStudy extends BaseEntity {
     }
 
     public int calculateElapsedDays() {
-        LocalDate now = LocalDate.now();
+        LocalDate now = TimeUtil.todayInStudyZone();
         LocalDate createdDate = this.getCreatedAt().toLocalDate();
 
         return (int) ChronoUnit.DAYS.between(createdDate, now);

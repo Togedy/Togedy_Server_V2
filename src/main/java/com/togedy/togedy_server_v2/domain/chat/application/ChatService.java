@@ -9,7 +9,7 @@ import com.togedy.togedy_server_v2.domain.chat.entity.ChatMessage;
 import com.togedy.togedy_server_v2.domain.chat.entity.NerKeyword;
 import com.togedy.togedy_server_v2.domain.chat.enums.Sender;
 import com.togedy.togedy_server_v2.domain.chat.exception.ChatLimitExceededException;
-import java.time.LocalDate;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -88,7 +88,7 @@ public class ChatService {
     }
 
     private void validateChatLimit(Long userId) {
-        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime startOfDay = TimeUtil.startOfToday();
         LocalDateTime endOfDay = startOfDay.plusDays(1);
 
         long todayChatCount = chatMessageRepository.countTodayChat(
