@@ -3,7 +3,9 @@ package com.togedy.togedy_server_v2.domain.badge.application;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.togedy.togedy_server_v2.domain.badge.dao.BadgeRepository;
+import com.togedy.togedy_server_v2.domain.badge.dao.HolidayRepository;
 import com.togedy.togedy_server_v2.domain.badge.entity.Badge;
+import com.togedy.togedy_server_v2.domain.badge.entity.Holiday;
 import com.togedy.togedy_server_v2.domain.badge.enums.BadgeType;
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
@@ -24,6 +26,8 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     private static final LocalDate STUDY_DATE = LocalDate.of(2026, 10, 27);
     private static final LocalDate SATURDAY = LocalDate.of(2026, 10, 24);
     private static final LocalDate SUNDAY = LocalDate.of(2026, 10, 25);
+    private static final LocalDate HOLIDAY_START = LocalDate.of(2026, 9, 24);
+    private static final LocalDate HOLIDAY_END = LocalDate.of(2026, 9, 26);
 
     @Autowired
     BadgeGrantService badgeGrantService;
@@ -39,6 +43,9 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
 
     @Autowired
     DailyStudySummaryRepository dailyStudySummaryRepository;
+
+    @Autowired
+    HolidayRepository holidayRepository;
 
     @Test
     @DisplayName("판정 학습일에 기준 시간에 도달한 과목에 과목명을 담아 한우물왕 뱃지를 지급한다.")
@@ -177,6 +184,74 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
         assertThat(badgeRepository.findAll())
                 .extracting(Badge::getPeriodKey)
                 .containsExactlyInAnyOrder(SATURDAY.minusWeeks(1).toString(), SATURDAY.toString());
+    }
+
+    @Test
+    @DisplayName("연휴의 모든 날 4시간 이상 공부하면 연휴명과 연휴 시작일을 담아 연휴 파이터 뱃지를 지급한다.")
+    void grantHolidayBadge() {
+        Holiday holiday = saveHoliday("추석 연휴", HOLIDAY_START, HOLIDAY_END);
+        saveDailyStudySummary(USER_ID, HOLIDAY_START, 4);
+        saveDailyStudySummary(USER_ID, HOLIDAY_START.plusDays(1), 5);
+        saveDailyStudySummary(USER_ID, HOLIDAY_END, 4);
+
+        badgeGrantService.grantHolidayBadges(HOLIDAY_END);
+
+        assertThat(badgeRepository.findAll())
+                .singleElement()
+                .satisfies(badge -> {
+                    assertThat(badge.getType()).isEqualTo(BadgeType.HOLIDAY);
+                    assertThat(badge.getDetail()).isEqualTo(holiday.getName());
+                    assertThat(badge.getPeriodKey()).isEqualTo(HOLIDAY_START.toString());
+                });
+    }
+
+    @Test
+    @DisplayName("연휴 중 하루라도 4시간 미만이거나 공부하지 않은 날이 있으면 지급하지 않는다.")
+    void skipHolidayBadgeWhenAnyDayMissed() {
+        saveHoliday("추석 연휴", HOLIDAY_START, HOLIDAY_END);
+        saveDailyStudySummary(USER_ID, HOLIDAY_START, 4);
+        saveDailyStudySummary(USER_ID, HOLIDAY_START.plusDays(1), 3);
+        saveDailyStudySummary(USER_ID, HOLIDAY_END, 4);
+        saveDailyStudySummary(2L, HOLIDAY_START, 4);
+        saveDailyStudySummary(2L, HOLIDAY_END, 4);
+
+        badgeGrantService.grantHolidayBadges(HOLIDAY_END);
+
+        assertThat(badgeRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("판정 학습일이 연휴 종료일이 아니면 연휴 파이터를 판정하지 않는다.")
+    void skipHolidayBadgeBeforeEndDate() {
+        saveHoliday("추석 연휴", HOLIDAY_START, HOLIDAY_END);
+        saveDailyStudySummary(USER_ID, HOLIDAY_START, 4);
+        saveDailyStudySummary(USER_ID, HOLIDAY_START.plusDays(1), 4);
+
+        badgeGrantService.grantHolidayBadges(HOLIDAY_START.plusDays(1));
+
+        assertThat(badgeRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("같은 연휴는 다시 지급하지 않는다.")
+    void skipGrantedHolidayBadge() {
+        saveHoliday("추석 연휴", HOLIDAY_START, HOLIDAY_END);
+        saveDailyStudySummary(USER_ID, HOLIDAY_START, 4);
+        saveDailyStudySummary(USER_ID, HOLIDAY_START.plusDays(1), 4);
+        saveDailyStudySummary(USER_ID, HOLIDAY_END, 4);
+
+        badgeGrantService.grantHolidayBadges(HOLIDAY_END);
+        badgeGrantService.grantHolidayBadges(HOLIDAY_END);
+
+        assertThat(badgeRepository.findAll()).hasSize(1);
+    }
+
+    private Holiday saveHoliday(String name, LocalDate startDate, LocalDate endDate) {
+        return holidayRepository.save(Holiday.builder()
+                .name(name)
+                .startDate(startDate)
+                .endDate(endDate)
+                .build());
     }
 
     private void saveDailyStudySummary(Long userId, LocalDate date, int hours) {
