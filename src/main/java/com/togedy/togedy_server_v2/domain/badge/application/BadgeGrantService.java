@@ -44,6 +44,9 @@ public class BadgeGrantService {
             BadgeType.WEEKEND_10
     );
 
+    // 직전 공부일로부터 이 일수 이상 지난 뒤 공부하면 복귀로 본다.
+    private static final int COMEBACK_ABSENCE_DAYS = 30;
+
     private final BadgeRepository badgeRepository;
     private final StudySubjectRepository studySubjectRepository;
     private final StudyTimeRepository studyTimeRepository;
@@ -115,6 +118,32 @@ public class BadgeGrantService {
                     .date(holiday.getStartDate())
                     .build()));
         }
+    }
+
+    /**
+     * 판정 학습일에 복귀한 유저를 대상으로 복귀 뱃지를 지급한다.
+     * <p>
+     * 판정 학습일에 공부했고, 직전 공부일이 판정 학습일보다 30일 이상 앞선 유저가 복귀한 것으로 본다.
+     * 이전 공부 기록이 없는 유저는 제외하며, 복귀 뱃지는 한 번만 지급한다.
+     * </p>
+     *
+     * @param studyDate 판정 대상 학습일
+     */
+    public void grantComebackBadges(LocalDate studyDate) {
+        List<Long> returnedUserIds = dailyStudySummaryRepository.findReturnedUserIds(
+                studyDate, studyDate.minusDays(COMEBACK_ABSENCE_DAYS));
+        if (returnedUserIds.isEmpty()) {
+            return;
+        }
+
+        Set<Long> grantedUserIds = badgeRepository.findUserIdsByTypeAndUserIdIn(BadgeType.COMEBACK, returnedUserIds);
+        returnedUserIds.stream()
+                .filter(userId -> !grantedUserIds.contains(userId))
+                .forEach(userId -> saveBadge(Badge.builder()
+                        .userId(userId)
+                        .type(BadgeType.COMEBACK)
+                        .date(studyDate)
+                        .build()));
     }
 
     /**
