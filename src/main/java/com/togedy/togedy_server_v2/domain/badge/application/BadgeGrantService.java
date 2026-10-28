@@ -1,7 +1,9 @@
 package com.togedy.togedy_server_v2.domain.badge.application;
 
 import com.togedy.togedy_server_v2.domain.badge.dao.BadgeRepository;
+import com.togedy.togedy_server_v2.domain.badge.dao.HolidayRepository;
 import com.togedy.togedy_server_v2.domain.badge.entity.Badge;
+import com.togedy.togedy_server_v2.domain.badge.entity.Holiday;
 import com.togedy.togedy_server_v2.domain.badge.enums.BadgeType;
 import com.togedy.togedy_server_v2.domain.badge.util.OneSubjectTimeline;
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
@@ -13,6 +15,7 @@ import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +48,7 @@ public class BadgeGrantService {
     private final StudySubjectRepository studySubjectRepository;
     private final StudyTimeRepository studyTimeRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
+    private final HolidayRepository holidayRepository;
 
     /**
      * 해당 학습일에 공부한 유저를 대상으로 한우물왕 뱃지를 지급한다.
@@ -91,6 +95,26 @@ public class BadgeGrantService {
                                 .type(type)
                                 .date(studyDate)
                                 .build())));
+    }
+
+    /**
+     * 판정 학습일에 끝난 연휴를 대상으로 연휴 파이터 뱃지를 지급한다.
+     * <p>
+     * 연휴 기간의 모든 학습일에 기준 시간(하루 4시간) 이상 공부한 유저가 받는다.
+     * 연휴명은 지급 시점의 이름으로 저장하며, periodKey는 연휴 시작일이다.
+     * </p>
+     *
+     * @param studyDate 판정 대상 학습일
+     */
+    public void grantHolidayBadges(LocalDate studyDate) {
+        for (Holiday holiday : holidayRepository.findAllByEndDate(studyDate)) {
+            findUserIdsStudiedEveryHoliday(holiday).forEach(userId -> saveBadge(Badge.builder()
+                    .userId(userId)
+                    .type(BadgeType.HOLIDAY)
+                    .detail(holiday.getName())
+                    .date(holiday.getStartDate())
+                    .build()));
+        }
     }
 
     /**
@@ -199,6 +223,23 @@ public class BadgeGrantService {
         return WEEKEND_TYPES.stream()
                 .filter(type -> studyTime >= toRequiredSeconds(type))
                 .findFirst();
+    }
+
+    /**
+     * 연휴 기간의 모든 학습일에 하루 기준 시간 이상 공부한 유저를 조회한다.
+     *
+     * @param holiday 판정 대상 연휴
+     * @return 모든 날 기준 시간을 채운 유저 ID 목록
+     */
+    private List<Long> findUserIdsStudiedEveryHoliday(Holiday holiday) {
+        long days = ChronoUnit.DAYS.between(holiday.getStartDate(), holiday.getEndDate()) + 1;
+
+        return dailyStudySummaryRepository.findUserIdsStudiedEveryDayAtLeast(
+                holiday.getStartDate(),
+                holiday.getEndDate(),
+                toRequiredSeconds(BadgeType.HOLIDAY),
+                days
+        );
     }
 
     /**

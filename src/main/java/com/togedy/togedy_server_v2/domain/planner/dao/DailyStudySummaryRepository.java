@@ -132,5 +132,21 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
             @Param("minStudyTime") Long minStudyTime
     );
 
+    @Query("""
+            SELECT dss.userId
+            FROM DailyStudySummary dss
+            WHERE dss.date >= :startDate
+                AND dss.date <= :endDate
+                AND dss.studyTime >= :minStudyTime
+            GROUP BY dss.userId
+            HAVING COUNT(dss) = :days
+            """)
+    List<Long> findUserIdsStudiedEveryDayAtLeast(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("minStudyTime") Long minStudyTime,
+            @Param("days") Long days
+    );
+
     void deleteAllByUserId(Long userId);
 }
