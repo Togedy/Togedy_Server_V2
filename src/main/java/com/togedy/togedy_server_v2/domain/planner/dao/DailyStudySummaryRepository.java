@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.planner.dao;
 
+import com.togedy.togedy_server_v2.domain.badge.dto.UserStudyTimeDto;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyStudySummaryRow;
 import com.togedy.togedy_server_v2.domain.study.dto.DailyStudyTimeDto;
@@ -113,6 +114,23 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
                 AND ds.date = :targetDate
             """)
     List<DailyStudySummaryRow> findAllByStudyIdsAndDate(List<Long> studyIds, LocalDate targetDate);
+
+    @Query("""
+            SELECT new com.togedy.togedy_server_v2.domain.badge.dto.UserStudyTimeDto(
+                dss.userId,
+                SUM(dss.studyTime)
+            )
+            FROM DailyStudySummary dss
+            WHERE dss.date >= :startDate
+                AND dss.date <= :endDate
+            GROUP BY dss.userId
+            HAVING SUM(dss.studyTime) >= :minStudyTime
+            """)
+    List<UserStudyTimeDto> findUserStudyTimesByPeriodAtLeast(
+            @Param("startDate") LocalDate startDate,
+            @Param("endDate") LocalDate endDate,
+            @Param("minStudyTime") Long minStudyTime
+    );
 
     void deleteAllByUserId(Long userId);
 }

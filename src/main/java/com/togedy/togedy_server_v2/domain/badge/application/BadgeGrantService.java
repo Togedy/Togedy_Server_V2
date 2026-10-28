@@ -4,15 +4,18 @@ import com.togedy.togedy_server_v2.domain.badge.dao.BadgeRepository;
 import com.togedy.togedy_server_v2.domain.badge.entity.Badge;
 import com.togedy.togedy_server_v2.domain.badge.enums.BadgeType;
 import com.togedy.togedy_server_v2.domain.badge.util.OneSubjectTimeline;
+import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -33,15 +36,21 @@ public class BadgeGrantService {
             BadgeType.ONE_SUBJECT_300
     );
 
+    private static final List<BadgeType> WEEKEND_TYPES = List.of(
+            BadgeType.WEEKEND_20,
+            BadgeType.WEEKEND_10
+    );
+
     private final BadgeRepository badgeRepository;
     private final StudySubjectRepository studySubjectRepository;
     private final StudyTimeRepository studyTimeRepository;
+    private final DailyStudySummaryRepository dailyStudySummaryRepository;
 
     /**
      * 해당 학습일에 공부한 유저를 대상으로 한우물왕 뱃지를 지급한다.
      * <p>
-     * 단계마다 타임라인상 기준 시간에 가장 먼저 도달한 과목이 받으며, 판정 시점에 삭제된 과목은 제외한다.
-     * 과목명은 지급 시점의 이름으로 저장한다. 유저 단위로 처리하므로 한 유저의 실패가 다른 유저의 지급을 막지 않는다.
+     * 단계마다 타임라인상 기준 시간에 가장 먼저 도달한 과목이 받으며, 판정 시점에 삭제된 과목은 제외한다. 과목명은 지급 시점의 이름으로 저장한다. 유저 단위로 처리하므로 한 유저의 실패가 다른 유저의
+     * 지급을 막지 않는다.
      * </p>
      *
      * @param studyDate 판정 대상 학습일
@@ -57,6 +66,31 @@ public class BadgeGrantService {
                 log.error("한우물왕 뱃지 지급 실패 userId={}", userId, e);
             }
         }
+    }
+
+    /**
+     * 판정 학습일이 일요일이면 해당 주 토·일 합계로 주말 파이터 뱃지를 지급한다.
+     * <p>
+     * 주말 합계는 05:00 집계가 끝난 일별 공부 시간을 사용한다. 기준을 넘은 단계 중 가장 높은 단계 하나만 지급하며, periodKey가 해당 주 토요일이므로 매주 다시 받을 수 있다.
+     * </p>
+     *
+     * @param studyDate 판정 대상 학습일
+     */
+    public void grantWeekendBadges(LocalDate studyDate) {
+        if (studyDate.getDayOfWeek() != DayOfWeek.SUNDAY) {
+            return;
+        }
+
+        LocalDate saturday = studyDate.minusDays(1);
+        long minStudyTime = toRequiredSeconds(WEEKEND_TYPES.get(WEEKEND_TYPES.size() - 1));
+
+        dailyStudySummaryRepository.findUserStudyTimesByPeriodAtLeast(saturday, studyDate, minStudyTime)
+                .forEach(userStudyTime -> findWeekendType(userStudyTime.getStudyTime())
+                        .ifPresent(type -> saveBadge(Badge.builder()
+                                .userId(userStudyTime.getUserId())
+                                .type(type)
+                                .date(studyDate)
+                                .build())));
     }
 
     /**
@@ -130,7 +164,7 @@ public class BadgeGrantService {
             BadgeType lowestType,
             LocalDateTime endTime
     ) {
-        long requiredSeconds = TimeUtil.convertHoursToSeconds(lowestType.getRequiredHours());
+        long requiredSeconds = toRequiredSeconds(lowestType);
 
         return studyTimeRepository.sumStudyTimeBySubjectBefore(userId, endTime).stream()
                 .filter(row -> activeSubjectIds.contains(((Number) row[0]).longValue()))
@@ -153,6 +187,28 @@ public class BadgeGrantService {
                 .detail(subject.getName())
                 .date(studyDate)
                 .build();
+    }
+
+    /**
+     * 주말 합계 공부 시간으로 받을 수 있는 가장 높은 주말 파이터 단계를 찾는다.
+     *
+     * @param studyTime 토·일 합계 공부 시간 (초)
+     * @return 가장 높은 도달 단계, 도달한 단계가 없으면 빈 값
+     */
+    private Optional<BadgeType> findWeekendType(long studyTime) {
+        return WEEKEND_TYPES.stream()
+                .filter(type -> studyTime >= toRequiredSeconds(type))
+                .findFirst();
+    }
+
+    /**
+     * 뱃지 단계의 기준 시간을 초 단위로 변환한다.
+     *
+     * @param type 뱃지 단계
+     * @return 기준 시간 (초)
+     */
+    private long toRequiredSeconds(BadgeType type) {
+        return TimeUtil.convertHoursToSeconds(type.getRequiredHours());
     }
 
     /**
