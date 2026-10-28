@@ -246,6 +246,68 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
         assertThat(badgeRepository.findAll()).hasSize(1);
     }
 
+    @Test
+    @DisplayName("직전 공부일로부터 30일이 지난 뒤 공부하면 복귀 뱃지를 지급한다.")
+    void grantComebackBadge() {
+        saveDailyStudySummary(USER_ID, STUDY_DATE.minusDays(30), 1);
+        saveDailyStudySummary(USER_ID, STUDY_DATE, 1);
+
+        badgeGrantService.grantComebackBadges(STUDY_DATE);
+
+        assertThat(badgeRepository.findAll())
+                .singleElement()
+                .satisfies(badge -> {
+                    assertThat(badge.getType()).isEqualTo(BadgeType.COMEBACK);
+                    assertThat(badge.getPeriodKey()).isEqualTo("ONCE");
+                });
+    }
+
+    @Test
+    @DisplayName("직전 공부일로부터 30일이 지나지 않았으면 지급하지 않는다.")
+    void skipComebackBadgeWithin30Days() {
+        saveDailyStudySummary(USER_ID, STUDY_DATE.minusDays(60), 1);
+        saveDailyStudySummary(USER_ID, STUDY_DATE.minusDays(29), 1);
+        saveDailyStudySummary(USER_ID, STUDY_DATE, 1);
+
+        badgeGrantService.grantComebackBadges(STUDY_DATE);
+
+        assertThat(badgeRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("이전 공부 기록이 없는 유저는 지급하지 않는다.")
+    void skipComebackBadgeWithoutPreviousStudy() {
+        saveDailyStudySummary(USER_ID, STUDY_DATE, 1);
+
+        badgeGrantService.grantComebackBadges(STUDY_DATE);
+
+        assertThat(badgeRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("판정 학습일에 공부하지 않은 유저는 지급하지 않는다.")
+    void skipComebackBadgeWithoutStudyOnStudyDate() {
+        saveDailyStudySummary(USER_ID, STUDY_DATE.minusDays(30), 1);
+
+        badgeGrantService.grantComebackBadges(STUDY_DATE);
+
+        assertThat(badgeRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("복귀 뱃지는 다시 복귀해도 한 번만 지급한다.")
+    void grantComebackBadgeOnce() {
+        LocalDate firstComebackDate = STUDY_DATE.minusDays(40);
+        saveDailyStudySummary(USER_ID, firstComebackDate.minusDays(30), 1);
+        saveDailyStudySummary(USER_ID, firstComebackDate, 1);
+        saveDailyStudySummary(USER_ID, STUDY_DATE, 1);
+
+        badgeGrantService.grantComebackBadges(firstComebackDate);
+        badgeGrantService.grantComebackBadges(STUDY_DATE);
+
+        assertThat(badgeRepository.findAll()).hasSize(1);
+    }
+
     private Holiday saveHoliday(String name, LocalDate startDate, LocalDate endDate) {
         return holidayRepository.save(Holiday.builder()
                 .name(name)
