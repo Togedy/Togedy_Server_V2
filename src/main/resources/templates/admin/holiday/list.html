@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head('연휴 관리')}"></head>
+<body>
+<header th:replace="~{admin/fragments :: nav('holiday')}"></header>
+<main>
+    <div class="page-head">
+        <div>
+            <h1>연휴 관리</h1>
+            <p class="desc">연휴 파이터 뱃지를 판정할 연휴 기간입니다. 종료된 연휴는 판정이 완료되어 수정·삭제할 수 없습니다.</p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/admin/holidays/new}">새 연휴 등록</a>
+    </div>
+    <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+    <div class="card">
+        <table>
+            <thead>
+            <tr><th>ID</th><th>상태</th><th style="width: 100%;">연휴명</th><th>시작일</th><th>종료일</th><th></th></tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(holidays)}"><td class="empty" colspan="6">등록된 연휴가 없습니다.</td></tr>
+            <tr th:each="holiday : ${holidays}">
+                <td class="muted" th:text="${holiday.holidayId}"></td>
+                <td>
+                    <span class="chip" th:if="${holiday.ended}">판정 완료</span>
+                    <span class="chip chip-green" th:unless="${holiday.ended}">판정 전</span>
+                </td>
+                <td th:text="${holiday.name}"></td>
+                <td class="muted" th:text="${holiday.startDate}"></td>
+                <td class="muted" th:text="${holiday.endDate}"></td>
+                <td>
+                    <div class="actions" th:unless="${holiday.ended}">
+                        <a class="btn btn-outline btn-sm"
+                           th:href="@{/admin/holidays/{id}/edit(id=${holiday.holidayId})}">수정</a>
+                        <form class="inline"
+                              th:action="@{/admin/holidays/{id}/delete(id=${holiday.holidayId})}"
+                              method="post" onsubmit="return confirm('삭제하시겠습니까?');">
+                            <button class="btn btn-danger btn-sm" type="submit">삭제</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>
