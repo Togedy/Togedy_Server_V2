@@ -98,6 +98,36 @@ public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
             @Param("summaryEnd") LocalDateTime summaryEnd
     );
 
+    @Query("""
+            SELECT DISTINCT st.userId
+            FROM StudyTime st
+            WHERE st.startTime < :endTime
+                AND st.endTime > :startTime
+                AND st.endTime IS NOT NULL
+            """)
+    List<Long> findStudiedUserIds(LocalDateTime startTime, LocalDateTime endTime);
+
+    @Query(value = """
+            SELECT st.study_subject_id,
+                   COALESCE(SUM(TIMESTAMPDIFF(SECOND, st.start_time, LEAST(st.end_time, :endTime))), 0)
+            FROM study_time st
+            WHERE st.user_id = :userId
+              AND st.start_time < :endTime
+              AND st.end_time IS NOT NULL
+            GROUP BY st.study_subject_id
+            """, nativeQuery = true)
+    List<Object[]> sumStudyTimeBySubjectBefore(Long userId, LocalDateTime endTime);
+
+    @Query("""
+            SELECT st
+            FROM StudyTime st
+            WHERE st.userId = :userId
+                AND st.startTime < :endTime
+                AND st.endTime IS NOT NULL
+            ORDER BY st.startTime ASC, st.id ASC
+            """)
+    List<StudyTime> findEndedStudyTimesBefore(Long userId, LocalDateTime endTime);
+
     void deleteAllByUserId(Long userId);
 
     @Query("""

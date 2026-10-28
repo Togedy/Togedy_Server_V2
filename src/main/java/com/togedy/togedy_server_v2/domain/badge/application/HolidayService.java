@@ -100,6 +100,14 @@ public class HolidayService {
         holidayRepository.delete(getModifiableHoliday(holidayId));
     }
 
+    /**
+     * 연휴 기간이 등록 가능한지 검증한다.
+     *
+     * @param request           연휴 요청 DTO
+     * @param excludedHolidayId 겹침 검사에서 제외할 연휴 ID (수정 시 자기 자신), 등록 시 {@code null}
+     * @throws InvalidHolidayPeriodException   종료일이 시작일보다 앞서거나 이미 지난 경우
+     * @throws DuplicateHolidayPeriodException 기간이 겹치는 연휴가 존재하는 경우
+     */
     private void validatePeriod(HolidayRequest request, Long excludedHolidayId) {
         if (request.getEndDate().isBefore(request.getStartDate())
                 || request.getEndDate().isBefore(TimeUtil.currentStudyDate())) {
@@ -111,6 +119,14 @@ public class HolidayService {
         }
     }
 
+    /**
+     * 수정·삭제할 수 있는 연휴를 조회한다.
+     *
+     * @param holidayId 조회 대상 연휴 ID
+     * @return 판정 전인 연휴
+     * @throws HolidayNotFoundException     해당 연휴가 존재하지 않는 경우
+     * @throws HolidayAlreadyEndedException 이미 종료되어 판정이 끝난 연휴인 경우
+     */
     private Holiday getModifiableHoliday(Long holidayId) {
         Holiday holiday = getHoliday(holidayId);
         if (holiday.isEnded(TimeUtil.currentStudyDate())) {
@@ -119,6 +135,13 @@ public class HolidayService {
         return holiday;
     }
 
+    /**
+     * 연휴를 조회한다.
+     *
+     * @param holidayId 조회 대상 연휴 ID
+     * @return 연휴
+     * @throws HolidayNotFoundException 해당 연휴가 존재하지 않는 경우
+     */
     private Holiday getHoliday(Long holidayId) {
         return holidayRepository.findById(holidayId)
                 .orElseThrow(HolidayNotFoundException::new);
