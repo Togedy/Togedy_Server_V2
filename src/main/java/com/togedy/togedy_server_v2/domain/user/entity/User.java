@@ -75,6 +75,9 @@ public class User extends BaseEntity {
     @Column(name = "user_role", nullable = false, columnDefinition = "varchar(20)")
     private UserRole userRole;
 
+    @Column(name = "representative_badge_id", nullable = true)
+    private Long representativeBadgeId;
+
     private User(String nickname, String email) {
         validateNicknameLength(nickname);
         this.nickname = nickname;
