@@ -23,11 +23,6 @@ public class BadgeScheduler {
     private final BadgeGrantService badgeGrantService;
 
     @Scheduled(cron = BADGE_GRANT_CRON, zone = "Asia/Seoul")
-    public void grantOneSubjectBadges() {
-        badgeGrantService.grantOneSubjectBadges(previousStudyDate());
-    }
-
-    @Scheduled(cron = BADGE_GRANT_CRON, zone = "Asia/Seoul")
     public void grantWeekendBadges() {
         badgeGrantService.grantWeekendBadges(previousStudyDate());
     }

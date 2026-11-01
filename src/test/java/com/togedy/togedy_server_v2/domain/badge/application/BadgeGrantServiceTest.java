@@ -50,13 +50,13 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     HolidayRepository holidayRepository;
 
     @Test
-    @DisplayName("판정 학습일에 기준 시간에 도달한 과목이 있으면 한우물왕 뱃지를 지급한다.")
+    @DisplayName("타이머를 종료한 과목의 누적 공부 시간이 기준 이상이면 한우물왕 뱃지를 지급한다.")
     void grantOneSubjectBadge() {
         StudySubject korean = saveSubject("국어");
         saveStudyTime(korean, LocalDateTime.of(2026, 10, 20, 6, 0), 25);
         saveStudyTime(korean, LocalDateTime.of(2026, 10, 27, 6, 0), 5);
 
-        badgeGrantService.grantOneSubjectBadges(STUDY_DATE);
+        badgeGrantService.grantOneSubjectBadges(USER_ID, korean.getId(), STUDY_DATE);
 
         assertThat(badgeRepository.findAll())
                 .singleElement()
@@ -68,42 +68,30 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     }
 
     @Test
-    @DisplayName("삭제된 과목의 공부 시간으로는 지급하지 않는다.")
-    void skipDeletedSubject() {
+    @DisplayName("다른 과목의 공부 시간은 합산하지 않는다.")
+    void skipOtherSubjectStudyTime() {
         StudySubject korean = saveSubject("국어");
         StudySubject math = saveSubject("수학");
-        saveStudyTime(korean, LocalDateTime.of(2026, 10, 20, 6, 0), 30);
-        saveStudyTime(math, LocalDateTime.of(2026, 10, 27, 6, 0), 25);
-        korean.delete();
-        studySubjectRepository.save(korean);
+        saveStudyTime(korean, LocalDateTime.of(2026, 10, 20, 6, 0), 20);
+        saveStudyTime(math, LocalDateTime.of(2026, 10, 27, 6, 0), 20);
 
-        badgeGrantService.grantOneSubjectBadges(STUDY_DATE);
+        badgeGrantService.grantOneSubjectBadges(USER_ID, math.getId(), STUDY_DATE);
 
         assertThat(badgeRepository.findAll()).isEmpty();
     }
 
     @Test
-    @DisplayName("이미 받은 단계는 다시 지급하지 않는다.")
-    void skipGrantedType() {
+    @DisplayName("도달한 단계를 모두 지급하고, 이미 받은 단계는 다시 지급하지 않는다.")
+    void grantReachedTypesOnce() {
         StudySubject korean = saveSubject("국어");
-        saveStudyTime(korean, LocalDateTime.of(2026, 10, 20, 6, 0), 25);
-        saveStudyTime(korean, LocalDateTime.of(2026, 10, 27, 6, 0), 6);
+        saveStudyTime(korean, LocalDateTime.of(2026, 10, 27, 6, 0), 60);
 
-        badgeGrantService.grantOneSubjectBadges(STUDY_DATE);
-        badgeGrantService.grantOneSubjectBadges(STUDY_DATE);
+        badgeGrantService.grantOneSubjectBadges(USER_ID, korean.getId(), STUDY_DATE);
+        badgeGrantService.grantOneSubjectBadges(USER_ID, korean.getId(), STUDY_DATE);
 
-        assertThat(badgeRepository.findAll()).hasSize(1);
-    }
-
-    @Test
-    @DisplayName("판정 학습일에 공부하지 않은 유저는 판정하지 않는다.")
-    void skipUserNotStudiedOnStudyDate() {
-        StudySubject korean = saveSubject("국어");
-        saveStudyTime(korean, LocalDateTime.of(2026, 10, 20, 6, 0), 30);
-
-        badgeGrantService.grantOneSubjectBadges(STUDY_DATE);
-
-        assertThat(badgeRepository.findAll()).isEmpty();
+        assertThat(badgeRepository.findAll())
+                .extracting(Badge::getType)
+                .containsExactlyInAnyOrder(BadgeType.ONE_SUBJECT_30, BadgeType.ONE_SUBJECT_50);
     }
 
     @Test
@@ -241,6 +229,47 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
 
         badgeGrantService.grantHolidayBadges(HOLIDAY_END);
         badgeGrantService.grantHolidayBadges(HOLIDAY_END);
+
+        assertThat(badgeRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("타이머 종료 시점에 해당 월 누적이 50시간 이상이면 월 이름을 담아 월간 파이터 뱃지를 지급한다.")
+    void grantMonthlyBadgeOnTimerStop() {
+        LocalDate stopDate = MONTH_START.plusDays(14);
+        saveDailyStudySummary(USER_ID, MONTH_START, 25);
+        saveDailyStudySummary(USER_ID, stopDate, 25);
+
+        badgeGrantService.grantMonthlyBadge(USER_ID, stopDate);
+
+        assertThat(badgeRepository.findAll())
+                .singleElement()
+                .satisfies(badge -> {
+                    assertThat(badge.getType()).isEqualTo(BadgeType.MONTHLY_50);
+                    assertThat(badge.getDetail()).isEqualTo("10월");
+                    assertThat(badge.getPeriodKey()).isEqualTo("2026-10");
+                });
+    }
+
+    @Test
+    @DisplayName("타이머 종료 시점에 해당 월 누적이 50시간 미만이면 지급하지 않는다.")
+    void skipMonthlyBadgeOnTimerStopBelowThreshold() {
+        saveDailyStudySummary(USER_ID, MONTH_START.minusDays(1), 10);
+        saveDailyStudySummary(USER_ID, MONTH_START, 45);
+
+        badgeGrantService.grantMonthlyBadge(USER_ID, MONTH_START);
+
+        assertThat(badgeRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("타이머 종료로 이미 받은 월은 종료 시와 월말 판정에서 다시 지급하지 않는다.")
+    void skipGrantedMonthlyBadge() {
+        saveDailyStudySummary(USER_ID, MONTH_START, 50);
+
+        badgeGrantService.grantMonthlyBadge(USER_ID, MONTH_START);
+        badgeGrantService.grantMonthlyBadge(USER_ID, MONTH_END);
+        badgeGrantService.grantMonthlyBadges(MONTH_END);
 
         assertThat(badgeRepository.findAll()).hasSize(1);
     }

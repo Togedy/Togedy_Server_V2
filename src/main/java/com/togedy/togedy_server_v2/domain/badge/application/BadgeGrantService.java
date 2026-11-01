@@ -5,22 +5,15 @@ import com.togedy.togedy_server_v2.domain.badge.dao.HolidayRepository;
 import com.togedy.togedy_server_v2.domain.badge.entity.Badge;
 import com.togedy.togedy_server_v2.domain.badge.entity.Holiday;
 import com.togedy.togedy_server_v2.domain.badge.enums.BadgeType;
-import com.togedy.togedy_server_v2.domain.badge.util.OneSubjectTimeline;
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
-import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTimeRepository;
-import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
-import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -47,31 +40,31 @@ public class BadgeGrantService {
     private static final int COMEBACK_ABSENCE_DAYS = 30;
 
     private final BadgeRepository badgeRepository;
-    private final StudySubjectRepository studySubjectRepository;
     private final StudyTimeRepository studyTimeRepository;
     private final DailyStudySummaryRepository dailyStudySummaryRepository;
     private final HolidayRepository holidayRepository;
 
     /**
-     * 해당 학습일에 공부한 유저를 대상으로 한우물왕 뱃지를 지급한다.
+     * 타이머를 종료한 과목의 누적 공부 시간으로 아직 받지 않은 한우물왕 단계를 지급한다.
      * <p>
-     * 단계마다 타임라인상 기준 시간에 가장 먼저 도달한 과목이 받으며, 판정 시점에 삭제된 과목은 제외한다. 과목명은 지급 시점의 이름으로 저장한다. 유저 단위로 처리하므로 한 유저의 실패가 다른 유저의
-     * 지급을 막지 않는다.
+     * 타이머 종료로 누적 시간이 늘어나는 과목은 방금 종료한 과목뿐이므로 그 과목만 판정한다.
+     * 모든 단계를 이미 받았으면 공부 시간을 조회하지 않는다.
      * </p>
      *
-     * @param studyDate 판정 대상 학습일
+     * @param userId         판정 대상 유저 ID
+     * @param studySubjectId 타이머를 종료한 과목 ID
+     * @param studyDate      타이머 종료 시각의 학습일
      */
-    public void grantOneSubjectBadges(LocalDate studyDate) {
-        LocalDateTime startTime = TimeUtil.startOfStudyDay(studyDate);
-        LocalDateTime endTime = startTime.plusDays(1);
-
-        for (Long userId : studyTimeRepository.findStudiedUserIds(startTime, endTime)) {
-            try {
-                grantUserOneSubjectBadges(userId, studyDate, endTime);
-            } catch (Exception e) {
-                log.error("한우물왕 뱃지 지급 실패 userId={}", userId, e);
-            }
+    public void grantOneSubjectBadges(Long userId, Long studySubjectId, LocalDate studyDate) {
+        List<BadgeType> remainingTypes = findRemainingOneSubjectTypes(userId);
+        if (remainingTypes.isEmpty()) {
+            return;
         }
+
+        long studyTime = studyTimeRepository.sumStudyTimeByStudySubjectId(studySubjectId);
+        remainingTypes.stream()
+                .filter(type -> studyTime >= toRequiredSeconds(type))
+                .forEach(type -> saveBadge(createOneSubjectBadge(userId, type, studyDate)));
     }
 
     /**
@@ -120,10 +113,32 @@ public class BadgeGrantService {
     }
 
     /**
-     * 판정 학습일이 그 달의 마지막 날이면 한 달 누적 공부 시간으로 월간 파이터 뱃지를 지급한다.
+     * 타이머 종료 시점까지의 해당 월 누적 공부 시간으로 월간 파이터 뱃지를 지급한다.
      * <p>
-     * 월 합계는 05:00 집계가 끝난 일별 공부 시간을 사용하며, periodKey가 해당 월이므로 매달 다시 받을 수 있다.
-     * 지급 시점이 아닌 판정 대상 월(예: "10월")을 detail에 담는다.
+     * 타이머 종료 시 일별 공부 시간이 바로 갱신되므로 일별 합계로 월 누적을 계산한다.
+     * 해당 월 뱃지를 이미 받았으면 공부 시간을 조회하지 않는다.
+     * </p>
+     *
+     * @param userId    판정 대상 유저 ID
+     * @param studyDate 타이머 종료 시각의 학습일
+     */
+    public void grantMonthlyBadge(Long userId, LocalDate studyDate) {
+        String periodKey = BadgeType.MONTHLY_50.getPeriodType().toKey(studyDate);
+        if (badgeRepository.existsByUserIdAndTypeAndPeriodKey(userId, BadgeType.MONTHLY_50, periodKey)) {
+            return;
+        }
+
+        long studyTime = dailyStudySummaryRepository.sumStudyTimeByUserIdAndPeriod(
+                userId, studyDate.withDayOfMonth(1), studyDate);
+        if (studyTime >= toRequiredSeconds(BadgeType.MONTHLY_50)) {
+            saveBadge(createMonthlyBadge(userId, studyDate));
+        }
+    }
+
+    /**
+     * 판정 학습일이 그 달의 마지막 날이면 타이머 종료 시 받지 못한 유저에게 월간 파이터 뱃지를 지급한다.
+     * <p>
+     * 월말 05:00을 넘겨 실행 중이던 타이머의 지난달 몫은 05:00 집계로만 반영되어 타이머 종료 시 판정에서 빠지므로, 05:00 집계가 끝난 뒤 한 번 더 판정한다.
      * </p>
      *
      * @param studyDate 판정 대상 학습일
@@ -133,14 +148,13 @@ public class BadgeGrantService {
             return;
         }
 
+        Set<Long> grantedUserIds = badgeRepository.findUserIdsByTypeAndPeriodKey(
+                BadgeType.MONTHLY_50, BadgeType.MONTHLY_50.getPeriodType().toKey(studyDate));
         dailyStudySummaryRepository.findUserStudyTimesByPeriodAtLeast(
                         studyDate.withDayOfMonth(1), studyDate, toRequiredSeconds(BadgeType.MONTHLY_50))
-                .forEach(userStudyTime -> saveBadge(Badge.builder()
-                        .userId(userStudyTime.getUserId())
-                        .type(BadgeType.MONTHLY_50)
-                        .detail(studyDate.getMonthValue() + "월")
-                        .date(studyDate)
-                        .build()));
+                .stream()
+                .filter(userStudyTime -> !grantedUserIds.contains(userStudyTime.getUserId()))
+                .forEach(userStudyTime -> saveBadge(createMonthlyBadge(userStudyTime.getUserId(), studyDate)));
     }
 
     /**
@@ -170,34 +184,6 @@ public class BadgeGrantService {
     }
 
     /**
-     * 한 유저에게 아직 받지 않은 한우물왕 단계 중 도달한 단계를 지급한다.
-     * <p>
-     * 남은 단계가 없거나 가장 낮은 기준에 도달한 활성 과목이 없으면 공부 기록 전체를 조회하지 않고 종료한다.
-     * </p>
-     *
-     * @param userId    판정 대상 유저 ID
-     * @param studyDate 판정 대상 학습일
-     * @param endTime   판정 기준 시각 (판정 학습일 다음 날 05:00)
-     */
-    private void grantUserOneSubjectBadges(Long userId, LocalDate studyDate, LocalDateTime endTime) {
-        List<BadgeType> remainingTypes = findRemainingOneSubjectTypes(userId);
-        if (remainingTypes.isEmpty()) {
-            return;
-        }
-
-        Set<Long> activeSubjectIds = findActiveSubjectIds(userId);
-        if (!hasReachableSubject(userId, activeSubjectIds, remainingTypes.get(0), endTime)) {
-            return;
-        }
-
-        List<StudyTime> studyTimes = studyTimeRepository.findEndedStudyTimesBefore(userId, endTime);
-        Map<BadgeType, Long> reachedSubjectIds = OneSubjectTimeline.findFirstReachedSubjects(
-                studyTimes, activeSubjectIds, remainingTypes, endTime);
-
-        reachedSubjectIds.keySet().forEach(type -> saveBadge(createOneSubjectBadge(userId, type, studyDate)));
-    }
-
-    /**
      * 유저가 아직 받지 않은 한우물왕 단계를 조회한다.
      *
      * @param userId 조회 대상 유저 ID
@@ -208,43 +194,6 @@ public class BadgeGrantService {
         return ONE_SUBJECT_TYPES.stream()
                 .filter(type -> !grantedTypes.contains(type))
                 .toList();
-    }
-
-    /**
-     * 유저의 삭제되지 않은 과목 ID를 조회한다.
-     *
-     * @param userId 조회 대상 유저 ID
-     * @return 활성 과목 ID
-     */
-    private Set<Long> findActiveSubjectIds(Long userId) {
-        return studySubjectRepository.findAllByUserId(userId).stream()
-                .map(StudySubject::getId)
-                .collect(Collectors.toSet());
-    }
-
-    /**
-     * 남은 단계 중 가장 낮은 기준 시간에 도달한 활성 과목이 있는지 확인한다.
-     * <p>
-     * 공부 기록 전체를 불러오기 전에 과목별 누적 합계로 먼저 걸러내, 지급 가능성이 없는 유저의 조회 비용을 줄인다.
-     * </p>
-     *
-     * @param userId           판정 대상 유저 ID
-     * @param activeSubjectIds 활성 과목 ID
-     * @param lowestType       남은 단계 중 기준 시간이 가장 낮은 단계
-     * @param endTime          판정 기준 시각
-     * @return 기준 시간에 도달한 활성 과목이 있으면 {@code true}
-     */
-    private boolean hasReachableSubject(
-            Long userId,
-            Set<Long> activeSubjectIds,
-            BadgeType lowestType,
-            LocalDateTime endTime
-    ) {
-        long requiredSeconds = toRequiredSeconds(lowestType);
-
-        return studyTimeRepository.sumStudyTimeBySubjectBefore(userId, endTime).stream()
-                .filter(row -> activeSubjectIds.contains(((Number) row[0]).longValue()))
-                .anyMatch(row -> ((Number) row[1]).longValue() >= requiredSeconds);
     }
 
     /**
@@ -259,6 +208,22 @@ public class BadgeGrantService {
         return Badge.builder()
                 .userId(userId)
                 .type(type)
+                .date(studyDate)
+                .build();
+    }
+
+    /**
+     * 지급 시점이 아닌 판정 대상 월(예: "10월")을 detail에 담은 월간 파이터 뱃지를 생성한다.
+     *
+     * @param userId    지급 대상 유저 ID
+     * @param studyDate 판정 대상 월에 속한 학습일
+     * @return 저장 전 뱃지
+     */
+    private Badge createMonthlyBadge(Long userId, LocalDate studyDate) {
+        return Badge.builder()
+                .userId(userId)
+                .type(BadgeType.MONTHLY_50)
+                .detail(studyDate.getMonthValue() + "월")
                 .date(studyDate)
                 .build();
     }

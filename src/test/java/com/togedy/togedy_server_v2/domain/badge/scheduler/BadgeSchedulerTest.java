@@ -26,13 +26,11 @@ class BadgeSchedulerTest {
     void grantBadgesForPreviousStudyDate() {
         LocalDate previousStudyDate = TimeUtil.currentStudyDate().minusDays(1);
 
-        badgeScheduler.grantOneSubjectBadges();
         badgeScheduler.grantWeekendBadges();
         badgeScheduler.grantHolidayBadges();
         badgeScheduler.grantMonthlyBadges();
         badgeScheduler.grantComebackBadges();
 
-        verify(badgeGrantService).grantOneSubjectBadges(previousStudyDate);
         verify(badgeGrantService).grantWeekendBadges(previousStudyDate);
         verify(badgeGrantService).grantHolidayBadges(previousStudyDate);
         verify(badgeGrantService).grantMonthlyBadges(previousStudyDate);

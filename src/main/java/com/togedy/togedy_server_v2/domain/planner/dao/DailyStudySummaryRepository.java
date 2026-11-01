@@ -59,6 +59,15 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
     Optional<Long> findTotalStudyTimeByUserId(Long userId);
 
     @Query("""
+            SELECT COALESCE(SUM(dss.studyTime), 0)
+            FROM DailyStudySummary dss
+            WHERE dss.userId = :userId
+                AND dss.date >= :startDate
+                AND dss.date <= :endDate
+            """)
+    Long sumStudyTimeByUserIdAndPeriod(Long userId, LocalDate startDate, LocalDate endDate);
+
+    @Query("""
             SELECT dss
             FROM DailyStudySummary dss
             WHERE dss.userId = :userId
