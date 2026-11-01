@@ -29,11 +29,9 @@ class BadgeSchedulerTest {
         badgeScheduler.grantWeekendBadges();
         badgeScheduler.grantHolidayBadges();
         badgeScheduler.grantMonthlyBadges();
-        badgeScheduler.grantComebackBadges();
 
         verify(badgeGrantService).grantWeekendBadges(previousStudyDate);
         verify(badgeGrantService).grantHolidayBadges(previousStudyDate);
         verify(badgeGrantService).grantMonthlyBadges(previousStudyDate);
-        verify(badgeGrantService).grantComebackBadges(previousStudyDate);
     }
 }

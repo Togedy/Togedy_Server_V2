@@ -331,12 +331,11 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     }
 
     @Test
-    @DisplayName("직전 공부일로부터 30일이 지난 뒤 공부하면 복귀 뱃지를 지급한다.")
+    @DisplayName("직전 공부일로부터 30일이 지난 뒤 공부를 시작하면 복귀 뱃지를 지급한다.")
     void grantComebackBadge() {
         saveDailyStudySummary(USER_ID, STUDY_DATE.minusDays(30), 1);
-        saveDailyStudySummary(USER_ID, STUDY_DATE, 1);
 
-        badgeGrantService.grantComebackBadges(STUDY_DATE);
+        badgeGrantService.grantComebackBadge(USER_ID, STUDY_DATE);
 
         assertThat(badgeRepository.findAll())
                 .singleElement()
@@ -351,9 +350,8 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     void skipComebackBadgeWithin30Days() {
         saveDailyStudySummary(USER_ID, STUDY_DATE.minusDays(60), 1);
         saveDailyStudySummary(USER_ID, STUDY_DATE.minusDays(29), 1);
-        saveDailyStudySummary(USER_ID, STUDY_DATE, 1);
 
-        badgeGrantService.grantComebackBadges(STUDY_DATE);
+        badgeGrantService.grantComebackBadge(USER_ID, STUDY_DATE);
 
         assertThat(badgeRepository.findAll()).isEmpty();
     }
@@ -361,21 +359,20 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     @Test
     @DisplayName("이전 공부 기록이 없는 유저는 지급하지 않는다.")
     void skipComebackBadgeWithoutPreviousStudy() {
-        saveDailyStudySummary(USER_ID, STUDY_DATE, 1);
-
-        badgeGrantService.grantComebackBadges(STUDY_DATE);
+        badgeGrantService.grantComebackBadge(USER_ID, STUDY_DATE);
 
         assertThat(badgeRepository.findAll()).isEmpty();
     }
 
     @Test
-    @DisplayName("판정 학습일에 공부하지 않은 유저는 지급하지 않는다.")
-    void skipComebackBadgeWithoutStudyOnStudyDate() {
+    @DisplayName("시작 학습일 당일의 공부 기록은 직전 공부일로 보지 않는다.")
+    void grantComebackBadgeIgnoringStudyOnStudyDate() {
         saveDailyStudySummary(USER_ID, STUDY_DATE.minusDays(30), 1);
+        saveDailyStudySummary(USER_ID, STUDY_DATE, 1);
 
-        badgeGrantService.grantComebackBadges(STUDY_DATE);
+        badgeGrantService.grantComebackBadge(USER_ID, STUDY_DATE);
 
-        assertThat(badgeRepository.findAll()).isEmpty();
+        assertThat(badgeRepository.findAll()).hasSize(1);
     }
 
     @Test
@@ -384,10 +381,9 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
         LocalDate firstComebackDate = STUDY_DATE.minusDays(40);
         saveDailyStudySummary(USER_ID, firstComebackDate.minusDays(30), 1);
         saveDailyStudySummary(USER_ID, firstComebackDate, 1);
-        saveDailyStudySummary(USER_ID, STUDY_DATE, 1);
 
-        badgeGrantService.grantComebackBadges(firstComebackDate);
-        badgeGrantService.grantComebackBadges(STUDY_DATE);
+        badgeGrantService.grantComebackBadge(USER_ID, firstComebackDate);
+        badgeGrantService.grantComebackBadge(USER_ID, STUDY_DATE);
 
         assertThat(badgeRepository.findAll()).hasSize(1);
     }
