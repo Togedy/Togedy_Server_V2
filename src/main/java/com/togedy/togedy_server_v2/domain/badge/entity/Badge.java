@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.badge.entity;
 
 import com.togedy.togedy_server_v2.domain.badge.enums.BadgeType;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -50,5 +51,16 @@ public class Badge extends BaseEntity {
         this.detail = detail;
         this.type = type;
         this.periodKey = type.getPeriodType().toKey(date);
+    }
+
+    public String getDisplayName() {
+        if (detail == null) {
+            return type.getName();
+        }
+        return detail + " " + type.getName();
+    }
+
+    public LocalDate getAcquiredDate() {
+        return TimeUtil.startOfStudyDay(getCreatedAt()).toLocalDate();
     }
 }
