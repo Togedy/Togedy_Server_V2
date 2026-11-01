@@ -37,11 +37,6 @@ public class BadgeScheduler {
         badgeGrantService.grantMonthlyBadges(previousStudyDate());
     }
 
-    @Scheduled(cron = BADGE_GRANT_CRON, zone = "Asia/Seoul")
-    public void grantComebackBadges() {
-        badgeGrantService.grantComebackBadges(previousStudyDate());
-    }
-
     /**
      * 판정 대상인 전날 학습일을 구한다.
      *

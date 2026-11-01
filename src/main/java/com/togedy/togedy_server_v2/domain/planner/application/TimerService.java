@@ -13,6 +13,7 @@ import com.togedy.togedy_server_v2.domain.planner.dto.SubjectStudyTimeItemRespon
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
+import com.togedy.togedy_server_v2.domain.planner.event.TimerStartedEvent;
 import com.togedy.togedy_server_v2.domain.planner.event.TimerStoppedEvent;
 import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudySubjectException;
 import com.togedy.togedy_server_v2.domain.planner.exception.StudySubjectNotFoundException;
@@ -88,6 +89,7 @@ public class TimerService {
             throw new TimerAlreadyRunningException();
         }
 
+        applicationEventPublisher.publishEvent(new TimerStartedEvent(userId, startTime));
         return PostTimerStartResponse.of(timerId, startTime);
     }
 

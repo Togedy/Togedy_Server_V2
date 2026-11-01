@@ -158,25 +158,25 @@ public class BadgeGrantService {
     }
 
     /**
-     * 판정 학습일에 복귀한 유저를 대상으로 복귀 뱃지를 지급한다.
+     * 타이머를 시작한 유저가 복귀한 것이면 복귀 뱃지를 지급한다.
      * <p>
-     * 판정 학습일에 공부했고, 직전 공부일이 판정 학습일보다 30일 이상 앞선 유저가 복귀한 것으로 본다.
+     * 시작 학습일 이전의 마지막 공부일이 시작 학습일보다 30일 이상 앞서면 복귀한 것으로 본다.
      * 이전 공부 기록이 없는 유저는 제외하며, 복귀 뱃지는 한 번만 지급한다.
+     * 시작 직후 타이머를 취소해도 지급한 뱃지는 유지한다.
      * </p>
      *
-     * @param studyDate 판정 대상 학습일
+     * @param userId    판정 대상 유저 ID
+     * @param studyDate 타이머 시작 시각의 학습일
      */
-    public void grantComebackBadges(LocalDate studyDate) {
-        List<Long> returnedUserIds = dailyStudySummaryRepository.findReturnedUserIds(
-                studyDate, studyDate.minusDays(COMEBACK_ABSENCE_DAYS));
-        if (returnedUserIds.isEmpty()) {
+    public void grantComebackBadge(Long userId, LocalDate studyDate) {
+        String periodKey = BadgeType.COMEBACK.getPeriodType().toKey(studyDate);
+        if (badgeRepository.existsByUserIdAndTypeAndPeriodKey(userId, BadgeType.COMEBACK, periodKey)) {
             return;
         }
 
-        Set<Long> grantedUserIds = badgeRepository.findUserIdsByTypeAndUserIdIn(BadgeType.COMEBACK, returnedUserIds);
-        returnedUserIds.stream()
-                .filter(userId -> !grantedUserIds.contains(userId))
-                .forEach(userId -> saveBadge(Badge.builder()
+        dailyStudySummaryRepository.findLastStudyDateBefore(userId, studyDate)
+                .filter(lastStudyDate -> !lastStudyDate.isAfter(studyDate.minusDays(COMEBACK_ABSENCE_DAYS)))
+                .ifPresent(lastStudyDate -> saveBadge(Badge.builder()
                         .userId(userId)
                         .type(BadgeType.COMEBACK)
                         .date(studyDate)

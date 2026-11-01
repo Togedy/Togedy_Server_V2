@@ -158,29 +158,15 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
     );
 
     @Query("""
-            SELECT current.userId
-            FROM DailyStudySummary current
-            WHERE current.date = :studyDate
-                AND current.studyTime > 0
-                AND EXISTS (
-                    SELECT 1
-                    FROM DailyStudySummary previous
-                    WHERE previous.userId = current.userId
-                        AND previous.date <= :lastStudyDateLimit
-                        AND previous.studyTime > 0
-                )
-                AND NOT EXISTS (
-                    SELECT 1
-                    FROM DailyStudySummary recent
-                    WHERE recent.userId = current.userId
-                        AND recent.date > :lastStudyDateLimit
-                        AND recent.date < :studyDate
-                        AND recent.studyTime > 0
-                )
+            SELECT MAX(dss.date)
+            FROM DailyStudySummary dss
+            WHERE dss.userId = :userId
+                AND dss.date < :date
+                AND dss.studyTime > 0
             """)
-    List<Long> findReturnedUserIds(
-            @Param("studyDate") LocalDate studyDate,
-            @Param("lastStudyDateLimit") LocalDate lastStudyDateLimit
+    Optional<LocalDate> findLastStudyDateBefore(
+            @Param("userId") Long userId,
+            @Param("date") LocalDate date
     );
 
     void deleteAllByUserId(Long userId);

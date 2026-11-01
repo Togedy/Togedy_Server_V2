@@ -21,14 +21,6 @@ public interface BadgeRepository extends JpaRepository<Badge, Long> {
             SELECT b.userId
             FROM Badge b
             WHERE b.type = :type
-                AND b.userId IN :userIds
-            """)
-    Set<Long> findUserIdsByTypeAndUserIdIn(BadgeType type, Collection<Long> userIds);
-
-    @Query("""
-            SELECT b.userId
-            FROM Badge b
-            WHERE b.type = :type
                 AND b.periodKey = :periodKey
             """)
     Set<Long> findUserIdsByTypeAndPeriodKey(BadgeType type, String periodKey);
