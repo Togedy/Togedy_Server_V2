@@ -48,7 +48,7 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     HolidayRepository holidayRepository;
 
     @Test
-    @DisplayName("판정 학습일에 기준 시간에 도달한 과목에 과목명을 담아 한우물왕 뱃지를 지급한다.")
+    @DisplayName("판정 학습일에 기준 시간에 도달한 과목이 있으면 한우물왕 뱃지를 지급한다.")
     void grantOneSubjectBadge() {
         StudySubject korean = saveSubject("국어");
         saveStudyTime(korean, LocalDateTime.of(2026, 10, 20, 6, 0), 25);
@@ -60,27 +60,24 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
                 .singleElement()
                 .satisfies(badge -> {
                     assertThat(badge.getType()).isEqualTo(BadgeType.ONE_SUBJECT_30);
-                    assertThat(badge.getDetail()).isEqualTo("국어");
+                    assertThat(badge.getDetail()).isNull();
                     assertThat(badge.getPeriodKey()).isEqualTo("ONCE");
                 });
     }
 
     @Test
-    @DisplayName("삭제된 과목은 제외하고 다음으로 도달한 과목에 지급한다.")
+    @DisplayName("삭제된 과목의 공부 시간으로는 지급하지 않는다.")
     void skipDeletedSubject() {
         StudySubject korean = saveSubject("국어");
         StudySubject math = saveSubject("수학");
         saveStudyTime(korean, LocalDateTime.of(2026, 10, 20, 6, 0), 30);
-        saveStudyTime(math, LocalDateTime.of(2026, 10, 22, 6, 0), 25);
-        saveStudyTime(math, LocalDateTime.of(2026, 10, 27, 6, 0), 5);
+        saveStudyTime(math, LocalDateTime.of(2026, 10, 27, 6, 0), 25);
         korean.delete();
         studySubjectRepository.save(korean);
 
         badgeGrantService.grantOneSubjectBadges(STUDY_DATE);
 
-        assertThat(badgeRepository.findAll())
-                .extracting(Badge::getDetail)
-                .containsExactly("수학");
+        assertThat(badgeRepository.findAll()).isEmpty();
     }
 
     @Test

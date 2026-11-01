@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -162,17 +161,16 @@ public class BadgeGrantService {
             return;
         }
 
-        Map<Long, StudySubject> activeSubjects = findActiveSubjects(userId);
-        if (!hasReachableSubject(userId, activeSubjects.keySet(), remainingTypes.get(0), endTime)) {
+        Set<Long> activeSubjectIds = findActiveSubjectIds(userId);
+        if (!hasReachableSubject(userId, activeSubjectIds, remainingTypes.get(0), endTime)) {
             return;
         }
 
         List<StudyTime> studyTimes = studyTimeRepository.findEndedStudyTimesBefore(userId, endTime);
         Map<BadgeType, Long> reachedSubjectIds = OneSubjectTimeline.findFirstReachedSubjects(
-                studyTimes, activeSubjects.keySet(), remainingTypes, endTime);
+                studyTimes, activeSubjectIds, remainingTypes, endTime);
 
-        reachedSubjectIds.forEach((type, subjectId) ->
-                saveBadge(createOneSubjectBadge(userId, type, activeSubjects.get(subjectId), studyDate)));
+        reachedSubjectIds.keySet().forEach(type -> saveBadge(createOneSubjectBadge(userId, type, studyDate)));
     }
 
     /**
@@ -189,14 +187,15 @@ public class BadgeGrantService {
     }
 
     /**
-     * 유저의 삭제되지 않은 과목을 조회한다.
+     * 유저의 삭제되지 않은 과목 ID를 조회한다.
      *
      * @param userId 조회 대상 유저 ID
-     * @return 과목 ID를 키로 하는 활성 과목 Map
+     * @return 활성 과목 ID
      */
-    private Map<Long, StudySubject> findActiveSubjects(Long userId) {
+    private Set<Long> findActiveSubjectIds(Long userId) {
         return studySubjectRepository.findAllByUserId(userId).stream()
-                .collect(Collectors.toMap(StudySubject::getId, Function.identity()));
+                .map(StudySubject::getId)
+                .collect(Collectors.toSet());
     }
 
     /**
@@ -225,19 +224,17 @@ public class BadgeGrantService {
     }
 
     /**
-     * 지급 시점의 과목명을 담은 한우물왕 뱃지를 생성한다.
+     * 한우물왕 뱃지를 생성한다.
      *
      * @param userId    지급 대상 유저 ID
      * @param type      지급할 한우물왕 단계
-     * @param subject   기준 시간에 가장 먼저 도달한 과목
      * @param studyDate 판정 대상 학습일
      * @return 저장 전 뱃지
      */
-    private Badge createOneSubjectBadge(Long userId, BadgeType type, StudySubject subject, LocalDate studyDate) {
+    private Badge createOneSubjectBadge(Long userId, BadgeType type, LocalDate studyDate) {
         return Badge.builder()
                 .userId(userId)
                 .type(type)
-                .detail(subject.getName())
                 .date(studyDate)
                 .build();
     }
