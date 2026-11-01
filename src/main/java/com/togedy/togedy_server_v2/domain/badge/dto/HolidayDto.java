@@ -11,6 +11,8 @@ public class HolidayDto {
 
     private Long holidayId;
 
+    private Long holidayKindId;
+
     private String name;
 
     private LocalDate startDate;
@@ -22,7 +24,8 @@ public class HolidayDto {
     public static HolidayDto of(Holiday holiday, LocalDate studyDate) {
         return HolidayDto.builder()
                 .holidayId(holiday.getId())
-                .name(holiday.getName())
+                .holidayKindId(holiday.getHolidayKind().getId())
+                .name(holiday.getHolidayKind().getName())
                 .startDate(holiday.getStartDate())
                 .endDate(holiday.getEndDate())
                 .ended(holiday.isEnded(studyDate))

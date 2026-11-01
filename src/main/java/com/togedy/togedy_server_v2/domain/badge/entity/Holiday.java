@@ -3,9 +3,12 @@ package com.togedy.togedy_server_v2.domain.badge.entity;
 import com.togedy.togedy_server_v2.global.entity.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import java.time.LocalDate;
@@ -28,8 +31,9 @@ public class Holiday extends BaseEntity {
     @Column(name = "holiday_id", nullable = false, updatable = false)
     private Long id;
 
-    @Column(name = "name", nullable = false, length = 50)
-    private String name;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "holiday_kind_id", nullable = false)
+    private HolidayKind holidayKind;
 
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
@@ -38,14 +42,14 @@ public class Holiday extends BaseEntity {
     private LocalDate endDate;
 
     @Builder
-    public Holiday(String name, LocalDate startDate, LocalDate endDate) {
-        this.name = name;
+    public Holiday(HolidayKind holidayKind, LocalDate startDate, LocalDate endDate) {
+        this.holidayKind = holidayKind;
         this.startDate = startDate;
         this.endDate = endDate;
     }
 
-    public void update(String name, LocalDate startDate, LocalDate endDate) {
-        this.name = name;
+    public void update(HolidayKind holidayKind, LocalDate startDate, LocalDate endDate) {
+        this.holidayKind = holidayKind;
         this.startDate = startDate;
         this.endDate = endDate;
     }

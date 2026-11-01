@@ -3,6 +3,7 @@ package com.togedy.togedy_server_v2.domain.badge.dao;
 import com.togedy.togedy_server_v2.domain.badge.entity.Holiday;
 import java.time.LocalDate;
 import java.util.List;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -20,5 +21,6 @@ public interface HolidayRepository extends JpaRepository<Holiday, Long> {
                               @Param("endDate") LocalDate endDate,
                               @Param("excludedHolidayId") Long excludedHolidayId);
 
+    @EntityGraph(attributePaths = "holidayKind")
     List<Holiday> findAllByEndDate(LocalDate endDate);
 }

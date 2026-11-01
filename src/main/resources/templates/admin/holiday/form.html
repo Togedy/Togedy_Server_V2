@@ -11,9 +11,12 @@
           th:action="${holidayId} == null ? @{/admin/holidays} : @{/admin/holidays/{id}/edit(id=${holidayId})}">
         <div class="alert alert-error" th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}"></div>
         <div class="field">
-            <label for="name">연휴명</label>
-            <input type="text" th:field="*{name}" th:errorclass="invalid" placeholder="예) 2026 추석 연휴">
-            <span class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+            <label for="holidayKindId">연휴 종류</label>
+            <select th:field="*{holidayKindId}" th:errorclass="invalid">
+                <option value="">선택</option>
+                <option th:each="kind : ${holidayKinds}" th:value="${kind.holidayKindId}" th:text="${kind.name}"></option>
+            </select>
+            <span class="error" th:if="${#fields.hasErrors('holidayKindId')}" th:errors="*{holidayKindId}"></span>
         </div>
         <div class="field">
             <label for="startDate">시작일</label>

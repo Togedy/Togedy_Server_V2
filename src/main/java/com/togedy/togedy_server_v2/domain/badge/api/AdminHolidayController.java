@@ -1,10 +1,13 @@
 package com.togedy.togedy_server_v2.domain.badge.api;
 
+import com.togedy.togedy_server_v2.domain.badge.application.HolidayKindService;
 import com.togedy.togedy_server_v2.domain.badge.application.HolidayService;
 import com.togedy.togedy_server_v2.domain.badge.dto.HolidayDto;
+import com.togedy.togedy_server_v2.domain.badge.dto.HolidayKindDto;
 import com.togedy.togedy_server_v2.domain.badge.dto.HolidayRequest;
 import com.togedy.togedy_server_v2.global.exception.CustomException;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +25,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AdminHolidayController {
 
     private final HolidayService holidayService;
+    private final HolidayKindService holidayKindService;
+
+    @ModelAttribute("holidayKinds")
+    public List<HolidayKindDto> holidayKinds() {
+        return holidayKindService.findHolidayKinds();
+    }
 
     @GetMapping
     public String holidayList(Model model) {
@@ -56,7 +65,7 @@ public class AdminHolidayController {
         HolidayDto holiday = holidayService.findHoliday(holidayId);
 
         HolidayRequest form = new HolidayRequest();
-        form.setName(holiday.getName());
+        form.setHolidayKindId(holiday.getHolidayKindId());
         form.setStartDate(holiday.getStartDate());
         form.setEndDate(holiday.getEndDate());
 

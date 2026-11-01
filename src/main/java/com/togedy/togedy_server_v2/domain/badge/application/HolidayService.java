@@ -1,11 +1,14 @@
 package com.togedy.togedy_server_v2.domain.badge.application;
 
+import com.togedy.togedy_server_v2.domain.badge.dao.HolidayKindRepository;
 import com.togedy.togedy_server_v2.domain.badge.dao.HolidayRepository;
 import com.togedy.togedy_server_v2.domain.badge.dto.HolidayDto;
 import com.togedy.togedy_server_v2.domain.badge.dto.HolidayRequest;
 import com.togedy.togedy_server_v2.domain.badge.entity.Holiday;
+import com.togedy.togedy_server_v2.domain.badge.entity.HolidayKind;
 import com.togedy.togedy_server_v2.domain.badge.exception.DuplicateHolidayPeriodException;
 import com.togedy.togedy_server_v2.domain.badge.exception.HolidayAlreadyEndedException;
+import com.togedy.togedy_server_v2.domain.badge.exception.HolidayKindNotFoundException;
 import com.togedy.togedy_server_v2.domain.badge.exception.HolidayNotFoundException;
 import com.togedy.togedy_server_v2.domain.badge.exception.InvalidHolidayPeriodException;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
@@ -22,12 +25,14 @@ import org.springframework.transaction.annotation.Transactional;
 public class HolidayService {
 
     private final HolidayRepository holidayRepository;
+    private final HolidayKindRepository holidayKindRepository;
 
     /**
      * 연휴 목록을 시작일 기준 내림차순으로 조회한다.
      *
      * @return 연휴 목록
      */
+    @Transactional(readOnly = true)
     public List<HolidayDto> findHolidays() {
         LocalDate studyDate = TimeUtil.currentStudyDate();
         return holidayRepository.findAll(Sort.by(Direction.DESC, "startDate"))
@@ -43,6 +48,7 @@ public class HolidayService {
      * @return 연휴
      * @throws HolidayNotFoundException 해당 연휴가 존재하지 않는 경우
      */
+    @Transactional(readOnly = true)
     public HolidayDto findHoliday(Long holidayId) {
         return HolidayDto.of(getHoliday(holidayId), TimeUtil.currentStudyDate());
     }
@@ -51,15 +57,17 @@ public class HolidayService {
      * 연휴를 등록한다.
      *
      * @param request 연휴 요청 DTO
+     * @throws HolidayKindNotFoundException    해당 연휴 종류가 존재하지 않는 경우
      * @throws InvalidHolidayPeriodException   종료일이 시작일보다 앞서거나 이미 지난 경우
      * @throws DuplicateHolidayPeriodException 기간이 겹치는 연휴가 존재하는 경우
      */
     @Transactional
     public void generateHoliday(HolidayRequest request) {
+        HolidayKind holidayKind = getHolidayKind(request.getHolidayKindId());
         validatePeriod(request, null);
 
         Holiday holiday = Holiday.builder()
-                .name(request.getName())
+                .holidayKind(holidayKind)
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .build();
@@ -77,15 +85,17 @@ public class HolidayService {
      * @param holidayId 수정 대상 연휴 ID
      * @throws HolidayNotFoundException        해당 연휴가 존재하지 않는 경우
      * @throws HolidayAlreadyEndedException    이미 종료되어 판정이 끝난 연휴인 경우
+     * @throws HolidayKindNotFoundException    해당 연휴 종류가 존재하지 않는 경우
      * @throws InvalidHolidayPeriodException   종료일이 시작일보다 앞서거나 이미 지난 경우
      * @throws DuplicateHolidayPeriodException 기간이 겹치는 연휴가 존재하는 경우
      */
     @Transactional
     public void modifyHoliday(HolidayRequest request, Long holidayId) {
         Holiday holiday = getModifiableHoliday(holidayId);
+        HolidayKind holidayKind = getHolidayKind(request.getHolidayKindId());
         validatePeriod(request, holidayId);
 
-        holiday.update(request.getName(), request.getStartDate(), request.getEndDate());
+        holiday.update(holidayKind, request.getStartDate(), request.getEndDate());
     }
 
     /**
@@ -145,5 +155,17 @@ public class HolidayService {
     private Holiday getHoliday(Long holidayId) {
         return holidayRepository.findById(holidayId)
                 .orElseThrow(HolidayNotFoundException::new);
+    }
+
+    /**
+     * 연휴 종류를 조회한다.
+     *
+     * @param holidayKindId 조회 대상 연휴 종류 ID
+     * @return 연휴 종류
+     * @throws HolidayKindNotFoundException 해당 연휴 종류가 존재하지 않는 경우
+     */
+    private HolidayKind getHolidayKind(Long holidayKindId) {
+        return holidayKindRepository.findById(holidayKindId)
+                .orElseThrow(HolidayKindNotFoundException::new);
     }
 }
