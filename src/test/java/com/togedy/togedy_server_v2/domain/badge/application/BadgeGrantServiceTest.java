@@ -28,6 +28,8 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     private static final LocalDate SUNDAY = LocalDate.of(2026, 10, 25);
     private static final LocalDate HOLIDAY_START = LocalDate.of(2026, 9, 24);
     private static final LocalDate HOLIDAY_END = LocalDate.of(2026, 9, 26);
+    private static final LocalDate MONTH_START = LocalDate.of(2026, 10, 1);
+    private static final LocalDate MONTH_END = LocalDate.of(2026, 10, 31);
 
     @Autowired
     BadgeGrantService badgeGrantService;
@@ -241,6 +243,62 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
         badgeGrantService.grantHolidayBadges(HOLIDAY_END);
 
         assertThat(badgeRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("한 달 합계가 50시간 이상이면 해당 월을 기간 키와 월 이름으로 월간 파이터 뱃지를 지급한다.")
+    void grantMonthlyBadge() {
+        saveDailyStudySummary(USER_ID, MONTH_START, 25);
+        saveDailyStudySummary(USER_ID, MONTH_END, 25);
+
+        badgeGrantService.grantMonthlyBadges(MONTH_END);
+
+        assertThat(badgeRepository.findAll())
+                .singleElement()
+                .satisfies(badge -> {
+                    assertThat(badge.getType()).isEqualTo(BadgeType.MONTHLY_50);
+                    assertThat(badge.getDetail()).isEqualTo("10월");
+                    assertThat(badge.getPeriodKey()).isEqualTo("2026-10");
+                });
+    }
+
+    @Test
+    @DisplayName("해당 월 외의 공부 시간은 제외하고, 50시간 미만인 유저는 지급하지 않는다.")
+    void skipBelowMonthlyThreshold() {
+        saveDailyStudySummary(USER_ID, MONTH_START.minusDays(1), 10);
+        saveDailyStudySummary(USER_ID, MONTH_START, 24);
+        saveDailyStudySummary(USER_ID, MONTH_END, 25);
+
+        badgeGrantService.grantMonthlyBadges(MONTH_END);
+
+        assertThat(badgeRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("판정 학습일이 그 달의 마지막 날이 아니면 월간 파이터를 판정하지 않는다.")
+    void skipMonthlyBadgeBeforeMonthEnd() {
+        saveDailyStudySummary(USER_ID, MONTH_START, 25);
+        saveDailyStudySummary(USER_ID, MONTH_END.minusDays(1), 25);
+
+        badgeGrantService.grantMonthlyBadges(MONTH_END.minusDays(1));
+
+        assertThat(badgeRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("매달 다시 지급하고, 같은 달은 다시 지급하지 않는다.")
+    void grantMonthlyBadgeEveryMonth() {
+        LocalDate previousMonthEnd = MONTH_START.minusDays(1);
+        saveDailyStudySummary(USER_ID, previousMonthEnd, 50);
+        saveDailyStudySummary(USER_ID, MONTH_END, 50);
+
+        badgeGrantService.grantMonthlyBadges(previousMonthEnd);
+        badgeGrantService.grantMonthlyBadges(MONTH_END);
+        badgeGrantService.grantMonthlyBadges(MONTH_END);
+
+        assertThat(badgeRepository.findAll())
+                .extracting(Badge::getPeriodKey)
+                .containsExactlyInAnyOrder("2026-09", "2026-10");
     }
 
     @Test

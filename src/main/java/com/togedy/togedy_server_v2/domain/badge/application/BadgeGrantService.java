@@ -120,6 +120,30 @@ public class BadgeGrantService {
     }
 
     /**
+     * 판정 학습일이 그 달의 마지막 날이면 한 달 누적 공부 시간으로 월간 파이터 뱃지를 지급한다.
+     * <p>
+     * 월 합계는 05:00 집계가 끝난 일별 공부 시간을 사용하며, periodKey가 해당 월이므로 매달 다시 받을 수 있다.
+     * 지급 시점이 아닌 판정 대상 월(예: "10월")을 detail에 담는다.
+     * </p>
+     *
+     * @param studyDate 판정 대상 학습일
+     */
+    public void grantMonthlyBadges(LocalDate studyDate) {
+        if (studyDate.plusDays(1).getDayOfMonth() != 1) {
+            return;
+        }
+
+        dailyStudySummaryRepository.findUserStudyTimesByPeriodAtLeast(
+                        studyDate.withDayOfMonth(1), studyDate, toRequiredSeconds(BadgeType.MONTHLY_50))
+                .forEach(userStudyTime -> saveBadge(Badge.builder()
+                        .userId(userStudyTime.getUserId())
+                        .type(BadgeType.MONTHLY_50)
+                        .detail(studyDate.getMonthValue() + "월")
+                        .date(studyDate)
+                        .build()));
+    }
+
+    /**
      * 판정 학습일에 복귀한 유저를 대상으로 복귀 뱃지를 지급한다.
      * <p>
      * 판정 학습일에 공부했고, 직전 공부일이 판정 학습일보다 30일 이상 앞선 유저가 복귀한 것으로 본다.

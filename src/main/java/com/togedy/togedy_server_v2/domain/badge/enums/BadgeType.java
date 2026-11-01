@@ -13,6 +13,7 @@ public enum BadgeType {
     WEEKEND_10("10시간 주말 파이터", "", 10, PeriodType.WEEKEND),
     WEEKEND_20("20시간 주말 파이터", "", 20, PeriodType.WEEKEND),
     HOLIDAY("연휴 파이터", "", 4, PeriodType.HOLIDAY),   // 하루 기준 4시간
+    MONTHLY_50("파이터", "", 50, PeriodType.MONTH),
     COMEBACK("돌아왔구나", "", 0, PeriodType.ONCE);
 
     private final String name;

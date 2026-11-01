@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.badge.enums;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.temporal.TemporalAdjusters;
 
 public enum PeriodType {
@@ -21,6 +22,12 @@ public enum PeriodType {
         @Override
         public String toKey(LocalDate date) {
             return date.toString();
+        }
+    },
+    MONTH {
+        @Override
+        public String toKey(LocalDate date) {
+            return YearMonth.from(date).toString();
         }
     };
 

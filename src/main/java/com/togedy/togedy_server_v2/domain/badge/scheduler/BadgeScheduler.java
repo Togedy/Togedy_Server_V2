@@ -38,6 +38,11 @@ public class BadgeScheduler {
     }
 
     @Scheduled(cron = BADGE_GRANT_CRON, zone = "Asia/Seoul")
+    public void grantMonthlyBadges() {
+        badgeGrantService.grantMonthlyBadges(previousStudyDate());
+    }
+
+    @Scheduled(cron = BADGE_GRANT_CRON, zone = "Asia/Seoul")
     public void grantComebackBadges() {
         badgeGrantService.grantComebackBadges(previousStudyDate());
     }
