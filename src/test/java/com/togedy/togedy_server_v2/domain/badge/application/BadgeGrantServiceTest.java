@@ -3,9 +3,11 @@ package com.togedy.togedy_server_v2.domain.badge.application;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.togedy.togedy_server_v2.domain.badge.dao.BadgeRepository;
+import com.togedy.togedy_server_v2.domain.badge.dao.HolidayKindRepository;
 import com.togedy.togedy_server_v2.domain.badge.dao.HolidayRepository;
 import com.togedy.togedy_server_v2.domain.badge.entity.Badge;
 import com.togedy.togedy_server_v2.domain.badge.entity.Holiday;
+import com.togedy.togedy_server_v2.domain.badge.entity.HolidayKind;
 import com.togedy.togedy_server_v2.domain.badge.enums.BadgeType;
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
@@ -48,6 +50,9 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
 
     @Autowired
     HolidayRepository holidayRepository;
+
+    @Autowired
+    HolidayKindRepository holidayKindRepository;
 
     @Test
     @DisplayName("타이머를 종료한 과목의 누적 공부 시간이 기준 이상이면 한우물왕 뱃지를 지급한다.")
@@ -174,9 +179,9 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     }
 
     @Test
-    @DisplayName("연휴의 모든 날 4시간 이상 공부하면 연휴명과 연휴 시작일을 담아 연휴 파이터 뱃지를 지급한다.")
+    @DisplayName("연휴의 모든 날 4시간 이상 공부하면 연휴 종류 이름과 연휴 시작일을 담아 연휴 파이터 뱃지를 지급한다.")
     void grantHolidayBadge() {
-        Holiday holiday = saveHoliday("추석 연휴", HOLIDAY_START, HOLIDAY_END);
+        saveHoliday("추석", HOLIDAY_START, HOLIDAY_END);
         saveDailyStudySummary(USER_ID, HOLIDAY_START, 4);
         saveDailyStudySummary(USER_ID, HOLIDAY_START.plusDays(1), 5);
         saveDailyStudySummary(USER_ID, HOLIDAY_END, 4);
@@ -187,7 +192,7 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
                 .singleElement()
                 .satisfies(badge -> {
                     assertThat(badge.getType()).isEqualTo(BadgeType.HOLIDAY);
-                    assertThat(badge.getDetail()).isEqualTo(holiday.getName());
+                    assertThat(badge.getDetail()).isEqualTo("추석");
                     assertThat(badge.getPeriodKey()).isEqualTo(HOLIDAY_START.toString());
                 });
     }
@@ -195,7 +200,7 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     @Test
     @DisplayName("연휴 중 하루라도 4시간 미만이거나 공부하지 않은 날이 있으면 지급하지 않는다.")
     void skipHolidayBadgeWhenAnyDayMissed() {
-        saveHoliday("추석 연휴", HOLIDAY_START, HOLIDAY_END);
+        saveHoliday("추석", HOLIDAY_START, HOLIDAY_END);
         saveDailyStudySummary(USER_ID, HOLIDAY_START, 4);
         saveDailyStudySummary(USER_ID, HOLIDAY_START.plusDays(1), 3);
         saveDailyStudySummary(USER_ID, HOLIDAY_END, 4);
@@ -210,7 +215,7 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     @Test
     @DisplayName("판정 학습일이 연휴 종료일이 아니면 연휴 파이터를 판정하지 않는다.")
     void skipHolidayBadgeBeforeEndDate() {
-        saveHoliday("추석 연휴", HOLIDAY_START, HOLIDAY_END);
+        saveHoliday("추석", HOLIDAY_START, HOLIDAY_END);
         saveDailyStudySummary(USER_ID, HOLIDAY_START, 4);
         saveDailyStudySummary(USER_ID, HOLIDAY_START.plusDays(1), 4);
 
@@ -222,7 +227,7 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     @Test
     @DisplayName("같은 연휴는 다시 지급하지 않는다.")
     void skipGrantedHolidayBadge() {
-        saveHoliday("추석 연휴", HOLIDAY_START, HOLIDAY_END);
+        saveHoliday("추석", HOLIDAY_START, HOLIDAY_END);
         saveDailyStudySummary(USER_ID, HOLIDAY_START, 4);
         saveDailyStudySummary(USER_ID, HOLIDAY_START.plusDays(1), 4);
         saveDailyStudySummary(USER_ID, HOLIDAY_END, 4);
@@ -389,8 +394,13 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     }
 
     private Holiday saveHoliday(String name, LocalDate startDate, LocalDate endDate) {
-        return holidayRepository.save(Holiday.builder()
+        HolidayKind holidayKind = holidayKindRepository.save(HolidayKind.builder()
                 .name(name)
+                .badgeEnabled(true)
+                .build());
+
+        return holidayRepository.save(Holiday.builder()
+                .holidayKind(holidayKind)
                 .startDate(startDate)
                 .endDate(endDate)
                 .build());
