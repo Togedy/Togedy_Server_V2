@@ -145,6 +145,7 @@
                th:classappend="${active == 'calendar'} ? 'active'">캘린더 공지</a>
             <a th:href="@{/admin/inquiries}" th:classappend="${active == 'inquiry'} ? 'active'">문의</a>
             <a th:href="@{/admin/holidays}" th:classappend="${active == 'holiday'} ? 'active'">연휴 관리</a>
+            <a th:href="@{/admin/holiday-kinds}" th:classappend="${active == 'holiday-kind'} ? 'active'">연휴 종류</a>
         </nav>
         <div class="account">
             <span sec:authentication="name"></span>

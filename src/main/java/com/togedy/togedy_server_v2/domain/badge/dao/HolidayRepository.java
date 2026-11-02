@@ -21,6 +21,8 @@ public interface HolidayRepository extends JpaRepository<Holiday, Long> {
                               @Param("endDate") LocalDate endDate,
                               @Param("excludedHolidayId") Long excludedHolidayId);
 
+    boolean existsByHolidayKindId(Long holidayKindId);
+
     @EntityGraph(attributePaths = "holidayKind")
     List<Holiday> findAllByEndDate(LocalDate endDate);
 }

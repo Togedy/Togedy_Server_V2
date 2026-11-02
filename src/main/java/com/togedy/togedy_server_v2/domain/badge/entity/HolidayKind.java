@@ -42,4 +42,15 @@ public class HolidayKind extends BaseEntity {
         this.badgeImageUrl = badgeImageUrl;
         this.badgeEnabled = badgeEnabled;
     }
+
+    public void update(String name, boolean badgeEnabled) {
+        this.name = name;
+        this.badgeEnabled = badgeEnabled;
+    }
+
+    public String changeBadgeImageUrl(String badgeImageUrl) {
+        String oldBadgeImageUrl = this.badgeImageUrl;
+        this.badgeImageUrl = badgeImageUrl;
+        return oldBadgeImageUrl;
+    }
 }
