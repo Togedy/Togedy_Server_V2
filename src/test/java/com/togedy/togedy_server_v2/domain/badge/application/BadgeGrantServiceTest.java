@@ -225,6 +225,19 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     }
 
     @Test
+    @DisplayName("뱃지 지급이 꺼진 종류의 연휴는 연휴 파이터를 판정하지 않는다.")
+    void skipHolidayBadgeWhenBadgeDisabled() {
+        saveHoliday("삼일절", false, HOLIDAY_START, HOLIDAY_END);
+        saveDailyStudySummary(USER_ID, HOLIDAY_START, 4);
+        saveDailyStudySummary(USER_ID, HOLIDAY_START.plusDays(1), 4);
+        saveDailyStudySummary(USER_ID, HOLIDAY_END, 4);
+
+        badgeGrantService.grantHolidayBadges(HOLIDAY_END);
+
+        assertThat(badgeRepository.findAll()).isEmpty();
+    }
+
+    @Test
     @DisplayName("같은 연휴는 다시 지급하지 않는다.")
     void skipGrantedHolidayBadge() {
         saveHoliday("추석", HOLIDAY_START, HOLIDAY_END);
@@ -394,9 +407,13 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     }
 
     private Holiday saveHoliday(String name, LocalDate startDate, LocalDate endDate) {
+        return saveHoliday(name, true, startDate, endDate);
+    }
+
+    private Holiday saveHoliday(String name, boolean badgeEnabled, LocalDate startDate, LocalDate endDate) {
         HolidayKind holidayKind = holidayKindRepository.save(HolidayKind.builder()
                 .name(name)
-                .badgeEnabled(true)
+                .badgeEnabled(badgeEnabled)
                 .build());
 
         return holidayRepository.save(Holiday.builder()

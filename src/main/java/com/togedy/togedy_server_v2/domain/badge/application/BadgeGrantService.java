@@ -93,7 +93,7 @@ public class BadgeGrantService {
     }
 
     /**
-     * 판정 학습일에 끝난 연휴를 대상으로 연휴 파이터 뱃지를 지급한다.
+     * 판정 학습일에 끝난 연휴 중 뱃지 지급이 켜진 종류의 연휴를 대상으로 연휴 파이터 뱃지를 지급한다.
      * <p>
      * 연휴 기간의 모든 학습일에 기준 시간(하루 4시간) 이상 공부한 유저가 받는다.
      * 연휴 종류의 이름을 지급 시점의 값으로 저장하며, periodKey는 연휴 시작일이다.
@@ -102,7 +102,7 @@ public class BadgeGrantService {
      * @param studyDate 판정 대상 학습일
      */
     public void grantHolidayBadges(LocalDate studyDate) {
-        for (Holiday holiday : holidayRepository.findAllByEndDate(studyDate)) {
+        for (Holiday holiday : holidayRepository.findAllByEndDateAndHolidayKindBadgeEnabledTrue(studyDate)) {
             findUserIdsStudiedEveryHoliday(holiday).forEach(userId -> saveBadge(Badge.builder()
                     .userId(userId)
                     .type(BadgeType.HOLIDAY)
