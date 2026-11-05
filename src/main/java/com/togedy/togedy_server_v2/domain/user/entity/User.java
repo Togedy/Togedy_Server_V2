@@ -153,6 +153,14 @@ public class User extends BaseEntity {
         return oldImageUrl;
     }
 
+    public void changeRepresentativeBadge(Long badgeId) {
+        this.representativeBadgeId = badgeId;
+    }
+
+    public void clearRepresentativeBadge() {
+        this.representativeBadgeId = null;
+    }
+
     public void completeProfile() {
         this.profileCompleted = true;
     }

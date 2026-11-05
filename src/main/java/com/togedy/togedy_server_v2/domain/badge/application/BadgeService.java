@@ -5,6 +5,7 @@ import com.togedy.togedy_server_v2.domain.badge.dao.HolidayRepository;
 import com.togedy.togedy_server_v2.domain.badge.dto.BadgeItemResponse;
 import com.togedy.togedy_server_v2.domain.badge.dto.GetBadgeResponse;
 import com.togedy.togedy_server_v2.domain.badge.dto.GetMyBadgesResponse;
+import com.togedy.togedy_server_v2.domain.badge.dto.PatchRepresentativeBadgeRequest;
 import com.togedy.togedy_server_v2.domain.badge.dto.RepresentativeBadgeResponse;
 import com.togedy.togedy_server_v2.domain.badge.dto.YearlyBadgeResponse;
 import com.togedy.togedy_server_v2.domain.badge.entity.Badge;
@@ -86,6 +87,35 @@ public class BadgeService {
                 resolveImageUrl(badge, holidayImageUrls),
                 badge.getType().getDescription()
         );
+    }
+
+    /**
+     * 본인이 보유한 뱃지를 대표 뱃지로 설정한다. 기존 대표 뱃지가 있으면 전달받은 뱃지로 교체된다.
+     *
+     * @param request 대표 뱃지로 설정할 뱃지 ID
+     * @param userId  유저 ID
+     */
+    @Transactional
+    public void modifyRepresentativeBadge(PatchRepresentativeBadgeRequest request, Long userId) {
+        Badge badge = badgeRepository.findByIdAndUserId(request.getBadgeId(), userId)
+                .orElseThrow(BadgeNotFoundException::new);
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.changeRepresentativeBadge(badge.getId());
+    }
+
+    /**
+     * 대표 뱃지를 해제한다. 대표 뱃지가 없어도 예외 없이 처리한다.
+     *
+     * @param userId 유저 ID
+     */
+    @Transactional
+    public void removeRepresentativeBadge(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.clearRepresentativeBadge();
     }
 
     /**
