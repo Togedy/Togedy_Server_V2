@@ -9,7 +9,8 @@ public enum ImageCategory {
 
     PROFILE("profile"),
     STUDY("study"),
-    PLANNER("planner");
+    PLANNER("planner"),
+    BADGE("badge");
 
     private final String prefix;
 }

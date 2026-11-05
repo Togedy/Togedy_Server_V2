@@ -75,6 +75,9 @@ public class User extends BaseEntity {
     @Column(name = "user_role", nullable = false, columnDefinition = "varchar(20)")
     private UserRole userRole;
 
+    @Column(name = "representative_badge_id", nullable = true)
+    private Long representativeBadgeId;
+
     private User(String nickname, String email) {
         validateNicknameLength(nickname);
         this.nickname = nickname;
@@ -148,6 +151,14 @@ public class User extends BaseEntity {
         String oldImageUrl = this.profileImageUrl;
         this.profileImageUrl = newImageUrl;
         return oldImageUrl;
+    }
+
+    public void changeRepresentativeBadge(Long badgeId) {
+        this.representativeBadgeId = badgeId;
+    }
+
+    public void clearRepresentativeBadge() {
+        this.representativeBadgeId = null;
     }
 
     public void completeProfile() {

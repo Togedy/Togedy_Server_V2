@@ -139,6 +139,10 @@ public class TimeUtil {
         return todayBoundary;
     }
 
+    public static LocalDateTime startOfStudyDay(LocalDate studyDate) {
+        return studyDate.atTime(STUDY_DAY_BOUNDARY_TIME);
+    }
+
     public static LocalDateTime startOfNextStudyDay(LocalDateTime dateTime) {
         return startOfStudyDay(dateTime).plusDays(1);
     }

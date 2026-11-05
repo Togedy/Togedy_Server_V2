@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head(${holidayKindId} == null ? '연휴 종류 등록' : '연휴 종류 수정')}"></head>
+<body>
+<header th:replace="~{admin/fragments :: nav('holiday-kind')}"></header>
+<main>
+    <div class="page-head">
+        <h1 th:text="${holidayKindId} == null ? '연휴 종류 등록' : '연휴 종류 수정'"></h1>
+    </div>
+    <form class="card pad" th:object="${form}" method="post" enctype="multipart/form-data"
+          th:action="${holidayKindId} == null ? @{/admin/holiday-kinds} : @{/admin/holiday-kinds/{id}/edit(id=${holidayKindId})}">
+        <div class="alert alert-error" th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}"></div>
+        <div class="field">
+            <label for="name">종류 이름</label>
+            <input type="text" th:field="*{name}" th:errorclass="invalid" placeholder="예) 추석">
+            <span class="error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></span>
+        </div>
+        <div class="field">
+            <label for="badgeImage">뱃지 이미지</label>
+            <img th:if="${badgeImageUrl}" th:src="${badgeImageUrl}" alt="현재 뱃지 이미지"
+                 style="display: block; width: 80px; height: 80px; object-fit: contain; margin-bottom: 8px;">
+            <input type="file" id="badgeImage" name="badgeImage" accept="image/*">
+            <span class="muted" th:if="${badgeImageUrl}" style="display: block; margin-top: 6px; font-size: 12px; white-space: normal;">새 파일을 선택하지 않으면 현재 이미지를 유지합니다.</span>
+        </div>
+        <div class="field">
+            <label>
+                <input type="checkbox" th:field="*{badgeEnabled}">
+                연휴 파이터 뱃지 지급
+            </label>
+        </div>
+        <div class="form-actions">
+            <a class="btn btn-secondary" th:href="@{/admin/holiday-kinds}">목록</a>
+            <button class="btn btn-primary" type="submit">저장</button>
+        </div>
+    </form>
+</main>
+</body>
+</html>

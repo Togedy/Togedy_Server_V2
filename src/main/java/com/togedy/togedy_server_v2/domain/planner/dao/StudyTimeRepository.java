@@ -98,6 +98,14 @@ public interface StudyTimeRepository extends JpaRepository<StudyTime, Long> {
             @Param("summaryEnd") LocalDateTime summaryEnd
     );
 
+    @Query(value = """
+            SELECT COALESCE(SUM(TIMESTAMPDIFF(SECOND, st.start_time, st.end_time)), 0)
+            FROM study_time st
+            WHERE st.study_subject_id = :studySubjectId
+              AND st.end_time IS NOT NULL
+            """, nativeQuery = true)
+    Long sumStudyTimeByStudySubjectId(Long studySubjectId);
+
     void deleteAllByUserId(Long userId);
 
     @Query("""
