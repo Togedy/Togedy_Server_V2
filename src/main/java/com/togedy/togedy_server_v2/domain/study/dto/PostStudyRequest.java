@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostStudyRequest {
 
-    private Integer goalTime;
+    private Integer challengeGoalTime;
 
     private String studyName;
 
