@@ -60,7 +60,7 @@ public class StudyE2ETest extends AbstractE2ETest {
                 .param("studyDescription", "챌린지 스터디를 생성한다.")
                 .param("studyMemberLimit", "30")
                 .param("studyTag", "내신/학교생활")
-                .param("goalTime", "5")
+                .param("challengeGoalTime", "5")
                 .header("Authorization", accessToken)
                 .contentType(MediaType.MULTIPART_FORM_DATA);
 
