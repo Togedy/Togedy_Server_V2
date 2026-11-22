@@ -24,7 +24,7 @@ public enum BadgeType {
     WEEKEND_20("20시간 주말 파이터", "",
             "https://togedy-prod-s3-292967571397-ap-northeast-2-an.s3.ap-northeast-2.amazonaws.com/badge/static/weekend_20.png",
             20, PeriodType.WEEKEND),
-    HOLIDAY("연휴 파이터", "", "", 4, PeriodType.HOLIDAY),   // 하루 기준 4시간
+    HOLIDAY("파이터", "", "", 4, PeriodType.HOLIDAY),   // 하루 기준 4시간, 표시 이름은 "{연휴 종류} 파이터"
     MONTHLY_50("파이터", "",
             "https://togedy-prod-s3-292967571397-ap-northeast-2-an.s3.ap-northeast-2.amazonaws.com/badge/static/monthly_%d.png",
             50,

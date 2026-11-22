@@ -148,13 +148,13 @@ public interface DailyStudySummaryRepository extends JpaRepository<DailyStudySum
                 AND dss.date <= :endDate
                 AND dss.studyTime >= :minStudyTime
             GROUP BY dss.userId
-            HAVING COUNT(dss) = :days
+            HAVING COUNT(dss) >= :requiredDays
             """)
-    List<Long> findUserIdsStudiedEveryDayAtLeast(
+    List<Long> findUserIdsStudiedDaysAtLeast(
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             @Param("minStudyTime") Long minStudyTime,
-            @Param("days") Long days
+            @Param("requiredDays") Long requiredDays
     );
 
     @Query("""

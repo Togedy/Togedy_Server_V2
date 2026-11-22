@@ -19,9 +19,10 @@ public enum PeriodType {
         }
     },
     HOLIDAY {
+        // 연휴 뱃지의 기간 키는 날짜가 아닌 연휴 ID이므로 Badge.createHolidayBadge로 생성한다.
         @Override
         public String toKey(LocalDate date) {
-            return date.toString();
+            throw new UnsupportedOperationException("연휴 뱃지는 Badge.createHolidayBadge로 생성한다.");
         }
     },
     MONTH {

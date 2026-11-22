@@ -91,7 +91,7 @@ public class BadgeService {
      * 뱃지를 상세 응답으로 변환한다.
      *
      * @param badge            뱃지
-     * @param holidayImageUrls 연휴 시작일(periodKey)별 연휴 종류 이미지 URL
+     * @param holidayImageUrls 연휴 ID(periodKey)별 연휴 종류 이미지 URL
      * @return 뱃지 상세 정보
      */
     private GetBadgeResponse toBadgeResponse(Badge badge, Map<String, String> holidayImageUrls) {
@@ -126,7 +126,7 @@ public class BadgeService {
      * 받은 날짜 최신순으로 정렬된 뱃지를 연도별, 표시 이름별로 묶는다.
      *
      * @param badges           받은 날짜 최신순으로 정렬된 뱃지 목록
-     * @param holidayImageUrls 연휴 시작일(periodKey)별 연휴 종류 이미지 URL
+     * @param holidayImageUrls 연휴 ID(periodKey)별 연휴 종류 이미지 URL
      * @return 연도 최신순의 연도별 뱃지 묶음
      */
     private List<YearlyBadgeResponse> groupByYear(List<Badge> badges, Map<String, String> holidayImageUrls) {
@@ -146,7 +146,7 @@ public class BadgeService {
      * 같은 연도의 뱃지를 표시 이름별로 묶고, 가장 최근에 받은 뱃지를 대표로 삼는다.
      *
      * @param badges           같은 연도에 받은 뱃지 목록, 받은 날짜 최신순
-     * @param holidayImageUrls 연휴 시작일(periodKey)별 연휴 종류 이미지 URL
+     * @param holidayImageUrls 연휴 ID(periodKey)별 연휴 종류 이미지 URL
      * @return 가장 최근에 받은 순의 뱃지 묶음
      */
     private List<BadgeItemResponse> groupByDisplayName(List<Badge> badges, Map<String, String> holidayImageUrls) {
@@ -171,27 +171,27 @@ public class BadgeService {
     }
 
     /**
-     * 연휴 파이터 뱃지의 연휴를 조회해 연휴 시작일별 연휴 종류 이미지 URL을 만든다.
+     * 연휴 파이터 뱃지의 연휴를 조회해 연휴 ID별 연휴 종류 이미지 URL을 만든다.
      * <p>
-     * 연휴 뱃지는 판정이 끝난 연휴에만 지급되고 판정이 끝난 연휴는 수정·삭제할 수 없으므로, periodKey(연휴 시작일)로 지급 당시의 연휴를 찾을 수 있다.
+     * 연휴 뱃지는 판정이 끝난 연휴에만 지급되고 판정이 끝난 연휴는 수정·삭제할 수 없으므로, periodKey(연휴 ID)로 지급 당시의 연휴를 찾을 수 있다.
      * </p>
      *
      * @param badges 뱃지 목록
-     * @return 연휴 시작일(periodKey)별 연휴 종류 이미지 URL, 연휴 뱃지가 없으면 빈 Map
+     * @return 연휴 ID(periodKey)별 연휴 종류 이미지 URL, 연휴 뱃지가 없으면 빈 Map
      */
     private Map<String, String> findHolidayImageUrls(List<Badge> badges) {
-        List<LocalDate> startDates = badges.stream()
+        List<Long> holidayIds = badges.stream()
                 .filter(badge -> badge.getType().getPeriodType() == PeriodType.HOLIDAY)
-                .map(badge -> LocalDate.parse(badge.getPeriodKey()))
+                .map(badge -> Long.valueOf(badge.getPeriodKey()))
                 .distinct()
                 .toList();
-        if (startDates.isEmpty()) {
+        if (holidayIds.isEmpty()) {
             return Map.of();
         }
 
         Map<String, String> holidayImageUrls = new HashMap<>();
-        for (Holiday holiday : holidayRepository.findAllByStartDateIn(startDates)) {
-            holidayImageUrls.put(holiday.getStartDate().toString(), holiday.getHolidayKind().getBadgeImageUrl());
+        for (Holiday holiday : holidayRepository.findAllByIdIn(holidayIds)) {
+            holidayImageUrls.put(holiday.getId().toString(), holiday.getHolidayKind().getBadgeImageUrl());
         }
         return holidayImageUrls;
     }
@@ -203,7 +203,7 @@ public class BadgeService {
      * </p>
      *
      * @param badge            뱃지
-     * @param holidayImageUrls 연휴 시작일(periodKey)별 연휴 종류 이미지 URL
+     * @param holidayImageUrls 연휴 ID(periodKey)별 연휴 종류 이미지 URL
      * @return 이미지 URL, 연휴를 찾지 못하면 {@code null}
      */
     private String resolveImageUrl(Badge badge, Map<String, String> holidayImageUrls) {

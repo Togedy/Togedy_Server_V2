@@ -48,9 +48,8 @@ public class BadgeE2ETest extends AbstractE2ETest {
 
         Badge oldWeekend = saveBadge(user, BadgeType.WEEKEND_10, null,
                 LocalDate.of(2026, 10, 3), LocalDateTime.of(2026, 10, 5, 5, 10));
-        saveHoliday("추석", CHUSEOK_IMAGE_URL, LocalDate.of(2026, 9, 24), LocalDate.of(2026, 9, 28));
-        Badge holiday = saveBadge(user, BadgeType.HOLIDAY, "추석",
-                LocalDate.of(2026, 9, 24), LocalDateTime.of(2026, 10, 10, 5, 10));
+        Holiday chuseok = saveHoliday("추석", CHUSEOK_IMAGE_URL, LocalDate.of(2026, 9, 24), LocalDate.of(2026, 9, 28));
+        Badge holiday = saveHolidayBadge(user, chuseok, LocalDateTime.of(2026, 10, 10, 5, 10));
         Badge latestWeekend = saveBadge(user, BadgeType.WEEKEND_10, null,
                 LocalDate.of(2026, 10, 24), LocalDateTime.of(2026, 10, 26, 5, 10));
         // 05:00 이전 지급은 전날 학습일이므로 2025년으로 묶인다.
@@ -134,10 +133,10 @@ public class BadgeE2ETest extends AbstractE2ETest {
     public void readMyBadgeExcludingOtherDisplayName() throws Exception {
         User user = fixtureSupport.persistUser(UserFixture.createUser());
         String accessToken = testJwtFactory.createAccessToken(user.getId());
-        Badge seollal = saveBadge(user, BadgeType.HOLIDAY, "설날",
-                LocalDate.of(2026, 2, 14), LocalDateTime.of(2026, 2, 19, 5, 10));
-        saveBadge(user, BadgeType.HOLIDAY, "추석",
-                LocalDate.of(2026, 9, 24), LocalDateTime.of(2026, 9, 28, 5, 10));
+        Holiday seollalHoliday = saveHoliday("설날", null, LocalDate.of(2026, 2, 14), LocalDate.of(2026, 2, 18));
+        Holiday chuseokHoliday = saveHoliday("추석", null, LocalDate.of(2026, 9, 24), LocalDate.of(2026, 9, 27));
+        Badge seollal = saveHolidayBadge(user, seollalHoliday, LocalDateTime.of(2026, 2, 19, 5, 10));
+        saveHolidayBadge(user, chuseokHoliday, LocalDateTime.of(2026, 9, 28, 5, 10));
 
         mockMvc.perform(get("/api/v2/users/me/badges/{badgeId}", seollal.getId())
                         .header("Authorization", accessToken))
@@ -169,14 +168,13 @@ public class BadgeE2ETest extends AbstractE2ETest {
     public void readMyHolidayBadge() throws Exception {
         User user = fixtureSupport.persistUser(UserFixture.createUser());
         String accessToken = testJwtFactory.createAccessToken(user.getId());
-        saveHoliday("추석", CHUSEOK_IMAGE_URL, LocalDate.of(2026, 9, 24), LocalDate.of(2026, 9, 28));
-        Badge holiday = saveBadge(user, BadgeType.HOLIDAY, "추석",
-                LocalDate.of(2026, 9, 24), LocalDateTime.of(2026, 9, 29, 5, 10));
+        Holiday chuseok = saveHoliday("추석", CHUSEOK_IMAGE_URL, LocalDate.of(2026, 9, 24), LocalDate.of(2026, 9, 28));
+        Badge holiday = saveHolidayBadge(user, chuseok, LocalDateTime.of(2026, 9, 29, 5, 10));
 
         mockMvc.perform(get("/api/v2/users/me/badges/{badgeId}", holiday.getId())
                         .header("Authorization", accessToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.response.badgeName").value("추석 연휴 파이터"))
+                .andExpect(jsonPath("$.response.badgeName").value("추석 파이터"))
                 .andExpect(jsonPath("$.response.badgeImageUrl").value(CHUSEOK_IMAGE_URL));
     }
 
@@ -196,17 +194,23 @@ public class BadgeE2ETest extends AbstractE2ETest {
                 .andExpect(jsonPath("$.errorResponse.code").value("B20000"));
     }
 
-    private void saveHoliday(String name, String badgeImageUrl, LocalDate startDate, LocalDate endDate) {
+    private Holiday saveHoliday(String name, String badgeImageUrl, LocalDate startDate, LocalDate endDate) {
         HolidayKind holidayKind = holidayKindRepository.save(HolidayKind.builder()
                 .name(name)
                 .badgeImageUrl(badgeImageUrl)
                 .badgeEnabled(true)
                 .build());
-        holidayRepository.save(Holiday.builder()
+        return holidayRepository.save(Holiday.builder()
                 .holidayKind(holidayKind)
                 .startDate(startDate)
                 .endDate(endDate)
                 .build());
+    }
+
+    private Badge saveHolidayBadge(User user, Holiday holiday, LocalDateTime createdAt) {
+        Badge badge = badgeRepository.save(Badge.createHolidayBadge(user.getId(), holiday));
+        jdbcTemplate.update("UPDATE badge SET created_at = ? WHERE badge_id = ?", createdAt, badge.getId());
+        return badge;
     }
 
     private Badge saveBadge(User user, BadgeType type, String detail, LocalDate date, LocalDateTime createdAt) {

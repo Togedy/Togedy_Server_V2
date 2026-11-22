@@ -179,9 +179,9 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     }
 
     @Test
-    @DisplayName("연휴의 모든 날 4시간 이상 공부하면 연휴 종류 이름과 연휴 시작일을 담아 연휴 파이터 뱃지를 지급한다.")
+    @DisplayName("연휴의 모든 날 4시간 이상 공부하면 연휴 종류 이름과 연휴 ID를 담아 연휴 파이터 뱃지를 지급한다.")
     void grantHolidayBadge() {
-        saveHoliday("추석", HOLIDAY_START, HOLIDAY_END);
+        Holiday holiday = saveHoliday("추석", HOLIDAY_START, HOLIDAY_END);
         saveDailyStudySummary(USER_ID, HOLIDAY_START, 4);
         saveDailyStudySummary(USER_ID, HOLIDAY_START.plusDays(1), 5);
         saveDailyStudySummary(USER_ID, HOLIDAY_END, 4);
@@ -193,7 +193,7 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
                 .satisfies(badge -> {
                     assertThat(badge.getType()).isEqualTo(BadgeType.HOLIDAY);
                     assertThat(badge.getDetail()).isEqualTo("추석");
-                    assertThat(badge.getPeriodKey()).isEqualTo(HOLIDAY_START.toString());
+                    assertThat(badge.getPeriodKey()).isEqualTo(holiday.getId().toString());
                 });
     }
 
