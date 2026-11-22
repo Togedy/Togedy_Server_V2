@@ -73,6 +73,15 @@ public class HolidayKind extends BaseEntity {
         this.daysAfter = daysAfter;
     }
 
+    /**
+     * 규칙 날짜 앞뒤로 여러 날을 포함하는 연휴 기간(설날, 추석)인지 확인한다.
+     *
+     * @return 연휴 기간이면 {@code true}
+     */
+    public boolean isLongHoliday() {
+        return daysBefore > 0 || daysAfter > 0;
+    }
+
     public void update(String name, boolean badgeEnabled) {
         this.name = name;
         this.badgeEnabled = badgeEnabled;

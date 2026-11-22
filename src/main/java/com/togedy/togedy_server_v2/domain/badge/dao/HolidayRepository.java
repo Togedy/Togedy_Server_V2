@@ -24,6 +24,8 @@ public interface HolidayRepository extends JpaRepository<Holiday, Long> {
 
     boolean existsByHolidayKindId(Long holidayKindId);
 
+    boolean existsByHolidayKindIdAndStartDate(Long holidayKindId, LocalDate startDate);
+
     @EntityGraph(attributePaths = "holidayKind")
     List<Holiday> findAllByEndDateAndHolidayKindBadgeEnabledTrue(LocalDate endDate);
 
