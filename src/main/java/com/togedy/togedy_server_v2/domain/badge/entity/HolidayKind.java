@@ -82,6 +82,15 @@ public class HolidayKind extends BaseEntity {
         return daysBefore > 0 || daysAfter > 0;
     }
 
+    /**
+     * 어드민이 날짜를 직접 지정하는 종류인지 확인한다.
+     *
+     * @return 날짜 규칙이 없으면 {@code true}
+     */
+    public boolean isManual() {
+        return dateRuleType == DateRuleType.MANUAL;
+    }
+
     public void update(String name, boolean badgeEnabled) {
         this.name = name;
         this.badgeEnabled = badgeEnabled;

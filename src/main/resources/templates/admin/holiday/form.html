@@ -11,7 +11,7 @@
           th:action="${holidayId} == null ? @{/admin/holidays} : @{/admin/holidays/{id}/edit(id=${holidayId})}">
         <div class="alert alert-error" th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}"></div>
         <div class="field">
-            <label for="holidayKindId">연휴 종류</label>
+            <label for="holidayKindId">연휴 종류 (날짜 규칙이 없는 종류만 선택할 수 있습니다)</label>
             <select th:field="*{holidayKindId}" th:errorclass="invalid">
                 <option value="">선택</option>
                 <option th:each="kind : ${holidayKinds}" th:value="${kind.holidayKindId}" th:text="${kind.name}"></option>
@@ -19,14 +19,9 @@
             <span class="error" th:if="${#fields.hasErrors('holidayKindId')}" th:errors="*{holidayKindId}"></span>
         </div>
         <div class="field">
-            <label for="startDate">시작일</label>
-            <input type="date" th:field="*{startDate}" th:errorclass="invalid">
-            <span class="error" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}"></span>
-        </div>
-        <div class="field">
-            <label for="endDate">종료일</label>
-            <input type="date" th:field="*{endDate}" th:errorclass="invalid">
-            <span class="error" th:if="${#fields.hasErrors('endDate')}" th:errors="*{endDate}"></span>
+            <label for="date">날짜</label>
+            <input type="date" th:field="*{date}" th:errorclass="invalid">
+            <span class="error" th:if="${#fields.hasErrors('date')}" th:errors="*{date}"></span>
         </div>
         <div class="form-actions">
             <a class="btn btn-secondary" th:href="@{/admin/holidays}">목록</a>

@@ -12,6 +12,7 @@ import com.togedy.togedy_server_v2.domain.badge.exception.HolidayAlreadyEndedExc
 import com.togedy.togedy_server_v2.domain.badge.exception.HolidayKindNotFoundException;
 import com.togedy.togedy_server_v2.domain.badge.exception.HolidayNotFoundException;
 import com.togedy.togedy_server_v2.domain.badge.exception.InvalidHolidayPeriodException;
+import com.togedy.togedy_server_v2.domain.badge.exception.RuleHolidayNotModifiableException;
 import com.togedy.togedy_server_v2.global.util.LunarCalendarUtil;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.DayOfWeek;
@@ -58,21 +59,28 @@ public class HolidayService {
 
     /**
      * 연휴를 등록한다.
+     * <p>
+     * 어드민은 날짜 규칙이 없는(MANUAL) 종류의 연휴만 단일 날짜로 등록한다.
+     * </p>
      *
      * @param request 연휴 요청 DTO
-     * @throws HolidayKindNotFoundException    해당 연휴 종류가 존재하지 않는 경우
-     * @throws InvalidHolidayPeriodException   종료일이 시작일보다 앞서거나 이미 지난 경우
-     * @throws DuplicateHolidayPeriodException 기간이 겹치는 연휴가 존재하는 경우
+     * @throws HolidayKindNotFoundException      해당 연휴 종류가 존재하지 않는 경우
+     * @throws RuleHolidayNotModifiableException 날짜 규칙이 있는 종류인 경우
+     * @throws InvalidHolidayPeriodException     이미 지난 날짜인 경우
+     * @throws DuplicateHolidayPeriodException   같은 날짜에 같은 종류의 연휴가 존재하는 경우
      */
     @Transactional
     public void generateHoliday(HolidayRequest request) {
-        HolidayKind holidayKind = getHolidayKind(request.getHolidayKindId());
-        validatePeriod(request, null);
+        HolidayKind holidayKind = getManualHolidayKind(request.getHolidayKindId());
+        validateDate(request.getDate());
+        if (holidayRepository.existsByHolidayKindIdAndStartDate(holidayKind.getId(), request.getDate())) {
+            throw new DuplicateHolidayPeriodException();
+        }
 
         Holiday holiday = Holiday.builder()
                 .holidayKind(holidayKind)
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
+                .startDate(request.getDate())
+                .endDate(request.getDate())
                 .build();
 
         holidayRepository.save(holiday);
@@ -81,32 +89,38 @@ public class HolidayService {
     /**
      * 연휴를 수정한다.
      * <p>
-     * 연휴 뱃지의 periodKey가 연휴 시작일이므로, 판정이 끝난 연휴는 수정할 수 없다.
+     * 판정이 끝난 연휴와 날짜 규칙으로 생성된 연휴는 수정할 수 없다.
      * </p>
      *
      * @param request   연휴 요청 DTO
      * @param holidayId 수정 대상 연휴 ID
-     * @throws HolidayNotFoundException        해당 연휴가 존재하지 않는 경우
-     * @throws HolidayAlreadyEndedException    이미 종료되어 판정이 끝난 연휴인 경우
-     * @throws HolidayKindNotFoundException    해당 연휴 종류가 존재하지 않는 경우
-     * @throws InvalidHolidayPeriodException   종료일이 시작일보다 앞서거나 이미 지난 경우
-     * @throws DuplicateHolidayPeriodException 기간이 겹치는 연휴가 존재하는 경우
+     * @throws HolidayNotFoundException          해당 연휴가 존재하지 않는 경우
+     * @throws HolidayAlreadyEndedException      이미 종료되어 판정이 끝난 연휴인 경우
+     * @throws RuleHolidayNotModifiableException 날짜 규칙으로 생성된 연휴이거나, 날짜 규칙이 있는 종류로 바꾸는 경우
+     * @throws HolidayKindNotFoundException      해당 연휴 종류가 존재하지 않는 경우
+     * @throws InvalidHolidayPeriodException     이미 지난 날짜인 경우
+     * @throws DuplicateHolidayPeriodException   같은 날짜에 같은 종류의 연휴가 존재하는 경우
      */
     @Transactional
     public void modifyHoliday(HolidayRequest request, Long holidayId) {
         Holiday holiday = getModifiableHoliday(holidayId);
-        HolidayKind holidayKind = getHolidayKind(request.getHolidayKindId());
-        validatePeriod(request, holidayId);
+        HolidayKind holidayKind = getManualHolidayKind(request.getHolidayKindId());
+        validateDate(request.getDate());
+        if (holidayRepository.existsByHolidayKindIdAndStartDateAndIdNot(
+                holidayKind.getId(), request.getDate(), holidayId)) {
+            throw new DuplicateHolidayPeriodException();
+        }
 
-        holiday.update(holidayKind, request.getStartDate(), request.getEndDate());
+        holiday.update(holidayKind, request.getDate(), request.getDate());
     }
 
     /**
      * 연휴를 삭제한다.
      *
      * @param holidayId 삭제 대상 연휴 ID
-     * @throws HolidayNotFoundException     해당 연휴가 존재하지 않는 경우
-     * @throws HolidayAlreadyEndedException 이미 종료되어 판정이 끝난 연휴인 경우
+     * @throws HolidayNotFoundException          해당 연휴가 존재하지 않는 경우
+     * @throws HolidayAlreadyEndedException      이미 종료되어 판정이 끝난 연휴인 경우
+     * @throws RuleHolidayNotModifiableException 날짜 규칙으로 생성된 연휴인 경우
      */
     @Transactional
     public void removeHoliday(Long holidayId) {
@@ -183,21 +197,14 @@ public class HolidayService {
     }
 
     /**
-     * 연휴 기간이 등록 가능한지 검증한다.
+     * 연휴 날짜가 등록 가능한지 검증한다.
      *
-     * @param request           연휴 요청 DTO
-     * @param excludedHolidayId 겹침 검사에서 제외할 연휴 ID (수정 시 자기 자신), 등록 시 {@code null}
-     * @throws InvalidHolidayPeriodException   종료일이 시작일보다 앞서거나 이미 지난 경우
-     * @throws DuplicateHolidayPeriodException 기간이 겹치는 연휴가 존재하는 경우
+     * @param date 연휴 날짜
+     * @throws InvalidHolidayPeriodException 이미 지난 날짜인 경우
      */
-    private void validatePeriod(HolidayRequest request, Long excludedHolidayId) {
-        if (request.getEndDate().isBefore(request.getStartDate())
-                || request.getEndDate().isBefore(TimeUtil.currentStudyDate())) {
+    private void validateDate(LocalDate date) {
+        if (date.isBefore(TimeUtil.currentStudyDate())) {
             throw new InvalidHolidayPeriodException();
-        }
-
-        if (holidayRepository.existsOverlapping(request.getStartDate(), request.getEndDate(), excludedHolidayId)) {
-            throw new DuplicateHolidayPeriodException();
         }
     }
 
@@ -205,16 +212,36 @@ public class HolidayService {
      * 수정·삭제할 수 있는 연휴를 조회한다.
      *
      * @param holidayId 조회 대상 연휴 ID
-     * @return 판정 전인 연휴
-     * @throws HolidayNotFoundException     해당 연휴가 존재하지 않는 경우
-     * @throws HolidayAlreadyEndedException 이미 종료되어 판정이 끝난 연휴인 경우
+     * @return 판정 전인 수동 연휴
+     * @throws HolidayNotFoundException          해당 연휴가 존재하지 않는 경우
+     * @throws RuleHolidayNotModifiableException 날짜 규칙으로 생성된 연휴인 경우
+     * @throws HolidayAlreadyEndedException      이미 종료되어 판정이 끝난 연휴인 경우
      */
     private Holiday getModifiableHoliday(Long holidayId) {
         Holiday holiday = getHoliday(holidayId);
+        if (!holiday.getHolidayKind().isManual()) {
+            throw new RuleHolidayNotModifiableException();
+        }
         if (holiday.isEnded(TimeUtil.currentStudyDate())) {
             throw new HolidayAlreadyEndedException();
         }
         return holiday;
+    }
+
+    /**
+     * 어드민이 직접 날짜를 지정할 수 있는 연휴 종류를 조회한다.
+     *
+     * @param holidayKindId 조회 대상 연휴 종류 ID
+     * @return 날짜 규칙이 없는(MANUAL) 연휴 종류
+     * @throws HolidayKindNotFoundException      해당 연휴 종류가 존재하지 않는 경우
+     * @throws RuleHolidayNotModifiableException 날짜 규칙이 있는 종류인 경우
+     */
+    private HolidayKind getManualHolidayKind(Long holidayKindId) {
+        HolidayKind holidayKind = getHolidayKind(holidayKindId);
+        if (!holidayKind.isManual()) {
+            throw new RuleHolidayNotModifiableException();
+        }
+        return holidayKind;
     }
 
     /**

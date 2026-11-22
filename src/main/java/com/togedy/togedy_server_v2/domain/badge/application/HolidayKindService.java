@@ -5,6 +5,7 @@ import com.togedy.togedy_server_v2.domain.badge.dao.HolidayRepository;
 import com.togedy.togedy_server_v2.domain.badge.dto.HolidayKindDto;
 import com.togedy.togedy_server_v2.domain.badge.dto.HolidayKindRequest;
 import com.togedy.togedy_server_v2.domain.badge.entity.HolidayKind;
+import com.togedy.togedy_server_v2.domain.badge.enums.DateRuleType;
 import com.togedy.togedy_server_v2.domain.badge.event.BadgeImageRemovedEvent;
 import com.togedy.togedy_server_v2.domain.badge.exception.BadgeImageRequiredException;
 import com.togedy.togedy_server_v2.domain.badge.exception.DuplicateHolidayKindNameException;
@@ -35,6 +36,19 @@ public class HolidayKindService {
      */
     public List<HolidayKindDto> findHolidayKinds() {
         return holidayKindRepository.findAll(Sort.by("id"))
+                .stream()
+                .map(HolidayKindDto::of)
+                .toList();
+    }
+
+    /**
+     * 어드민이 날짜를 직접 지정하는(MANUAL) 연휴 종류 목록을 ID 오름차순으로 조회한다.
+     *
+     * @return 수동 연휴 종류 목록
+     */
+    @Transactional(readOnly = true)
+    public List<HolidayKindDto> findManualHolidayKinds() {
+        return holidayKindRepository.findAllByDateRuleType(DateRuleType.MANUAL, Sort.by("id"))
                 .stream()
                 .map(HolidayKindDto::of)
                 .toList();

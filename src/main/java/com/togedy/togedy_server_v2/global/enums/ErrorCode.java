@@ -119,13 +119,14 @@ public enum ErrorCode {
 
     // HOLIDAY(19000)
     HOLIDAY_NOT_FOUND(HttpStatus.NOT_FOUND, "H19000", "해당 연휴를 찾을 수 없습니다."),
-    INVALID_HOLIDAY_PERIOD(HttpStatus.BAD_REQUEST, "H19001", "종료일은 시작일 이후이고, 이미 지난 날짜가 아니어야 합니다."),
-    DUPLICATE_HOLIDAY_PERIOD(HttpStatus.CONFLICT, "H19002", "기간이 겹치는 연휴가 존재합니다."),
+    INVALID_HOLIDAY_PERIOD(HttpStatus.BAD_REQUEST, "H19001", "이미 지난 날짜에는 연휴를 등록할 수 없습니다."),
+    DUPLICATE_HOLIDAY_PERIOD(HttpStatus.CONFLICT, "H19002", "같은 날짜에 같은 종류의 연휴가 존재합니다."),
     HOLIDAY_ALREADY_ENDED(HttpStatus.CONFLICT, "H19003", "판정이 완료된 연휴는 수정하거나 삭제할 수 없습니다."),
     HOLIDAY_KIND_NOT_FOUND(HttpStatus.NOT_FOUND, "H19004", "해당 연휴 종류를 찾을 수 없습니다."),
     DUPLICATE_HOLIDAY_KIND_NAME(HttpStatus.CONFLICT, "H19005", "같은 이름의 연휴 종류가 존재합니다."),
     BADGE_IMAGE_REQUIRED(HttpStatus.BAD_REQUEST, "H19006", "뱃지를 지급하려면 뱃지 이미지가 필요합니다."),
     HOLIDAY_KIND_IN_USE(HttpStatus.CONFLICT, "H19007", "연휴가 등록된 종류는 삭제할 수 없습니다."),
+    RULE_HOLIDAY_NOT_MODIFIABLE(HttpStatus.CONFLICT, "H19008", "날짜 규칙이 있는 연휴는 직접 등록, 수정, 삭제할 수 없습니다."),
 
     // BADGE(20000)
     BADGE_NOT_FOUND(HttpStatus.NOT_FOUND, "B20000", "해당 뱃지를 찾을 수 없습니다.");
