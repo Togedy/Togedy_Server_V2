@@ -5,16 +5,11 @@ import com.togedy.togedy_server_v2.domain.badge.dao.HolidayRepository;
 import com.togedy.togedy_server_v2.domain.badge.dto.BadgeItemResponse;
 import com.togedy.togedy_server_v2.domain.badge.dto.GetBadgeResponse;
 import com.togedy.togedy_server_v2.domain.badge.dto.GetMyBadgesResponse;
-import com.togedy.togedy_server_v2.domain.badge.dto.PatchRepresentativeBadgeRequest;
-import com.togedy.togedy_server_v2.domain.badge.dto.RepresentativeBadgeResponse;
 import com.togedy.togedy_server_v2.domain.badge.dto.YearlyBadgeResponse;
 import com.togedy.togedy_server_v2.domain.badge.entity.Badge;
 import com.togedy.togedy_server_v2.domain.badge.entity.Holiday;
 import com.togedy.togedy_server_v2.domain.badge.enums.PeriodType;
 import com.togedy.togedy_server_v2.domain.badge.exception.BadgeNotFoundException;
-import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
-import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.HashMap;
@@ -31,40 +26,25 @@ import org.springframework.transaction.annotation.Transactional;
 public class BadgeService {
 
     private final BadgeRepository badgeRepository;
-    private final UserRepository userRepository;
     private final HolidayRepository holidayRepository;
 
     /**
-     * 본인의 대표 뱃지와 연도별 보유 뱃지를 조회한다.
+     * 본인의 연도별 보유 뱃지를 조회한다.
      * <p>
      * 연도는 받은 날짜 기준 최신순이며, 연도 안에서는 표시 이름이 같은 뱃지를 하나로 묶어 받은 횟수를 담는다. 묶음은 가장 최근에 받은 순으로 정렬하고, 묶음의 badgeId는 가장 최근에 받은 뱃지의
-     * ID이다. 대표 뱃지를 설정하지 않았거나 보유하지 않은 뱃지를 가리키면 대표 뱃지는 null이다.
+     * ID이다.
      * 연휴 파이터의 이미지는 보유한 연휴 뱃지의 연휴를 한 번에 조회해 연휴 종류의 이미지로 채운다.
      * </p>
      *
      * @param userId 유저 ID
-     * @return 대표 뱃지와 연도별 보유 뱃지
+     * @return 연도별 보유 뱃지
      */
     @Transactional(readOnly = true)
     public GetMyBadgesResponse findMyBadges(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
         List<Badge> badges = badgeRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(userId);
         Map<String, String> holidayImageUrls = findHolidayImageUrls(badges);
 
-        RepresentativeBadgeResponse representativeBadge = badges.stream()
-                .filter(badge -> badge.getId().equals(user.getRepresentativeBadgeId()))
-                .findFirst()
-                .map(badge -> RepresentativeBadgeResponse.of(
-                        badge.getId(),
-                        badge.getDisplayName(),
-                        resolveImageUrl(badge, holidayImageUrls),
-                        badge.getAcquiredDate()
-                ))
-                .orElse(null);
-
-        return GetMyBadgesResponse.of(representativeBadge, groupByYear(badges, holidayImageUrls));
+        return GetMyBadgesResponse.of(groupByYear(badges, holidayImageUrls));
     }
 
     /**
@@ -87,35 +67,6 @@ public class BadgeService {
                 resolveImageUrl(badge, holidayImageUrls),
                 badge.getType().getDescription()
         );
-    }
-
-    /**
-     * 본인이 보유한 뱃지를 대표 뱃지로 설정한다. 기존 대표 뱃지가 있으면 전달받은 뱃지로 교체된다.
-     *
-     * @param request 대표 뱃지로 설정할 뱃지 ID
-     * @param userId  유저 ID
-     */
-    @Transactional
-    public void modifyRepresentativeBadge(PatchRepresentativeBadgeRequest request, Long userId) {
-        Badge badge = badgeRepository.findByIdAndUserId(request.getBadgeId(), userId)
-                .orElseThrow(BadgeNotFoundException::new);
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
-        user.changeRepresentativeBadge(badge.getId());
-    }
-
-    /**
-     * 대표 뱃지를 해제한다. 대표 뱃지가 없어도 예외 없이 처리한다.
-     *
-     * @param userId 유저 ID
-     */
-    @Transactional
-    public void removeRepresentativeBadge(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
-        user.clearRepresentativeBadge();
     }
 
     /**

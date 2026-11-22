@@ -8,15 +8,10 @@ import lombok.Getter;
 @Builder
 public class GetMyBadgesResponse {
 
-    private RepresentativeBadgeResponse representativeBadge;
     private List<YearlyBadgeResponse> yearlyBadges;
 
-    public static GetMyBadgesResponse of(
-            RepresentativeBadgeResponse representativeBadge,
-            List<YearlyBadgeResponse> yearlyBadges
-    ) {
+    public static GetMyBadgesResponse of(List<YearlyBadgeResponse> yearlyBadges) {
         return GetMyBadgesResponse.builder()
-                .representativeBadge(representativeBadge)
                 .yearlyBadges(yearlyBadges)
                 .build();
     }

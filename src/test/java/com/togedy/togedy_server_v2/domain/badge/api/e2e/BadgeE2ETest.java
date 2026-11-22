@@ -1,8 +1,6 @@
 package com.togedy.togedy_server_v2.domain.badge.api.e2e;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -23,9 +21,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.web.servlet.ResultActions;
 
 @Tag("E2E 테스트")
 public class BadgeE2ETest extends AbstractE2ETest {
@@ -60,17 +56,11 @@ public class BadgeE2ETest extends AbstractE2ETest {
         // 05:00 이전 지급은 전날 학습일이므로 2025년으로 묶인다.
         Badge comeback = saveBadge(user, BadgeType.COMEBACK, null,
                 LocalDate.of(2025, 12, 31), LocalDateTime.of(2026, 1, 1, 4, 0));
-        jdbcTemplate.update("UPDATE users SET representative_badge_id = ? WHERE user_id = ?",
-                holiday.getId(), user.getId());
 
         mockMvc.perform(get("/api/v2/users/me/badges")
                         .header("Authorization", accessToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.isSuccess").value(true))
-                .andExpect(jsonPath("$.response.representativeBadge.badgeId").value(holiday.getId()))
-                .andExpect(jsonPath("$.response.representativeBadge.badgeName").value("추석 연휴 파이터"))
-                .andExpect(jsonPath("$.response.representativeBadge.badgeImageUrl").value(CHUSEOK_IMAGE_URL))
-                .andExpect(jsonPath("$.response.representativeBadge.acquiredDate").value("2026-10-10"))
                 .andExpect(jsonPath("$.response.yearlyBadges.length()").value(2))
                 .andExpect(jsonPath("$.response.yearlyBadges[0].year").value(2026))
                 .andExpect(jsonPath("$.response.yearlyBadges[0].badges.length()").value(2))
@@ -88,7 +78,7 @@ public class BadgeE2ETest extends AbstractE2ETest {
     }
 
     @Test
-    @DisplayName("대표 뱃지를 설정하지 않았고 보유 뱃지가 없으면 빈 응답을 반환한다.")
+    @DisplayName("보유 뱃지가 없으면 빈 응답을 반환한다.")
     public void readMyBadgesWithoutBadge() throws Exception {
         User user = fixtureSupport.persistUser(UserFixture.createUser());
         String accessToken = testJwtFactory.createAccessToken(user.getId());
@@ -96,7 +86,6 @@ public class BadgeE2ETest extends AbstractE2ETest {
         mockMvc.perform(get("/api/v2/users/me/badges")
                         .header("Authorization", accessToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.response.representativeBadge").value(Matchers.nullValue()))
                 .andExpect(jsonPath("$.response.yearlyBadges").isEmpty());
     }
 
@@ -149,131 +138,6 @@ public class BadgeE2ETest extends AbstractE2ETest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.isSuccess").value(false))
                 .andExpect(jsonPath("$.errorResponse.code").value("B20000"));
-    }
-
-    @Test
-    @DisplayName("보유한 뱃지를 대표 뱃지로 설정한다.")
-    public void updateRepresentativeBadge() throws Exception {
-        User user = fixtureSupport.persistUser(UserFixture.createUser());
-        String accessToken = testJwtFactory.createAccessToken(user.getId());
-        Badge badge = saveBadge(user, BadgeType.COMEBACK, null,
-                LocalDate.of(2026, 10, 1), LocalDateTime.of(2026, 10, 1, 10, 0));
-
-        patchRepresentativeBadge(accessToken, badge.getId())
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isSuccess").value(true));
-
-        expectRepresentativeBadge(accessToken, badge.getId());
-    }
-
-    @Test
-    @DisplayName("대표 뱃지가 있을 때 다른 뱃지로 설정하면 대표 뱃지가 교체된다.")
-    public void replaceRepresentativeBadge() throws Exception {
-        User user = fixtureSupport.persistUser(UserFixture.createUser());
-        String accessToken = testJwtFactory.createAccessToken(user.getId());
-        Badge oldBadge = saveBadge(user, BadgeType.COMEBACK, null,
-                LocalDate.of(2026, 10, 1), LocalDateTime.of(2026, 10, 1, 10, 0));
-        Badge newBadge = saveBadge(user, BadgeType.ONE_SUBJECT_30, null,
-                LocalDate.of(2026, 10, 2), LocalDateTime.of(2026, 10, 2, 10, 0));
-        patchRepresentativeBadge(accessToken, oldBadge.getId())
-                .andExpect(status().isOk());
-
-        patchRepresentativeBadge(accessToken, newBadge.getId())
-                .andExpect(status().isOk());
-
-        expectRepresentativeBadge(accessToken, newBadge.getId());
-    }
-
-    @Test
-    @DisplayName("다른 유저의 뱃지를 대표 뱃지로 설정하면 404를 반환하고 기존 대표 뱃지를 유지한다.")
-    public void updateRepresentativeBadgeWithOtherUserBadge() throws Exception {
-        User user = fixtureSupport.persistUser(UserFixture.createUser());
-        User other = fixtureSupport.persistUser(UserFixture.createUserWithName("다른유저"));
-        String accessToken = testJwtFactory.createAccessToken(user.getId());
-        Badge badge = saveBadge(user, BadgeType.COMEBACK, null,
-                LocalDate.of(2026, 10, 1), LocalDateTime.of(2026, 10, 1, 10, 0));
-        Badge otherBadge = saveBadge(other, BadgeType.COMEBACK, null,
-                LocalDate.of(2026, 10, 1), LocalDateTime.of(2026, 10, 1, 10, 0));
-        patchRepresentativeBadge(accessToken, badge.getId())
-                .andExpect(status().isOk());
-
-        patchRepresentativeBadge(accessToken, otherBadge.getId())
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.isSuccess").value(false))
-                .andExpect(jsonPath("$.errorResponse.code").value("B20000"));
-
-        expectRepresentativeBadge(accessToken, badge.getId());
-    }
-
-    @Test
-    @DisplayName("존재하지 않는 뱃지를 대표 뱃지로 설정하면 404를 반환한다.")
-    public void updateRepresentativeBadgeWithUnknownBadge() throws Exception {
-        User user = fixtureSupport.persistUser(UserFixture.createUser());
-        String accessToken = testJwtFactory.createAccessToken(user.getId());
-
-        patchRepresentativeBadge(accessToken, Long.MAX_VALUE)
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorResponse.code").value("B20000"));
-    }
-
-    @Test
-    @DisplayName("뱃지 ID 없이 대표 뱃지를 설정하면 400을 반환한다.")
-    public void updateRepresentativeBadgeWithoutBadgeId() throws Exception {
-        User user = fixtureSupport.persistUser(UserFixture.createUser());
-        String accessToken = testJwtFactory.createAccessToken(user.getId());
-
-        mockMvc.perform(patch("/api/v2/users/me/badges/representative")
-                        .header("Authorization", accessToken)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    @DisplayName("대표 뱃지를 해제한다.")
-    public void deleteRepresentativeBadge() throws Exception {
-        User user = fixtureSupport.persistUser(UserFixture.createUser());
-        String accessToken = testJwtFactory.createAccessToken(user.getId());
-        Badge badge = saveBadge(user, BadgeType.COMEBACK, null,
-                LocalDate.of(2026, 10, 1), LocalDateTime.of(2026, 10, 1, 10, 0));
-        patchRepresentativeBadge(accessToken, badge.getId())
-                .andExpect(status().isOk());
-
-        mockMvc.perform(delete("/api/v2/users/me/badges/representative")
-                        .header("Authorization", accessToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isSuccess").value(true));
-
-        mockMvc.perform(get("/api/v2/users/me/badges")
-                        .header("Authorization", accessToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.response.representativeBadge").value(Matchers.nullValue()));
-    }
-
-    @Test
-    @DisplayName("대표 뱃지가 없을 때 해제해도 200을 반환한다.")
-    public void deleteRepresentativeBadgeWithoutRepresentative() throws Exception {
-        User user = fixtureSupport.persistUser(UserFixture.createUser());
-        String accessToken = testJwtFactory.createAccessToken(user.getId());
-
-        mockMvc.perform(delete("/api/v2/users/me/badges/representative")
-                        .header("Authorization", accessToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isSuccess").value(true));
-    }
-
-    private ResultActions patchRepresentativeBadge(String accessToken, Long badgeId) throws Exception {
-        return mockMvc.perform(patch("/api/v2/users/me/badges/representative")
-                .header("Authorization", accessToken)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"badgeId\": " + badgeId + "}"));
-    }
-
-    private void expectRepresentativeBadge(String accessToken, Long badgeId) throws Exception {
-        mockMvc.perform(get("/api/v2/users/me/badges")
-                        .header("Authorization", accessToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.response.representativeBadge.badgeId").value(badgeId));
     }
 
     private void saveHoliday(String name, String badgeImageUrl, LocalDate startDate, LocalDate endDate) {
