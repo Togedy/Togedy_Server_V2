@@ -105,7 +105,63 @@ public class BadgeE2ETest extends AbstractE2ETest {
                 .andExpect(jsonPath("$.response.badgeImageUrl")
                         .value(String.format(BadgeType.MONTHLY_50.getImageUrl(), 10)))
                 .andExpect(jsonPath("$.response.badgeDescription")
-                        .value(BadgeType.MONTHLY_50.getDescription()));
+                        .value(BadgeType.MONTHLY_50.getDescription()))
+                .andExpect(jsonPath("$.response.acquiredDate").value("2026-10-31"));
+    }
+
+    @Test
+    @DisplayName("같은 연도에 같은 이름의 뱃지를 여러 번 받았으면 가장 최근에 받은 날짜를 발급일로 반환한다.")
+    public void readMyBadgeWithLatestAcquiredDateInYear() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+        Badge oldWeekend = saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2026, 10, 3), LocalDateTime.of(2026, 10, 5, 5, 10));
+        saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2026, 10, 24), LocalDateTime.of(2026, 10, 26, 5, 10));
+        // 다른 이름(단계)의 주말 파이터는 제외한다.
+        saveBadge(user, BadgeType.WEEKEND_20, null,
+                LocalDate.of(2026, 11, 7), LocalDateTime.of(2026, 11, 9, 5, 10));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/{badgeId}", oldWeekend.getId())
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.badgeId").value(oldWeekend.getId()))
+                .andExpect(jsonPath("$.response.acquiredDate").value("2026-10-26"));
+    }
+
+    @Test
+    @DisplayName("같은 종류라도 표시 이름이 다른 뱃지는 발급일 계산에서 제외한다.")
+    public void readMyBadgeExcludingOtherDisplayName() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+        Badge seollal = saveBadge(user, BadgeType.HOLIDAY, "설날",
+                LocalDate.of(2026, 2, 14), LocalDateTime.of(2026, 2, 19, 5, 10));
+        saveBadge(user, BadgeType.HOLIDAY, "추석",
+                LocalDate.of(2026, 9, 24), LocalDateTime.of(2026, 9, 28, 5, 10));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/{badgeId}", seollal.getId())
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.acquiredDate").value("2026-02-19"));
+    }
+
+    @Test
+    @DisplayName("다른 연도에 받은 같은 이름의 뱃지는 발급일 계산에서 제외한다.")
+    public void readMyBadgeExcludingOtherYear() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+        Badge weekend2026 = saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2026, 12, 26), LocalDateTime.of(2026, 12, 28, 5, 10));
+        // 05:00 이전 지급은 전날 학습일이므로 2026년으로 계산된다.
+        saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2027, 1, 2), LocalDateTime.of(2027, 1, 1, 4, 0));
+        saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2027, 1, 9), LocalDateTime.of(2027, 1, 11, 5, 10));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/{badgeId}", weekend2026.getId())
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.acquiredDate").value("2026-12-31"));
     }
 
     @Test
