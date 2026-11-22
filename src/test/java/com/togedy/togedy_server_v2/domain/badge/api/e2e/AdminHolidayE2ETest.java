@@ -15,6 +15,7 @@ import com.togedy.togedy_server_v2.domain.badge.dao.HolidayKindRepository;
 import com.togedy.togedy_server_v2.domain.badge.dao.HolidayRepository;
 import com.togedy.togedy_server_v2.domain.badge.entity.Holiday;
 import com.togedy.togedy_server_v2.domain.badge.entity.HolidayKind;
+import com.togedy.togedy_server_v2.domain.badge.enums.DateRuleType;
 import com.togedy.togedy_server_v2.global.security.AdminUser;
 import com.togedy.togedy_server_v2.global.support.AbstractE2ETest;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
@@ -193,6 +194,104 @@ public class AdminHolidayE2ETest extends AbstractE2ETest {
                 .andExpect(flash().attributeExists("errorMessage"));
 
         assertThat(holidayRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("등록 폼에는 날짜 규칙이 없는 연휴 종류만 보여준다.")
+    public void readCreateFormWithManualKindsOnly() throws Exception {
+        saveRuleKind("크리스마스");
+
+        mockMvc.perform(get("/admin/holidays/new").with(user(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("수능")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("크리스마스"))));
+    }
+
+    @Test
+    @DisplayName("날짜 규칙이 있는 종류로는 연휴를 등록하지 않는다.")
+    public void createHolidayWithRuleKind() throws Exception {
+        LocalDate today = TimeUtil.currentStudyDate();
+        HolidayKind christmas = saveRuleKind("크리스마스");
+
+        mockMvc.perform(post("/admin/holidays")
+                        .param("holidayKindId", christmas.getId().toString())
+                        .param("date", today.plusDays(10).toString())
+                        .with(user(ADMIN))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeHasErrors("form"));
+
+        assertThat(holidayRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("같은 날짜라도 다른 종류의 연휴는 등록한다.")
+    public void createHolidayOnSameDateWithOtherKind() throws Exception {
+        LocalDate today = TimeUtil.currentStudyDate();
+        holidayRepository.save(holiday(today.plusDays(10)));
+        HolidayKind event = holidayKindRepository.save(HolidayKind.builder().name("개교기념일").badgeEnabled(true).build());
+
+        mockMvc.perform(post("/admin/holidays")
+                        .param("holidayKindId", event.getId().toString())
+                        .param("date", today.plusDays(10).toString())
+                        .with(user(ADMIN))
+                        .with(csrf()))
+                .andExpect(redirectedUrl("/admin/holidays"));
+
+        assertThat(holidayRepository.findAll()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("날짜 규칙으로 생성된 연휴는 수정하지 않는다.")
+    public void modifyRuleHoliday() throws Exception {
+        LocalDate today = TimeUtil.currentStudyDate();
+        Holiday holiday = holidayRepository.save(Holiday.builder()
+                .holidayKind(saveRuleKind("크리스마스"))
+                .startDate(today.plusDays(10))
+                .endDate(today.plusDays(10))
+                .build());
+
+        mockMvc.perform(post("/admin/holidays/{id}/edit", holiday.getId())
+                        .param("holidayKindId", suneung.getId().toString())
+                        .param("date", today.plusDays(11).toString())
+                        .with(user(ADMIN))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeHasErrors("form"));
+
+        assertThat(holidayRepository.findById(holiday.getId()))
+                .get()
+                .extracting(Holiday::getStartDate)
+                .isEqualTo(today.plusDays(10));
+    }
+
+    @Test
+    @DisplayName("날짜 규칙으로 생성된 연휴는 삭제하지 않는다.")
+    public void removeRuleHoliday() throws Exception {
+        LocalDate today = TimeUtil.currentStudyDate();
+        Holiday holiday = holidayRepository.save(Holiday.builder()
+                .holidayKind(saveRuleKind("크리스마스"))
+                .startDate(today.plusDays(10))
+                .endDate(today.plusDays(10))
+                .build());
+
+        mockMvc.perform(post("/admin/holidays/{id}/delete", holiday.getId())
+                        .with(user(ADMIN))
+                        .with(csrf()))
+                .andExpect(redirectedUrl("/admin/holidays"))
+                .andExpect(flash().attributeExists("errorMessage"));
+
+        assertThat(holidayRepository.findAll()).hasSize(1);
+    }
+
+    private HolidayKind saveRuleKind(String name) {
+        return holidayKindRepository.save(HolidayKind.builder()
+                .name(name)
+                .badgeEnabled(true)
+                .dateRuleType(DateRuleType.SOLAR)
+                .ruleMonth(12)
+                .ruleDay(25)
+                .build());
     }
 
     private Holiday holiday(LocalDate date) {
