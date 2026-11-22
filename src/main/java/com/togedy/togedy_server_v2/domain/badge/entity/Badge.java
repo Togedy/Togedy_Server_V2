@@ -45,12 +45,20 @@ public class Badge extends BaseEntity {
     @Column(name = "period_key", nullable = false, updatable = false)
     private String periodKey;
 
+    @Column(name = "checked", nullable = false)
+    private boolean checked;
+
     @Builder
     public Badge(Long userId, String detail, BadgeType type, LocalDate date) {
         this.userId = userId;
         this.detail = detail;
         this.type = type;
         this.periodKey = type.getPeriodType().toKey(date);
+        this.checked = false;
+    }
+
+    public void check() {
+        this.checked = true;
     }
 
     public String getDisplayName() {

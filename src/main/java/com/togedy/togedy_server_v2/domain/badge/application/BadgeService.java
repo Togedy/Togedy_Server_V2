@@ -63,8 +63,38 @@ public class BadgeService {
         Badge badge = badgeRepository.findByIdAndUserId(badgeId, userId)
                 .orElseThrow(BadgeNotFoundException::new);
 
-        Map<String, String> holidayImageUrls = findHolidayImageUrls(List.of(badge));
+        return toBadgeResponse(badge, findHolidayImageUrls(List.of(badge)));
+    }
 
+    /**
+     * 본인이 아직 확인하지 않은 뱃지를 받은 순서대로 조회하고 확인 처리한다.
+     * <p>
+     * 응답은 뱃지 상세 조회와 같으며, 확인하지 않은 뱃지가 없으면 빈 목록을 반환한다.
+     * </p>
+     *
+     * @param userId 유저 ID
+     * @return 확인하지 않은 뱃지의 상세 정보 목록
+     */
+    @Transactional
+    public List<GetBadgeResponse> findNewBadges(Long userId) {
+        List<Badge> badges = badgeRepository.findAllByUserIdAndCheckedFalseOrderByCreatedAtAscIdAsc(userId);
+        Map<String, String> holidayImageUrls = findHolidayImageUrls(badges);
+
+        List<GetBadgeResponse> responses = badges.stream()
+                .map(badge -> toBadgeResponse(badge, holidayImageUrls))
+                .toList();
+        badges.forEach(Badge::check);
+        return responses;
+    }
+
+    /**
+     * 뱃지를 상세 응답으로 변환한다.
+     *
+     * @param badge            뱃지
+     * @param holidayImageUrls 연휴 시작일(periodKey)별 연휴 종류 이미지 URL
+     * @return 뱃지 상세 정보
+     */
+    private GetBadgeResponse toBadgeResponse(Badge badge, Map<String, String> holidayImageUrls) {
         return GetBadgeResponse.of(
                 badge.getId(),
                 badge.getDisplayName(),

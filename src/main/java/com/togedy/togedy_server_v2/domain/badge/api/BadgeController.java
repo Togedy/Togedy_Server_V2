@@ -8,6 +8,7 @@ import com.togedy.togedy_server_v2.global.security.AuthUser;
 import com.togedy.togedy_server_v2.global.util.ApiUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +28,13 @@ public class BadgeController {
     @GetMapping
     public ApiResponse<GetMyBadgesResponse> readMyBadges(@AuthenticationPrincipal AuthUser user) {
         GetMyBadgesResponse response = badgeService.findMyBadges(user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "새 뱃지 조회", description = "본인이 아직 확인하지 않은 뱃지를 상세 정보 목록으로 조회하고 확인 처리한다.")
+    @GetMapping("/new")
+    public ApiResponse<List<GetBadgeResponse>> readNewBadges(@AuthenticationPrincipal AuthUser user) {
+        List<GetBadgeResponse> response = badgeService.findNewBadges(user.getId());
         return ApiUtil.success(response);
     }
 
