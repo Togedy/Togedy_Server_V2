@@ -12,6 +12,7 @@ import com.togedy.togedy_server_v2.domain.badge.enums.PeriodType;
 import com.togedy.togedy_server_v2.domain.badge.exception.BadgeNotFoundException;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -49,6 +50,9 @@ public class BadgeService {
 
     /**
      * 본인이 보유한 뱃지의 상세 정보를 조회한다.
+     * <p>
+     * 발급일은 보유 뱃지 조회의 묶음과 같은 기준으로, 같은 연도에 받은 표시 이름이 같은 뱃지 중 가장 최근에 받은 날짜이다.
+     * </p>
      *
      * @param badgeId 뱃지 ID
      * @param userId  유저 ID
@@ -65,8 +69,27 @@ public class BadgeService {
                 badge.getId(),
                 badge.getDisplayName(),
                 resolveImageUrl(badge, holidayImageUrls),
-                badge.getType().getDescription()
+                badge.getType().getDescription(),
+                findLatestAcquiredDateInYear(badge)
         );
+    }
+
+    /**
+     * 뱃지와 같은 연도에 받은 표시 이름이 같은 뱃지 중 가장 최근에 받은 날짜를 구한다.
+     *
+     * @param badge 기준 뱃지
+     * @return 같은 연도, 같은 표시 이름 뱃지의 가장 최근 발급일
+     */
+    private LocalDate findLatestAcquiredDateInYear(Badge badge) {
+        int year = badge.getAcquiredDate().getYear();
+
+        return badgeRepository.findAllByUserIdAndType(badge.getUserId(), badge.getType())
+                .stream()
+                .filter(other -> other.getDisplayName().equals(badge.getDisplayName()))
+                .map(Badge::getAcquiredDate)
+                .filter(acquiredDate -> acquiredDate.getYear() == year)
+                .max(Comparator.naturalOrder())
+                .orElseThrow();
     }
 
     /**
