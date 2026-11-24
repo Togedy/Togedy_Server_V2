@@ -2,6 +2,7 @@ package com.togedy.togedy_server_v2.domain.badge.scheduler;
 
 import com.togedy.togedy_server_v2.domain.badge.application.HolidayService;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -23,7 +24,8 @@ public class HolidayScheduler {
     @Scheduled(cron = HOLIDAY_GENERATE_CRON, zone = "Asia/Seoul")
     public void generateRuleHolidays() {
         int year = TimeUtil.todayInStudyZone().getYear();
-        holidayService.generateRuleHolidays(year);
-        holidayService.generateRuleHolidays(year + 1);
+        LocalDate studyDate = TimeUtil.currentStudyDate();
+        holidayService.generateRuleHolidays(year, studyDate);
+        holidayService.generateRuleHolidays(year + 1, studyDate);
     }
 }

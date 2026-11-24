@@ -9,13 +9,15 @@ import com.togedy.togedy_server_v2.domain.badge.entity.Holiday;
 import com.togedy.togedy_server_v2.domain.badge.entity.HolidayKind;
 import com.togedy.togedy_server_v2.domain.badge.enums.DateRuleType;
 import com.togedy.togedy_server_v2.global.support.AbstractE2ETest;
-import com.togedy.togedy_server_v2.global.util.TimeUtil;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 class HolidayServiceTest extends AbstractE2ETest {
+
+    // 생성 대상 연도의 연휴가 모두 판정 전이 되도록 고정한 기준 학습일
+    private static final LocalDate STUDY_DATE = LocalDate.of(2026, 1, 1);
 
     @Autowired
     HolidayService holidayService;
@@ -32,7 +34,7 @@ class HolidayServiceTest extends AbstractE2ETest {
         // 2028 추석: 음력 8/15 = 10/3(화) → 10/2(월)~10/4(수), 앞쪽 9/30(토)·10/1(일)이 맞닿음
         saveRuleKind("추석", DateRuleType.LUNAR, 8, 15, 1, 1);
 
-        holidayService.generateRuleHolidays(2028);
+        holidayService.generateRuleHolidays(2028, STUDY_DATE);
 
         assertThat(holidayRepository.findAll())
                 .extracting(Holiday::getStartDate, Holiday::getEndDate)
@@ -45,7 +47,7 @@ class HolidayServiceTest extends AbstractE2ETest {
         // 2027 추석: 음력 8/15 = 9/15(수) → 9/14(화)~9/16(목)
         saveRuleKind("추석", DateRuleType.LUNAR, 8, 15, 1, 1);
 
-        holidayService.generateRuleHolidays(2027);
+        holidayService.generateRuleHolidays(2027, STUDY_DATE);
 
         assertThat(holidayRepository.findAll())
                 .extracting(Holiday::getStartDate, Holiday::getEndDate)
@@ -58,7 +60,7 @@ class HolidayServiceTest extends AbstractE2ETest {
         // 2027 삼일절: 3/1(월), 앞쪽 2/28(일)이 맞닿지만 넓히지 않음
         saveRuleKind("삼일절", DateRuleType.SOLAR, 3, 1, 0, 0);
 
-        holidayService.generateRuleHolidays(2027);
+        holidayService.generateRuleHolidays(2027, STUDY_DATE);
 
         assertThat(holidayRepository.findAll())
                 .extracting(Holiday::getStartDate, Holiday::getEndDate)
@@ -72,7 +74,7 @@ class HolidayServiceTest extends AbstractE2ETest {
         HolidayKind childrensDay = saveRuleKind("어린이날", DateRuleType.SOLAR, 5, 5, 0, 0);
         HolidayKind buddhasBirthday = saveRuleKind("부처님오신날", DateRuleType.LUNAR, 4, 8, 0, 0);
 
-        holidayService.generateRuleHolidays(2044);
+        holidayService.generateRuleHolidays(2044, STUDY_DATE);
 
         assertThat(holidayRepository.findAll())
                 .extracting(holiday -> holiday.getHolidayKind().getId(), Holiday::getStartDate)
@@ -87,8 +89,8 @@ class HolidayServiceTest extends AbstractE2ETest {
         saveRuleKind("추석", DateRuleType.LUNAR, 8, 15, 1, 1);
         saveRuleKind("삼일절", DateRuleType.SOLAR, 3, 1, 0, 0);
 
-        holidayService.generateRuleHolidays(2028);
-        holidayService.generateRuleHolidays(2028);
+        holidayService.generateRuleHolidays(2028, STUDY_DATE);
+        holidayService.generateRuleHolidays(2028, STUDY_DATE);
 
         assertThat(holidayRepository.findAll()).hasSize(2);
     }
@@ -98,20 +100,23 @@ class HolidayServiceTest extends AbstractE2ETest {
     void skipManualHolidayKind() {
         holidayKindRepository.save(HolidayKind.builder().name("수능").badgeEnabled(true).build());
 
-        holidayService.generateRuleHolidays(2028);
+        holidayService.generateRuleHolidays(2028, STUDY_DATE);
 
         assertThat(holidayRepository.findAll()).isEmpty();
     }
 
     @Test
-    @DisplayName("판정이 끝난 지난 연휴는 생성하지 않는다.")
+    @DisplayName("판정이 끝난 연휴는 생성하지 않고, 판정 전 연휴는 생성한다.")
     void skipEndedHolidays() {
+        // 기준 학습일 2026-03-02: 삼일절(3/1)은 판정이 끝났고 크리스마스(12/25)는 판정 전
         saveRuleKind("삼일절", DateRuleType.SOLAR, 3, 1, 0, 0);
         saveRuleKind("크리스마스", DateRuleType.SOLAR, 12, 25, 0, 0);
 
-        holidayService.generateRuleHolidays(TimeUtil.currentStudyDate().getYear() - 1);
+        holidayService.generateRuleHolidays(2026, LocalDate.of(2026, 3, 2));
 
-        assertThat(holidayRepository.findAll()).isEmpty();
+        assertThat(holidayRepository.findAll())
+                .extracting(Holiday::getStartDate)
+                .containsExactly(LocalDate.of(2026, 12, 25));
     }
 
     private HolidayKind saveRuleKind(String name, DateRuleType dateRuleType, int month, int day,

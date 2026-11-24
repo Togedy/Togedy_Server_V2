@@ -1,9 +1,12 @@
 package com.togedy.togedy_server_v2.domain.badge.scheduler;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 
 import com.togedy.togedy_server_v2.domain.badge.application.HolidayService;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +30,7 @@ class HolidaySchedulerTest {
 
         holidayScheduler.generateRuleHolidays();
 
-        verify(holidayService).generateRuleHolidays(year);
-        verify(holidayService).generateRuleHolidays(year + 1);
+        verify(holidayService).generateRuleHolidays(eq(year), any(LocalDate.class));
+        verify(holidayService).generateRuleHolidays(eq(year + 1), any(LocalDate.class));
     }
 }

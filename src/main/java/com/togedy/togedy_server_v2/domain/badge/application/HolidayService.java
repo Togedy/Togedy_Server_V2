@@ -134,12 +134,11 @@ public class HolidayService {
      * 판정이 끝난 지난 연휴는 생성하지 않는다.
      * </p>
      *
-     * @param year 생성 대상 연도
+     * @param year      생성 대상 연도
+     * @param studyDate 판정이 끝났는지 가르는 기준 학습일
      */
     @Transactional
-    public void generateRuleHolidays(int year) {
-        LocalDate studyDate = TimeUtil.currentStudyDate();
-
+    public void generateRuleHolidays(int year, LocalDate studyDate) {
         for (HolidayKind holidayKind : holidayKindRepository.findAllByDateRuleTypeNot(DateRuleType.MANUAL)) {
             LocalDate ruleDate = resolveRuleDate(holidayKind, year);
             LocalDate startDate = ruleDate.minusDays(holidayKind.getDaysBefore());
