@@ -16,11 +16,7 @@ public class HolidayRequest {
     @NotNull(message = "연휴 종류는 필수 항목입니다.")
     private Long holidayKindId;
 
-    @NotNull(message = "시작일은 필수 항목입니다.")
+    @NotNull(message = "날짜는 필수 항목입니다.")
     @DateTimeFormat(iso = ISO.DATE)
-    private LocalDate startDate;
-
-    @NotNull(message = "종료일은 필수 항목입니다.")
-    @DateTimeFormat(iso = ISO.DATE)
-    private LocalDate endDate;
+    private LocalDate date;
 }

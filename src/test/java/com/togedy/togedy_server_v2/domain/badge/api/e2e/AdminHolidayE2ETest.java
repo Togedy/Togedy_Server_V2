@@ -15,6 +15,7 @@ import com.togedy.togedy_server_v2.domain.badge.dao.HolidayKindRepository;
 import com.togedy.togedy_server_v2.domain.badge.dao.HolidayRepository;
 import com.togedy.togedy_server_v2.domain.badge.entity.Holiday;
 import com.togedy.togedy_server_v2.domain.badge.entity.HolidayKind;
+import com.togedy.togedy_server_v2.domain.badge.enums.DateRuleType;
 import com.togedy.togedy_server_v2.global.security.AdminUser;
 import com.togedy.togedy_server_v2.global.support.AbstractE2ETest;
 import com.togedy.togedy_server_v2.global.util.TimeUtil;
@@ -37,22 +38,22 @@ public class AdminHolidayE2ETest extends AbstractE2ETest {
     @Autowired
     HolidayKindRepository holidayKindRepository;
 
-    HolidayKind chuseok;
+    HolidayKind suneung;
 
     @BeforeEach
     void setUpHolidayKind() {
-        chuseok = holidayKindRepository.save(HolidayKind.builder().name("추석").badgeEnabled(true).build());
+        suneung = holidayKindRepository.save(HolidayKind.builder().name("수능").badgeEnabled(true).build());
     }
 
     @Test
     @DisplayName("연휴 목록 페이지를 조회한다.")
     public void readHolidayList() throws Exception {
         LocalDate today = TimeUtil.currentStudyDate();
-        holidayRepository.save(holiday(today.plusDays(10), today.plusDays(12)));
+        holidayRepository.save(holiday(today.plusDays(10)));
 
         mockMvc.perform(get("/admin/holidays").with(user(ADMIN)))
                 .andExpect(status().isOk())
-                .andExpect(content().string(Matchers.containsString("추석")));
+                .andExpect(content().string(Matchers.containsString("수능")));
     }
 
     @Test
@@ -61,9 +62,8 @@ public class AdminHolidayE2ETest extends AbstractE2ETest {
         LocalDate today = TimeUtil.currentStudyDate();
 
         mockMvc.perform(post("/admin/holidays")
-                        .param("holidayKindId", chuseok.getId().toString())
-                        .param("startDate", today.plusDays(10).toString())
-                        .param("endDate", today.plusDays(12).toString())
+                        .param("holidayKindId", suneung.getId().toString())
+                        .param("date", today.plusDays(10).toString())
                         .with(user(ADMIN))
                         .with(csrf()))
                 .andExpect(redirectedUrl("/admin/holidays"));
@@ -71,27 +71,10 @@ public class AdminHolidayE2ETest extends AbstractE2ETest {
         assertThat(holidayRepository.findAll())
                 .singleElement()
                 .satisfies(holiday -> {
-                    assertThat(holiday.getHolidayKind().getId()).isEqualTo(chuseok.getId());
+                    assertThat(holiday.getHolidayKind().getId()).isEqualTo(suneung.getId());
                     assertThat(holiday.getStartDate()).isEqualTo(today.plusDays(10));
-                    assertThat(holiday.getEndDate()).isEqualTo(today.plusDays(12));
+                    assertThat(holiday.getEndDate()).isEqualTo(today.plusDays(10));
                 });
-    }
-
-    @Test
-    @DisplayName("종료일이 시작일보다 앞서면 연휴를 등록하지 않고 폼을 다시 보여준다.")
-    public void createHolidayWithInvalidPeriod() throws Exception {
-        LocalDate today = TimeUtil.currentStudyDate();
-
-        mockMvc.perform(post("/admin/holidays")
-                        .param("holidayKindId", chuseok.getId().toString())
-                        .param("startDate", today.plusDays(12).toString())
-                        .param("endDate", today.plusDays(10).toString())
-                        .with(user(ADMIN))
-                        .with(csrf()))
-                .andExpect(status().isOk())
-                .andExpect(model().attributeHasErrors("form"));
-
-        assertThat(holidayRepository.findAll()).isEmpty();
     }
 
     @Test
@@ -100,9 +83,8 @@ public class AdminHolidayE2ETest extends AbstractE2ETest {
         LocalDate today = TimeUtil.currentStudyDate();
 
         mockMvc.perform(post("/admin/holidays")
-                        .param("holidayKindId", String.valueOf(chuseok.getId() + 1))
-                        .param("startDate", today.plusDays(10).toString())
-                        .param("endDate", today.plusDays(12).toString())
+                        .param("holidayKindId", String.valueOf(suneung.getId() + 1))
+                        .param("date", today.plusDays(10).toString())
                         .with(user(ADMIN))
                         .with(csrf()))
                 .andExpect(status().isOk())
@@ -112,14 +94,13 @@ public class AdminHolidayE2ETest extends AbstractE2ETest {
     }
 
     @Test
-    @DisplayName("이미 종료된 기간으로는 연휴를 등록하지 않는다.")
+    @DisplayName("이미 지난 날짜로는 연휴를 등록하지 않는다.")
     public void createEndedHoliday() throws Exception {
         LocalDate today = TimeUtil.currentStudyDate();
 
         mockMvc.perform(post("/admin/holidays")
-                        .param("holidayKindId", chuseok.getId().toString())
-                        .param("startDate", today.minusDays(5).toString())
-                        .param("endDate", today.minusDays(3).toString())
+                        .param("holidayKindId", suneung.getId().toString())
+                        .param("date", today.minusDays(5).toString())
                         .with(user(ADMIN))
                         .with(csrf()))
                 .andExpect(status().isOk())
@@ -129,15 +110,14 @@ public class AdminHolidayE2ETest extends AbstractE2ETest {
     }
 
     @Test
-    @DisplayName("기간이 겹치는 연휴는 등록하지 않는다.")
-    public void createOverlappingHoliday() throws Exception {
+    @DisplayName("같은 날짜에 같은 종류의 연휴는 등록하지 않는다.")
+    public void createDuplicateHoliday() throws Exception {
         LocalDate today = TimeUtil.currentStudyDate();
-        holidayRepository.save(holiday(today.plusDays(10), today.plusDays(12)));
+        holidayRepository.save(holiday(today.plusDays(10)));
 
         mockMvc.perform(post("/admin/holidays")
-                        .param("holidayKindId", chuseok.getId().toString())
-                        .param("startDate", today.plusDays(12).toString())
-                        .param("endDate", today.plusDays(14).toString())
+                        .param("holidayKindId", suneung.getId().toString())
+                        .param("date", today.plusDays(10).toString())
                         .with(user(ADMIN))
                         .with(csrf()))
                 .andExpect(status().isOk())
@@ -150,32 +130,32 @@ public class AdminHolidayE2ETest extends AbstractE2ETest {
     @DisplayName("판정 전인 연휴를 수정한다.")
     public void modifyHoliday() throws Exception {
         LocalDate today = TimeUtil.currentStudyDate();
-        Holiday holiday = holidayRepository.save(holiday(today.plusDays(10), today.plusDays(12)));
+        Holiday holiday = holidayRepository.save(holiday(today.plusDays(10)));
 
         mockMvc.perform(post("/admin/holidays/{id}/edit", holiday.getId())
-                        .param("holidayKindId", chuseok.getId().toString())
-                        .param("startDate", today.plusDays(10).toString())
-                        .param("endDate", today.plusDays(13).toString())
+                        .param("holidayKindId", suneung.getId().toString())
+                        .param("date", today.plusDays(13).toString())
                         .with(user(ADMIN))
                         .with(csrf()))
                 .andExpect(redirectedUrl("/admin/holidays"));
 
         assertThat(holidayRepository.findById(holiday.getId()))
                 .get()
-                .extracting(Holiday::getEndDate)
-                .isEqualTo(today.plusDays(13));
+                .satisfies(modified -> {
+                    assertThat(modified.getStartDate()).isEqualTo(today.plusDays(13));
+                    assertThat(modified.getEndDate()).isEqualTo(today.plusDays(13));
+                });
     }
 
     @Test
     @DisplayName("판정이 완료된 연휴는 수정하지 않는다.")
     public void modifyEndedHoliday() throws Exception {
         LocalDate today = TimeUtil.currentStudyDate();
-        Holiday holiday = holidayRepository.save(holiday(today.minusDays(5), today.minusDays(3)));
+        Holiday holiday = holidayRepository.save(holiday(today.minusDays(5)));
 
         mockMvc.perform(post("/admin/holidays/{id}/edit", holiday.getId())
-                        .param("holidayKindId", chuseok.getId().toString())
-                        .param("startDate", today.plusDays(1).toString())
-                        .param("endDate", today.plusDays(3).toString())
+                        .param("holidayKindId", suneung.getId().toString())
+                        .param("date", today.plusDays(1).toString())
                         .with(user(ADMIN))
                         .with(csrf()))
                 .andExpect(status().isOk())
@@ -191,7 +171,7 @@ public class AdminHolidayE2ETest extends AbstractE2ETest {
     @DisplayName("판정 전인 연휴를 삭제한다.")
     public void removeHoliday() throws Exception {
         LocalDate today = TimeUtil.currentStudyDate();
-        Holiday holiday = holidayRepository.save(holiday(today.plusDays(10), today.plusDays(12)));
+        Holiday holiday = holidayRepository.save(holiday(today.plusDays(10)));
 
         mockMvc.perform(post("/admin/holidays/{id}/delete", holiday.getId())
                         .with(user(ADMIN))
@@ -205,7 +185,7 @@ public class AdminHolidayE2ETest extends AbstractE2ETest {
     @DisplayName("판정이 완료된 연휴는 삭제하지 않는다.")
     public void removeEndedHoliday() throws Exception {
         LocalDate today = TimeUtil.currentStudyDate();
-        Holiday holiday = holidayRepository.save(holiday(today.minusDays(5), today.minusDays(3)));
+        Holiday holiday = holidayRepository.save(holiday(today.minusDays(5)));
 
         mockMvc.perform(post("/admin/holidays/{id}/delete", holiday.getId())
                         .with(user(ADMIN))
@@ -216,7 +196,105 @@ public class AdminHolidayE2ETest extends AbstractE2ETest {
         assertThat(holidayRepository.findAll()).hasSize(1);
     }
 
-    private Holiday holiday(LocalDate startDate, LocalDate endDate) {
-        return Holiday.builder().holidayKind(chuseok).startDate(startDate).endDate(endDate).build();
+    @Test
+    @DisplayName("등록 폼에는 날짜 규칙이 없는 연휴 종류만 보여준다.")
+    public void readCreateFormWithManualKindsOnly() throws Exception {
+        saveRuleKind("크리스마스");
+
+        mockMvc.perform(get("/admin/holidays/new").with(user(ADMIN)))
+                .andExpect(status().isOk())
+                .andExpect(content().string(Matchers.containsString("수능")))
+                .andExpect(content().string(Matchers.not(Matchers.containsString("크리스마스"))));
+    }
+
+    @Test
+    @DisplayName("날짜 규칙이 있는 종류로는 연휴를 등록하지 않는다.")
+    public void createHolidayWithRuleKind() throws Exception {
+        LocalDate today = TimeUtil.currentStudyDate();
+        HolidayKind christmas = saveRuleKind("크리스마스");
+
+        mockMvc.perform(post("/admin/holidays")
+                        .param("holidayKindId", christmas.getId().toString())
+                        .param("date", today.plusDays(10).toString())
+                        .with(user(ADMIN))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeHasErrors("form"));
+
+        assertThat(holidayRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("같은 날짜라도 다른 종류의 연휴는 등록한다.")
+    public void createHolidayOnSameDateWithOtherKind() throws Exception {
+        LocalDate today = TimeUtil.currentStudyDate();
+        holidayRepository.save(holiday(today.plusDays(10)));
+        HolidayKind event = holidayKindRepository.save(HolidayKind.builder().name("개교기념일").badgeEnabled(true).build());
+
+        mockMvc.perform(post("/admin/holidays")
+                        .param("holidayKindId", event.getId().toString())
+                        .param("date", today.plusDays(10).toString())
+                        .with(user(ADMIN))
+                        .with(csrf()))
+                .andExpect(redirectedUrl("/admin/holidays"));
+
+        assertThat(holidayRepository.findAll()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("날짜 규칙으로 생성된 연휴는 수정하지 않는다.")
+    public void modifyRuleHoliday() throws Exception {
+        LocalDate today = TimeUtil.currentStudyDate();
+        Holiday holiday = holidayRepository.save(Holiday.builder()
+                .holidayKind(saveRuleKind("크리스마스"))
+                .startDate(today.plusDays(10))
+                .endDate(today.plusDays(10))
+                .build());
+
+        mockMvc.perform(post("/admin/holidays/{id}/edit", holiday.getId())
+                        .param("holidayKindId", suneung.getId().toString())
+                        .param("date", today.plusDays(11).toString())
+                        .with(user(ADMIN))
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(model().attributeHasErrors("form"));
+
+        assertThat(holidayRepository.findById(holiday.getId()))
+                .get()
+                .extracting(Holiday::getStartDate)
+                .isEqualTo(today.plusDays(10));
+    }
+
+    @Test
+    @DisplayName("날짜 규칙으로 생성된 연휴는 삭제하지 않는다.")
+    public void removeRuleHoliday() throws Exception {
+        LocalDate today = TimeUtil.currentStudyDate();
+        Holiday holiday = holidayRepository.save(Holiday.builder()
+                .holidayKind(saveRuleKind("크리스마스"))
+                .startDate(today.plusDays(10))
+                .endDate(today.plusDays(10))
+                .build());
+
+        mockMvc.perform(post("/admin/holidays/{id}/delete", holiday.getId())
+                        .with(user(ADMIN))
+                        .with(csrf()))
+                .andExpect(redirectedUrl("/admin/holidays"))
+                .andExpect(flash().attributeExists("errorMessage"));
+
+        assertThat(holidayRepository.findAll()).hasSize(1);
+    }
+
+    private HolidayKind saveRuleKind(String name) {
+        return holidayKindRepository.save(HolidayKind.builder()
+                .name(name)
+                .badgeEnabled(true)
+                .dateRuleType(DateRuleType.SOLAR)
+                .ruleMonth(12)
+                .ruleDay(25)
+                .build());
+    }
+
+    private Holiday holiday(LocalDate date) {
+        return Holiday.builder().holidayKind(suneung).startDate(date).endDate(date).build();
     }
 }

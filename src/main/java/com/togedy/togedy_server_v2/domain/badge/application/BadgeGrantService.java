@@ -36,6 +36,9 @@ public class BadgeGrantService {
             BadgeType.WEEKEND_10
     );
 
+    // 연휴 기간이 이 일수보다 길면 이 일수만큼만 기준 시간을 채우면 된다.
+    private static final long HOLIDAY_MAX_REQUIRED_DAYS = 3;
+
     // 직전 공부일로부터 이 일수 이상 지난 뒤 공부하면 복귀로 본다.
     private static final int COMEBACK_ABSENCE_DAYS = 30;
 
@@ -95,20 +98,16 @@ public class BadgeGrantService {
     /**
      * 판정 학습일에 끝난 연휴 중 뱃지 지급이 켜진 종류의 연휴를 대상으로 연휴 파이터 뱃지를 지급한다.
      * <p>
-     * 연휴 기간의 모든 학습일에 기준 시간(하루 4시간) 이상 공부한 유저가 받는다.
-     * 연휴 종류의 이름을 지급 시점의 값으로 저장하며, periodKey는 연휴 시작일이다.
+     * 연휴 기간 중 필요 일수(최대 3일, 연휴가 3일 이하이면 모든 날)에 기준 시간(하루 4시간) 이상 공부한 유저가 받는다.
+     * 같은 날 끝난 연휴가 여러 개면 연휴마다 판정해 각각 지급한다.
      * </p>
      *
      * @param studyDate 판정 대상 학습일
      */
     public void grantHolidayBadges(LocalDate studyDate) {
         for (Holiday holiday : holidayRepository.findAllByEndDateAndHolidayKindBadgeEnabledTrue(studyDate)) {
-            findUserIdsStudiedEveryHoliday(holiday).forEach(userId -> saveBadge(Badge.builder()
-                    .userId(userId)
-                    .type(BadgeType.HOLIDAY)
-                    .detail(holiday.getHolidayKind().getName())
-                    .date(holiday.getStartDate())
-                    .build()));
+            findUserIdsStudiedHoliday(holiday)
+                    .forEach(userId -> saveBadge(Badge.createHolidayBadge(userId, holiday)));
         }
     }
 
@@ -241,19 +240,22 @@ public class BadgeGrantService {
     }
 
     /**
-     * 연휴 기간의 모든 학습일에 하루 기준 시간 이상 공부한 유저를 조회한다.
+     * 연휴 기간 중 필요 일수 이상 하루 기준 시간을 채운 유저를 조회한다.
+     * <p>
+     * 필요 일수는 연휴 일수와 최대 필요 일수(3일) 중 작은 값이며, 기준 시간을 채운 날은 연속하지 않아도 된다.
+     * </p>
      *
      * @param holiday 판정 대상 연휴
-     * @return 모든 날 기준 시간을 채운 유저 ID 목록
+     * @return 필요 일수 이상 기준 시간을 채운 유저 ID 목록
      */
-    private List<Long> findUserIdsStudiedEveryHoliday(Holiday holiday) {
+    private List<Long> findUserIdsStudiedHoliday(Holiday holiday) {
         long days = ChronoUnit.DAYS.between(holiday.getStartDate(), holiday.getEndDate()) + 1;
 
-        return dailyStudySummaryRepository.findUserIdsStudiedEveryDayAtLeast(
+        return dailyStudySummaryRepository.findUserIdsStudiedDaysAtLeast(
                 holiday.getStartDate(),
                 holiday.getEndDate(),
                 toRequiredSeconds(BadgeType.HOLIDAY),
-                days
+                Math.min(days, HOLIDAY_MAX_REQUIRED_DAYS)
         );
     }
 

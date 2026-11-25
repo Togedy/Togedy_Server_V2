@@ -45,12 +45,38 @@ public class Badge extends BaseEntity {
     @Column(name = "period_key", nullable = false, updatable = false)
     private String periodKey;
 
+    @Column(name = "checked", nullable = false)
+    private boolean checked;
+
     @Builder
     public Badge(Long userId, String detail, BadgeType type, LocalDate date) {
+        this(userId, detail, type, type.getPeriodType().toKey(date));
+    }
+
+    private Badge(Long userId, String detail, BadgeType type, String periodKey) {
         this.userId = userId;
         this.detail = detail;
         this.type = type;
-        this.periodKey = type.getPeriodType().toKey(date);
+        this.periodKey = periodKey;
+        this.checked = false;
+    }
+
+    /**
+     * 연휴 파이터 뱃지를 생성한다.
+     * <p>
+     * 같은 날 여러 연휴가 있어도 각각 지급하도록 periodKey는 연휴 ID이며, 연휴 종류의 이름을 지급 시점의 값으로 저장한다.
+     * </p>
+     *
+     * @param userId  지급 대상 유저 ID
+     * @param holiday 판정 대상 연휴
+     * @return 저장 전 뱃지
+     */
+    public static Badge createHolidayBadge(Long userId, Holiday holiday) {
+        return new Badge(userId, holiday.getHolidayKind().getName(), BadgeType.HOLIDAY, String.valueOf(holiday.getId()));
+    }
+
+    public void check() {
+        this.checked = true;
     }
 
     public String getDisplayName() {

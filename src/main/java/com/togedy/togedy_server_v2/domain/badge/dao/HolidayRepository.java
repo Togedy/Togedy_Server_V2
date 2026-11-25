@@ -6,27 +6,18 @@ import java.util.Collection;
 import java.util.List;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 public interface HolidayRepository extends JpaRepository<Holiday, Long> {
 
-    @Query("""
-            SELECT COUNT(h) > 0
-            FROM Holiday h
-            WHERE h.startDate <= :endDate
-              AND h.endDate >= :startDate
-              AND (:excludedHolidayId IS NULL OR h.id <> :excludedHolidayId)
-            """)
-    boolean existsOverlapping(@Param("startDate") LocalDate startDate,
-                              @Param("endDate") LocalDate endDate,
-                              @Param("excludedHolidayId") Long excludedHolidayId);
-
     boolean existsByHolidayKindId(Long holidayKindId);
+
+    boolean existsByHolidayKindIdAndStartDate(Long holidayKindId, LocalDate startDate);
+
+    boolean existsByHolidayKindIdAndStartDateAndIdNot(Long holidayKindId, LocalDate startDate, Long id);
 
     @EntityGraph(attributePaths = "holidayKind")
     List<Holiday> findAllByEndDateAndHolidayKindBadgeEnabledTrue(LocalDate endDate);
 
     @EntityGraph(attributePaths = "holidayKind")
-    List<Holiday> findAllByStartDateIn(Collection<LocalDate> startDates);
+    List<Holiday> findAllByIdIn(Collection<Long> ids);
 }

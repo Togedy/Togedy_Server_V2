@@ -21,8 +21,8 @@ import lombok.NoArgsConstructor;
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "holiday", uniqueConstraints = @UniqueConstraint(
-        name = "uk_holiday_start_date",
-        columnNames = "start_date")
+        name = "uk_holiday_holiday_kind_id_start_date",
+        columnNames = {"holiday_kind_id", "start_date"})
 )
 public class Holiday extends BaseEntity {
 

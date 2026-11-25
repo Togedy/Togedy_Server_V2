@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 
+import com.togedy.togedy_server_v2.domain.badge.application.BadgeService;
+import com.togedy.togedy_server_v2.domain.badge.dto.GetMyBadgesResponse;
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberProfileResponse;
 import com.togedy.togedy_server_v2.domain.study.dto.GetStudyMemberStudyTimeResponse;
@@ -23,12 +25,75 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.test.util.ReflectionTestUtils;
 
 public class StudyMemberServiceTest extends AbstractStudyServiceTest {
 
     @InjectMocks
     StudyMemberService studyMemberService;
+
+    @Mock
+    BadgeService badgeService;
+
+    @Test
+    public void 스터디_멤버의_보유_뱃지를_조회한다() {
+        //given
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long memberId = 2L;
+        GetMyBadgesResponse badges = GetMyBadgesResponse.of(List.of());
+
+        given(userStudyRepository.existsByStudyIdAndUserId(studyId, userId))
+                .willReturn(true);
+
+        given(userStudyRepository.existsByStudyIdAndUserId(studyId, memberId))
+                .willReturn(true);
+
+        given(badgeService.findMyBadges(memberId))
+                .willReturn(badges);
+
+        // when
+        GetMyBadgesResponse response = studyMemberService.findStudyMemberBadges(studyId, memberId, userId);
+
+        // then
+        assertThat(response).isSameAs(badges);
+    }
+
+    @Test
+    public void 스터디_멤버_뱃지_조회_시_해당_유저가_스터디에_가입하지_않은_경우_예외가_발생한다() {
+        //given
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long memberId = 2L;
+
+        given(userStudyRepository.existsByStudyIdAndUserId(studyId, userId))
+                .willReturn(false);
+
+        // when & then
+        assertThatThrownBy(() ->
+                studyMemberService.findStudyMemberBadges(studyId, memberId, userId)
+        ).isInstanceOf(StudyAccessDeniedException.class);
+    }
+
+    @Test
+    public void 스터디_멤버_뱃지_조회_시_멤버가_스터디에_가입하지_않은_경우_예외가_발생한다() {
+        //given
+        Long studyId = 1L;
+        Long userId = 1L;
+        Long memberId = 2L;
+
+        given(userStudyRepository.existsByStudyIdAndUserId(studyId, userId))
+                .willReturn(true);
+
+        given(userStudyRepository.existsByStudyIdAndUserId(studyId, memberId))
+                .willReturn(false);
+
+        // when & then
+        assertThatThrownBy(() ->
+                studyMemberService.findStudyMemberBadges(studyId, memberId, userId)
+        ).isInstanceOf(UserStudyNotFoundException.class);
+    }
 
     @Test
     public void 스터디_멤버의_프로필을_조회한다() {

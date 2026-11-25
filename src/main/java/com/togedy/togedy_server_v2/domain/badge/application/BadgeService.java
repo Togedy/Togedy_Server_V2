@@ -5,18 +5,14 @@ import com.togedy.togedy_server_v2.domain.badge.dao.HolidayRepository;
 import com.togedy.togedy_server_v2.domain.badge.dto.BadgeItemResponse;
 import com.togedy.togedy_server_v2.domain.badge.dto.GetBadgeResponse;
 import com.togedy.togedy_server_v2.domain.badge.dto.GetMyBadgesResponse;
-import com.togedy.togedy_server_v2.domain.badge.dto.PatchRepresentativeBadgeRequest;
-import com.togedy.togedy_server_v2.domain.badge.dto.RepresentativeBadgeResponse;
 import com.togedy.togedy_server_v2.domain.badge.dto.YearlyBadgeResponse;
 import com.togedy.togedy_server_v2.domain.badge.entity.Badge;
 import com.togedy.togedy_server_v2.domain.badge.entity.Holiday;
 import com.togedy.togedy_server_v2.domain.badge.enums.PeriodType;
 import com.togedy.togedy_server_v2.domain.badge.exception.BadgeNotFoundException;
-import com.togedy.togedy_server_v2.domain.user.dao.UserRepository;
-import com.togedy.togedy_server_v2.domain.user.entity.User;
-import com.togedy.togedy_server_v2.domain.user.exception.user.UserNotFoundException;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,44 +27,32 @@ import org.springframework.transaction.annotation.Transactional;
 public class BadgeService {
 
     private final BadgeRepository badgeRepository;
-    private final UserRepository userRepository;
     private final HolidayRepository holidayRepository;
 
     /**
-     * 본인의 대표 뱃지와 연도별 보유 뱃지를 조회한다.
+     * 본인의 연도별 보유 뱃지를 조회한다.
      * <p>
      * 연도는 받은 날짜 기준 최신순이며, 연도 안에서는 표시 이름이 같은 뱃지를 하나로 묶어 받은 횟수를 담는다. 묶음은 가장 최근에 받은 순으로 정렬하고, 묶음의 badgeId는 가장 최근에 받은 뱃지의
-     * ID이다. 대표 뱃지를 설정하지 않았거나 보유하지 않은 뱃지를 가리키면 대표 뱃지는 null이다.
+     * ID이다.
      * 연휴 파이터의 이미지는 보유한 연휴 뱃지의 연휴를 한 번에 조회해 연휴 종류의 이미지로 채운다.
      * </p>
      *
      * @param userId 유저 ID
-     * @return 대표 뱃지와 연도별 보유 뱃지
+     * @return 연도별 보유 뱃지
      */
     @Transactional(readOnly = true)
     public GetMyBadgesResponse findMyBadges(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
         List<Badge> badges = badgeRepository.findAllByUserIdOrderByCreatedAtDescIdDesc(userId);
         Map<String, String> holidayImageUrls = findHolidayImageUrls(badges);
 
-        RepresentativeBadgeResponse representativeBadge = badges.stream()
-                .filter(badge -> badge.getId().equals(user.getRepresentativeBadgeId()))
-                .findFirst()
-                .map(badge -> RepresentativeBadgeResponse.of(
-                        badge.getId(),
-                        badge.getDisplayName(),
-                        resolveImageUrl(badge, holidayImageUrls),
-                        badge.getAcquiredDate()
-                ))
-                .orElse(null);
-
-        return GetMyBadgesResponse.of(representativeBadge, groupByYear(badges, holidayImageUrls));
+        return GetMyBadgesResponse.of(groupByYear(badges, holidayImageUrls));
     }
 
     /**
      * 본인이 보유한 뱃지의 상세 정보를 조회한다.
+     * <p>
+     * 발급일은 보유 뱃지 조회의 묶음과 같은 기준으로, 같은 연도에 받은 표시 이름이 같은 뱃지 중 가장 최근에 받은 날짜이다.
+     * </p>
      *
      * @param badgeId 뱃지 ID
      * @param userId  유저 ID
@@ -79,50 +63,70 @@ public class BadgeService {
         Badge badge = badgeRepository.findByIdAndUserId(badgeId, userId)
                 .orElseThrow(BadgeNotFoundException::new);
 
-        Map<String, String> holidayImageUrls = findHolidayImageUrls(List.of(badge));
+        return toBadgeResponse(badge, findHolidayImageUrls(List.of(badge)));
+    }
 
+    /**
+     * 본인이 아직 확인하지 않은 뱃지를 받은 순서대로 조회하고 확인 처리한다.
+     * <p>
+     * 응답은 뱃지 상세 조회와 같으며, 확인하지 않은 뱃지가 없으면 빈 목록을 반환한다.
+     * </p>
+     *
+     * @param userId 유저 ID
+     * @return 확인하지 않은 뱃지의 상세 정보 목록
+     */
+    @Transactional
+    public List<GetBadgeResponse> findNewBadges(Long userId) {
+        List<Badge> badges = badgeRepository.findAllByUserIdAndCheckedFalseOrderByCreatedAtAscIdAsc(userId);
+        Map<String, String> holidayImageUrls = findHolidayImageUrls(badges);
+
+        List<GetBadgeResponse> responses = badges.stream()
+                .map(badge -> toBadgeResponse(badge, holidayImageUrls))
+                .toList();
+        badges.forEach(Badge::check);
+        return responses;
+    }
+
+    /**
+     * 뱃지를 상세 응답으로 변환한다.
+     *
+     * @param badge            뱃지
+     * @param holidayImageUrls 연휴 ID(periodKey)별 연휴 종류 이미지 URL
+     * @return 뱃지 상세 정보
+     */
+    private GetBadgeResponse toBadgeResponse(Badge badge, Map<String, String> holidayImageUrls) {
         return GetBadgeResponse.of(
                 badge.getId(),
                 badge.getDisplayName(),
                 resolveImageUrl(badge, holidayImageUrls),
-                badge.getType().getDescription()
+                badge.getType().getDescription(),
+                findLatestAcquiredDateInYear(badge)
         );
     }
 
     /**
-     * 본인이 보유한 뱃지를 대표 뱃지로 설정한다. 기존 대표 뱃지가 있으면 전달받은 뱃지로 교체된다.
+     * 뱃지와 같은 연도에 받은 표시 이름이 같은 뱃지 중 가장 최근에 받은 날짜를 구한다.
      *
-     * @param request 대표 뱃지로 설정할 뱃지 ID
-     * @param userId  유저 ID
+     * @param badge 기준 뱃지
+     * @return 같은 연도, 같은 표시 이름 뱃지의 가장 최근 발급일
      */
-    @Transactional
-    public void modifyRepresentativeBadge(PatchRepresentativeBadgeRequest request, Long userId) {
-        Badge badge = badgeRepository.findByIdAndUserId(request.getBadgeId(), userId)
-                .orElseThrow(BadgeNotFoundException::new);
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
+    private LocalDate findLatestAcquiredDateInYear(Badge badge) {
+        int year = badge.getAcquiredDate().getYear();
 
-        user.changeRepresentativeBadge(badge.getId());
-    }
-
-    /**
-     * 대표 뱃지를 해제한다. 대표 뱃지가 없어도 예외 없이 처리한다.
-     *
-     * @param userId 유저 ID
-     */
-    @Transactional
-    public void removeRepresentativeBadge(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(UserNotFoundException::new);
-
-        user.clearRepresentativeBadge();
+        return badgeRepository.findAllByUserIdAndType(badge.getUserId(), badge.getType())
+                .stream()
+                .filter(other -> other.getDisplayName().equals(badge.getDisplayName()))
+                .map(Badge::getAcquiredDate)
+                .filter(acquiredDate -> acquiredDate.getYear() == year)
+                .max(Comparator.naturalOrder())
+                .orElseThrow();
     }
 
     /**
      * 받은 날짜 최신순으로 정렬된 뱃지를 연도별, 표시 이름별로 묶는다.
      *
      * @param badges           받은 날짜 최신순으로 정렬된 뱃지 목록
-     * @param holidayImageUrls 연휴 시작일(periodKey)별 연휴 종류 이미지 URL
+     * @param holidayImageUrls 연휴 ID(periodKey)별 연휴 종류 이미지 URL
      * @return 연도 최신순의 연도별 뱃지 묶음
      */
     private List<YearlyBadgeResponse> groupByYear(List<Badge> badges, Map<String, String> holidayImageUrls) {
@@ -142,7 +146,7 @@ public class BadgeService {
      * 같은 연도의 뱃지를 표시 이름별로 묶고, 가장 최근에 받은 뱃지를 대표로 삼는다.
      *
      * @param badges           같은 연도에 받은 뱃지 목록, 받은 날짜 최신순
-     * @param holidayImageUrls 연휴 시작일(periodKey)별 연휴 종류 이미지 URL
+     * @param holidayImageUrls 연휴 ID(periodKey)별 연휴 종류 이미지 URL
      * @return 가장 최근에 받은 순의 뱃지 묶음
      */
     private List<BadgeItemResponse> groupByDisplayName(List<Badge> badges, Map<String, String> holidayImageUrls) {
@@ -167,27 +171,27 @@ public class BadgeService {
     }
 
     /**
-     * 연휴 파이터 뱃지의 연휴를 조회해 연휴 시작일별 연휴 종류 이미지 URL을 만든다.
+     * 연휴 파이터 뱃지의 연휴를 조회해 연휴 ID별 연휴 종류 이미지 URL을 만든다.
      * <p>
-     * 연휴 뱃지는 판정이 끝난 연휴에만 지급되고 판정이 끝난 연휴는 수정·삭제할 수 없으므로, periodKey(연휴 시작일)로 지급 당시의 연휴를 찾을 수 있다.
+     * 연휴 뱃지는 판정이 끝난 연휴에만 지급되고 판정이 끝난 연휴는 수정·삭제할 수 없으므로, periodKey(연휴 ID)로 지급 당시의 연휴를 찾을 수 있다.
      * </p>
      *
      * @param badges 뱃지 목록
-     * @return 연휴 시작일(periodKey)별 연휴 종류 이미지 URL, 연휴 뱃지가 없으면 빈 Map
+     * @return 연휴 ID(periodKey)별 연휴 종류 이미지 URL, 연휴 뱃지가 없으면 빈 Map
      */
     private Map<String, String> findHolidayImageUrls(List<Badge> badges) {
-        List<LocalDate> startDates = badges.stream()
+        List<Long> holidayIds = badges.stream()
                 .filter(badge -> badge.getType().getPeriodType() == PeriodType.HOLIDAY)
-                .map(badge -> LocalDate.parse(badge.getPeriodKey()))
+                .map(badge -> Long.valueOf(badge.getPeriodKey()))
                 .distinct()
                 .toList();
-        if (startDates.isEmpty()) {
+        if (holidayIds.isEmpty()) {
             return Map.of();
         }
 
         Map<String, String> holidayImageUrls = new HashMap<>();
-        for (Holiday holiday : holidayRepository.findAllByStartDateIn(startDates)) {
-            holidayImageUrls.put(holiday.getStartDate().toString(), holiday.getHolidayKind().getBadgeImageUrl());
+        for (Holiday holiday : holidayRepository.findAllByIdIn(holidayIds)) {
+            holidayImageUrls.put(holiday.getId().toString(), holiday.getHolidayKind().getBadgeImageUrl());
         }
         return holidayImageUrls;
     }
@@ -199,7 +203,7 @@ public class BadgeService {
      * </p>
      *
      * @param badge            뱃지
-     * @param holidayImageUrls 연휴 시작일(periodKey)별 연휴 종류 이미지 URL
+     * @param holidayImageUrls 연휴 ID(periodKey)별 연휴 종류 이미지 URL
      * @return 이미지 URL, 연휴를 찾지 못하면 {@code null}
      */
     private String resolveImageUrl(Badge badge, Map<String, String> holidayImageUrls) {

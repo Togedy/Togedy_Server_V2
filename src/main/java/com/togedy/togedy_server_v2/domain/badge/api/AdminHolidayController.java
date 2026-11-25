@@ -29,7 +29,7 @@ public class AdminHolidayController {
 
     @ModelAttribute("holidayKinds")
     public List<HolidayKindDto> holidayKinds() {
-        return holidayKindService.findHolidayKinds();
+        return holidayKindService.findManualHolidayKinds();
     }
 
     @GetMapping
@@ -66,8 +66,7 @@ public class AdminHolidayController {
 
         HolidayRequest form = new HolidayRequest();
         form.setHolidayKindId(holiday.getHolidayKindId());
-        form.setStartDate(holiday.getStartDate());
-        form.setEndDate(holiday.getEndDate());
+        form.setDate(holiday.getStartDate());
 
         model.addAttribute("holidayId", holidayId);
         model.addAttribute("form", form);

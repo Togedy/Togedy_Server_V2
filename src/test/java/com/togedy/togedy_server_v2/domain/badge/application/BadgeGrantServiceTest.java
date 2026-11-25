@@ -1,6 +1,7 @@
 package com.togedy.togedy_server_v2.domain.badge.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import com.togedy.togedy_server_v2.domain.badge.dao.BadgeRepository;
 import com.togedy.togedy_server_v2.domain.badge.dao.HolidayKindRepository;
@@ -179,9 +180,9 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
     }
 
     @Test
-    @DisplayName("연휴의 모든 날 4시간 이상 공부하면 연휴 종류 이름과 연휴 시작일을 담아 연휴 파이터 뱃지를 지급한다.")
+    @DisplayName("연휴의 모든 날 4시간 이상 공부하면 연휴 종류 이름과 연휴 ID를 담아 연휴 파이터 뱃지를 지급한다.")
     void grantHolidayBadge() {
-        saveHoliday("추석", HOLIDAY_START, HOLIDAY_END);
+        Holiday holiday = saveHoliday("추석", HOLIDAY_START, HOLIDAY_END);
         saveDailyStudySummary(USER_ID, HOLIDAY_START, 4);
         saveDailyStudySummary(USER_ID, HOLIDAY_START.plusDays(1), 5);
         saveDailyStudySummary(USER_ID, HOLIDAY_END, 4);
@@ -193,7 +194,7 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
                 .satisfies(badge -> {
                     assertThat(badge.getType()).isEqualTo(BadgeType.HOLIDAY);
                     assertThat(badge.getDetail()).isEqualTo("추석");
-                    assertThat(badge.getPeriodKey()).isEqualTo(HOLIDAY_START.toString());
+                    assertThat(badge.getPeriodKey()).isEqualTo(holiday.getId().toString());
                 });
     }
 
@@ -249,6 +250,71 @@ class BadgeGrantServiceTest extends AbstractE2ETest {
         badgeGrantService.grantHolidayBadges(HOLIDAY_END);
 
         assertThat(badgeRepository.findAll()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("4일 이상 연휴는 연속하지 않아도 3일만 4시간 이상 공부하면 연휴 파이터 뱃지를 지급한다.")
+    void grantLongHolidayBadgeWithThreeDays() {
+        LocalDate start = LocalDate.of(2026, 2, 14);
+        LocalDate end = LocalDate.of(2026, 2, 18);
+        saveHoliday("설날", start, end);
+        saveDailyStudySummary(USER_ID, start, 4);
+        saveDailyStudySummary(USER_ID, start.plusDays(2), 4);
+        saveDailyStudySummary(USER_ID, end, 6);
+
+        badgeGrantService.grantHolidayBadges(end);
+
+        assertThat(badgeRepository.findAll())
+                .singleElement()
+                .extracting(Badge::getUserId, Badge::getDisplayName)
+                .containsExactly(USER_ID, "설날 파이터");
+    }
+
+    @Test
+    @DisplayName("4일 이상 연휴에서 4시간 이상 공부한 날이 3일 미만이면 지급하지 않는다.")
+    void skipLongHolidayBadgeWithTwoDays() {
+        LocalDate start = LocalDate.of(2026, 2, 14);
+        LocalDate end = LocalDate.of(2026, 2, 18);
+        saveHoliday("설날", start, end);
+        saveDailyStudySummary(USER_ID, start, 4);
+        saveDailyStudySummary(USER_ID, start.plusDays(1), 3);
+        saveDailyStudySummary(USER_ID, end, 4);
+
+        badgeGrantService.grantHolidayBadges(end);
+
+        assertThat(badgeRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("하루짜리 공휴일에 4시간 이상 공부하면 연휴 파이터 뱃지를 지급한다.")
+    void grantSingleDayHolidayBadge() {
+        LocalDate date = LocalDate.of(2026, 3, 1);
+        saveHoliday("삼일절", date, date);
+        saveDailyStudySummary(USER_ID, date, 4);
+
+        badgeGrantService.grantHolidayBadges(date);
+
+        assertThat(badgeRepository.findAll())
+                .singleElement()
+                .extracting(Badge::getDisplayName)
+                .isEqualTo("삼일절 파이터");
+    }
+
+    @Test
+    @DisplayName("같은 날 끝난 연휴가 여러 개면 연휴마다 연휴 파이터 뱃지를 지급한다.")
+    void grantHolidayBadgesForHolidaysOnSameDate() {
+        LocalDate date = LocalDate.of(2025, 5, 5);
+        Holiday childrensDay = saveHoliday("어린이날", date, date);
+        Holiday buddhasBirthday = saveHoliday("부처님오신날", date, date);
+        saveDailyStudySummary(USER_ID, date, 4);
+
+        badgeGrantService.grantHolidayBadges(date);
+
+        assertThat(badgeRepository.findAll())
+                .extracting(Badge::getDetail, Badge::getPeriodKey)
+                .containsExactlyInAnyOrder(
+                        tuple("어린이날", childrensDay.getId().toString()),
+                        tuple("부처님오신날", buddhasBirthday.getId().toString()));
     }
 
     @Test

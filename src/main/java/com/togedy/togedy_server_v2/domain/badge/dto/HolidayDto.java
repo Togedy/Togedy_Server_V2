@@ -21,6 +21,9 @@ public class HolidayDto {
 
     private boolean ended;
 
+    // 날짜 규칙으로 생성된 연휴는 어드민이 수정·삭제할 수 없다.
+    private boolean ruleGenerated;
+
     public static HolidayDto of(Holiday holiday, LocalDate studyDate) {
         return HolidayDto.builder()
                 .holidayId(holiday.getId())
@@ -29,6 +32,7 @@ public class HolidayDto {
                 .startDate(holiday.getStartDate())
                 .endDate(holiday.getEndDate())
                 .ended(holiday.isEnded(studyDate))
+                .ruleGenerated(!holiday.getHolidayKind().isManual())
                 .build();
     }
 }
