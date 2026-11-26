@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.study.api;
 
+import com.togedy.togedy_server_v2.domain.badge.dto.GetMyBadgesResponse;
 import com.togedy.togedy_server_v2.domain.study.application.StudyExternalService;
 import com.togedy.togedy_server_v2.domain.study.application.StudyInternalService;
 import com.togedy.togedy_server_v2.domain.study.application.StudyMemberService;
@@ -171,6 +172,18 @@ public class StudyController {
     ) {
         GetStudyMemberPlannerResponse response =
                 studyMemberService.findStudyMemberPlanner(studyId, userId, user.getId());
+        return ApiUtil.success(response);
+    }
+
+    @Operation(summary = "스터디 그룹원 뱃지 조회", description = "스터디 그룹원의 연도별 보유 뱃지를 조회한다.")
+    @GetMapping("/studies/{studyId}/members/{userId}/badges")
+    public ApiResponse<GetMyBadgesResponse> readStudyMemberBadges(
+            @PathVariable Long studyId,
+            @PathVariable Long userId,
+            @AuthenticationPrincipal AuthUser user
+    ) {
+        GetMyBadgesResponse response =
+                studyMemberService.findStudyMemberBadges(studyId, userId, user.getId());
         return ApiUtil.success(response);
     }
 

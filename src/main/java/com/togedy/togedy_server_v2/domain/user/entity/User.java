@@ -150,6 +150,7 @@ public class User extends BaseEntity {
         return oldImageUrl;
     }
 
+
     public void completeProfile() {
         this.profileCompleted = true;
     }

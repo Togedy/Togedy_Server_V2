@@ -1,0 +1,293 @@
+package com.togedy.togedy_server_v2.domain.badge.api.e2e;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.togedy.togedy_server_v2.domain.badge.dao.BadgeRepository;
+import com.togedy.togedy_server_v2.domain.badge.dao.HolidayKindRepository;
+import com.togedy.togedy_server_v2.domain.badge.dao.HolidayRepository;
+import com.togedy.togedy_server_v2.domain.badge.entity.Badge;
+import com.togedy.togedy_server_v2.domain.badge.entity.Holiday;
+import com.togedy.togedy_server_v2.domain.badge.entity.HolidayKind;
+import com.togedy.togedy_server_v2.domain.badge.enums.BadgeType;
+import com.togedy.togedy_server_v2.domain.user.entity.User;
+import com.togedy.togedy_server_v2.global.fixtures.UserFixture;
+import com.togedy.togedy_server_v2.global.support.AbstractE2ETest;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+@Tag("E2E 테스트")
+public class BadgeE2ETest extends AbstractE2ETest {
+
+    @Autowired
+    BadgeRepository badgeRepository;
+
+    @Autowired
+    HolidayKindRepository holidayKindRepository;
+
+    @Autowired
+    HolidayRepository holidayRepository;
+
+    @Autowired
+    JdbcTemplate jdbcTemplate;
+
+    private static final String CHUSEOK_IMAGE_URL = "https://s3/badge/chuseok.png";
+
+    @Test
+    @DisplayName("보유 뱃지를 연도별, 표시 이름별로 묶어 최신순으로 조회한다.")
+    public void readMyBadges() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+
+        Badge oldWeekend = saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2026, 10, 3), LocalDateTime.of(2026, 10, 5, 5, 10));
+        Holiday chuseok = saveHoliday("추석", CHUSEOK_IMAGE_URL, LocalDate.of(2026, 9, 24), LocalDate.of(2026, 9, 28));
+        Badge holiday = saveHolidayBadge(user, chuseok, LocalDateTime.of(2026, 10, 10, 5, 10));
+        Badge latestWeekend = saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2026, 10, 24), LocalDateTime.of(2026, 10, 26, 5, 10));
+        // 05:00 이전 지급은 전날 학습일이므로 2025년으로 묶인다.
+        Badge comeback = saveBadge(user, BadgeType.COMEBACK, null,
+                LocalDate.of(2025, 12, 31), LocalDateTime.of(2026, 1, 1, 4, 0));
+
+        mockMvc.perform(get("/api/v2/users/me/badges")
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isSuccess").value(true))
+                .andExpect(jsonPath("$.response.yearlyBadges.length()").value(2))
+                .andExpect(jsonPath("$.response.yearlyBadges[0].year").value(2026))
+                .andExpect(jsonPath("$.response.yearlyBadges[0].badges.length()").value(2))
+                .andExpect(jsonPath("$.response.yearlyBadges[0].badges[0].badgeId").value(latestWeekend.getId()))
+                .andExpect(jsonPath("$.response.yearlyBadges[0].badges[0].badgeName").value("10시간 주말 파이터"))
+                .andExpect(jsonPath("$.response.yearlyBadges[0].badges[0].badgeCount").value(2))
+                .andExpect(jsonPath("$.response.yearlyBadges[0].badges[1].badgeId").value(holiday.getId()))
+                .andExpect(jsonPath("$.response.yearlyBadges[0].badges[1].badgeImageUrl").value(CHUSEOK_IMAGE_URL))
+                .andExpect(jsonPath("$.response.yearlyBadges[0].badges[1].badgeCount").value(1))
+                .andExpect(jsonPath("$.response.yearlyBadges[1].year").value(2025))
+                .andExpect(jsonPath("$.response.yearlyBadges[1].badges[0].badgeId").value(comeback.getId()))
+                .andExpect(jsonPath("$.response.yearlyBadges[1].badges[0].badgeName").value("돌아왔구나"))
+                .andExpect(jsonPath("$.response.yearlyBadges[*].badges[*].badgeId",
+                        Matchers.not(Matchers.hasItem(oldWeekend.getId().intValue()))));
+    }
+
+    @Test
+    @DisplayName("보유 뱃지가 없으면 빈 응답을 반환한다.")
+    public void readMyBadgesWithoutBadge() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+
+        mockMvc.perform(get("/api/v2/users/me/badges")
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.yearlyBadges").isEmpty());
+    }
+
+    @Test
+    @DisplayName("보유한 뱃지의 상세 정보를 조회한다.")
+    public void readMyBadge() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+        Badge monthly = saveBadge(user, BadgeType.MONTHLY_50, "10월",
+                LocalDate.of(2026, 10, 31), LocalDateTime.of(2026, 10, 31, 22, 0));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/{badgeId}", monthly.getId())
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.badgeId").value(monthly.getId()))
+                .andExpect(jsonPath("$.response.badgeName").value("10월 파이터"))
+                .andExpect(jsonPath("$.response.badgeImageUrl")
+                        .value(String.format(BadgeType.MONTHLY_50.getImageUrl(), 10)))
+                .andExpect(jsonPath("$.response.badgeDescription")
+                        .value(BadgeType.MONTHLY_50.getDescription()))
+                .andExpect(jsonPath("$.response.acquiredDate").value("2026-10-31"));
+    }
+
+    @Test
+    @DisplayName("같은 연도에 같은 이름의 뱃지를 여러 번 받았으면 가장 최근에 받은 날짜를 발급일로 반환한다.")
+    public void readMyBadgeWithLatestAcquiredDateInYear() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+        Badge oldWeekend = saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2026, 10, 3), LocalDateTime.of(2026, 10, 5, 5, 10));
+        saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2026, 10, 24), LocalDateTime.of(2026, 10, 26, 5, 10));
+        // 다른 이름(단계)의 주말 파이터는 제외한다.
+        saveBadge(user, BadgeType.WEEKEND_20, null,
+                LocalDate.of(2026, 11, 7), LocalDateTime.of(2026, 11, 9, 5, 10));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/{badgeId}", oldWeekend.getId())
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.badgeId").value(oldWeekend.getId()))
+                .andExpect(jsonPath("$.response.acquiredDate").value("2026-10-26"));
+    }
+
+    @Test
+    @DisplayName("같은 종류라도 표시 이름이 다른 뱃지는 발급일 계산에서 제외한다.")
+    public void readMyBadgeExcludingOtherDisplayName() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+        Holiday seollalHoliday = saveHoliday("설날", null, LocalDate.of(2026, 2, 14), LocalDate.of(2026, 2, 18));
+        Holiday chuseokHoliday = saveHoliday("추석", null, LocalDate.of(2026, 9, 24), LocalDate.of(2026, 9, 27));
+        Badge seollal = saveHolidayBadge(user, seollalHoliday, LocalDateTime.of(2026, 2, 19, 5, 10));
+        saveHolidayBadge(user, chuseokHoliday, LocalDateTime.of(2026, 9, 28, 5, 10));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/{badgeId}", seollal.getId())
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.acquiredDate").value("2026-02-19"));
+    }
+
+    @Test
+    @DisplayName("다른 연도에 받은 같은 이름의 뱃지는 발급일 계산에서 제외한다.")
+    public void readMyBadgeExcludingOtherYear() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+        Badge weekend2026 = saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2026, 12, 26), LocalDateTime.of(2026, 12, 28, 5, 10));
+        // 05:00 이전 지급은 전날 학습일이므로 2026년으로 계산된다.
+        saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2027, 1, 2), LocalDateTime.of(2027, 1, 1, 4, 0));
+        saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2027, 1, 9), LocalDateTime.of(2027, 1, 11, 5, 10));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/{badgeId}", weekend2026.getId())
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.acquiredDate").value("2026-12-31"));
+    }
+
+    @Test
+    @DisplayName("연휴 파이터 뱃지를 상세 조회하면 연휴 종류의 이미지를 반환한다.")
+    public void readMyHolidayBadge() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+        Holiday chuseok = saveHoliday("추석", CHUSEOK_IMAGE_URL, LocalDate.of(2026, 9, 24), LocalDate.of(2026, 9, 28));
+        Badge holiday = saveHolidayBadge(user, chuseok, LocalDateTime.of(2026, 9, 29, 5, 10));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/{badgeId}", holiday.getId())
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.badgeName").value("추석 파이터"))
+                .andExpect(jsonPath("$.response.badgeImageUrl").value(CHUSEOK_IMAGE_URL));
+    }
+
+    @Test
+    @DisplayName("다른 유저의 뱃지를 상세 조회하면 404를 반환한다.")
+    public void readOtherUserBadge() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        User other = fixtureSupport.persistUser(UserFixture.createUserWithName("다른유저"));
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+        Badge otherBadge = saveBadge(other, BadgeType.COMEBACK, null,
+                LocalDate.of(2026, 10, 1), LocalDateTime.of(2026, 10, 1, 10, 0));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/{badgeId}", otherBadge.getId())
+                        .header("Authorization", accessToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.isSuccess").value(false))
+                .andExpect(jsonPath("$.errorResponse.code").value("B20000"));
+    }
+
+    @Test
+    @DisplayName("확인하지 않은 뱃지를 받은 순서대로 상세 정보 목록으로 조회한다.")
+    public void readNewBadges() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+        Badge checked = saveBadge(user, BadgeType.WEEKEND_10, null,
+                LocalDate.of(2026, 10, 3), LocalDateTime.of(2026, 10, 5, 5, 10));
+        jdbcTemplate.update("UPDATE badge SET checked = true WHERE badge_id = ?", checked.getId());
+        Badge monthly = saveBadge(user, BadgeType.MONTHLY_50, "10월",
+                LocalDate.of(2026, 10, 31), LocalDateTime.of(2026, 10, 31, 22, 0));
+        Badge comeback = saveBadge(user, BadgeType.COMEBACK, null,
+                LocalDate.of(2026, 11, 2), LocalDateTime.of(2026, 11, 2, 10, 0));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/new")
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.isSuccess").value(true))
+                .andExpect(jsonPath("$.response.length()").value(2))
+                .andExpect(jsonPath("$.response[0].badgeId").value(monthly.getId()))
+                .andExpect(jsonPath("$.response[0].badgeName").value("10월 파이터"))
+                .andExpect(jsonPath("$.response[0].badgeImageUrl")
+                        .value(String.format(BadgeType.MONTHLY_50.getImageUrl(), 10)))
+                .andExpect(jsonPath("$.response[0].acquiredDate").value("2026-10-31"))
+                .andExpect(jsonPath("$.response[1].badgeId").value(comeback.getId()))
+                .andExpect(jsonPath("$.response[1].badgeName").value("돌아왔구나"));
+    }
+
+    @Test
+    @DisplayName("새 뱃지를 조회하면 확인 처리되어 다시 조회할 때 반환하지 않는다.")
+    public void readNewBadgesTwice() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+        saveBadge(user, BadgeType.COMEBACK, null,
+                LocalDate.of(2026, 11, 2), LocalDateTime.of(2026, 11, 2, 10, 0));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/new")
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response.length()").value(1));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/new")
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").isEmpty());
+    }
+
+    @Test
+    @DisplayName("다른 유저의 뱃지는 새 뱃지로 조회하지 않고 확인 처리하지도 않는다.")
+    public void readNewBadgesExcludingOtherUser() throws Exception {
+        User user = fixtureSupport.persistUser(UserFixture.createUser());
+        User other = fixtureSupport.persistUser(UserFixture.createUserWithName("다른유저"));
+        String accessToken = testJwtFactory.createAccessToken(user.getId());
+        Badge otherBadge = saveBadge(other, BadgeType.COMEBACK, null,
+                LocalDate.of(2026, 11, 2), LocalDateTime.of(2026, 11, 2, 10, 0));
+
+        mockMvc.perform(get("/api/v2/users/me/badges/new")
+                        .header("Authorization", accessToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.response").isEmpty());
+
+        assertThat(badgeRepository.findById(otherBadge.getId()))
+                .get()
+                .extracting(Badge::isChecked)
+                .isEqualTo(false);
+    }
+
+    private Holiday saveHoliday(String name, String badgeImageUrl, LocalDate startDate, LocalDate endDate) {
+        HolidayKind holidayKind = holidayKindRepository.save(HolidayKind.builder()
+                .name(name)
+                .badgeImageUrl(badgeImageUrl)
+                .badgeEnabled(true)
+                .build());
+        return holidayRepository.save(Holiday.builder()
+                .holidayKind(holidayKind)
+                .startDate(startDate)
+                .endDate(endDate)
+                .build());
+    }
+
+    private Badge saveHolidayBadge(User user, Holiday holiday, LocalDateTime createdAt) {
+        Badge badge = badgeRepository.save(Badge.createHolidayBadge(user.getId(), holiday));
+        jdbcTemplate.update("UPDATE badge SET created_at = ? WHERE badge_id = ?", createdAt, badge.getId());
+        return badge;
+    }
+
+    private Badge saveBadge(User user, BadgeType type, String detail, LocalDate date, LocalDateTime createdAt) {
+        Badge badge = badgeRepository.save(Badge.builder()
+                .userId(user.getId())
+                .type(type)
+                .detail(detail)
+                .date(date)
+                .build());
+        jdbcTemplate.update("UPDATE badge SET created_at = ? WHERE badge_id = ?", createdAt, badge.getId());
+        return badge;
+    }
+}

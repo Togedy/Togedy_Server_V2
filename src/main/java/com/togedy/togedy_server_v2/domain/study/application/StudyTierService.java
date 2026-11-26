@@ -93,7 +93,7 @@ public class StudyTierService {
     @Transactional
     public void applyStudyTier() {
         List<StudyStatistics> statistics = studyStatisticsRepository.findUpdatedToday(
-                TimeUtil.todayInStudyZone());
+                TimeUtil.todayInStudyZone().minusDays(1));
 
         if (statistics.isEmpty()) {
             return;

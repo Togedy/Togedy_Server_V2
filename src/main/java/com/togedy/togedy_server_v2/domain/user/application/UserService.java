@@ -1,5 +1,6 @@
 package com.togedy.togedy_server_v2.domain.user.application;
 
+import com.togedy.togedy_server_v2.domain.badge.dao.BadgeRepository;
 import com.togedy.togedy_server_v2.domain.chat.dao.ChatMessageRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.PlannerDailyImageRepository;
@@ -99,6 +100,7 @@ public class UserService {
     private final StudyTaskRepository studyTaskRepository;
     private final CategoryRepository categoryRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final BadgeRepository badgeRepository;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final TransactionTemplate transactionTemplate;
 
@@ -306,7 +308,7 @@ public class UserService {
     /**
      * 사용자를 회원 탈퇴 처리한다.
      * <p>
-     * 사용자가 참여 중인 스터디 정보와 사용자에 종속된 일정, 플래너, 채팅, 인증 관련 데이터를 순차적으로 삭제한 뒤 마지막으로 사용자 정보를 삭제한다.
+     * 사용자가 참여 중인 스터디 정보와 사용자에 종속된 일정, 플래너, 채팅, 뱃지, 인증 관련 데이터를 순차적으로 삭제한 뒤 마지막으로 사용자 정보를 삭제한다.
      * </p>
      *
      * @param userId 회원 탈퇴할 사용자 ID
@@ -580,6 +582,7 @@ public class UserService {
         deleteSchedule(userId);
         deletePlanner(userId);
         deleteChat(userId);
+        deleteBadge(userId);
         deleteUser(user);
     }
 
@@ -707,6 +710,15 @@ public class UserService {
      */
     private void deleteChat(Long userId) {
         chatMessageRepository.deleteAllByUserId(userId);
+    }
+
+    /**
+     * 사용자가 받은 뱃지를 삭제한다.
+     *
+     * @param userId 뱃지를 삭제할 사용자 ID
+     */
+    private void deleteBadge(Long userId) {
+        badgeRepository.deleteAllByUserId(userId);
     }
 
     private void publishPlannerImageRemovedEvents(Long userId) {

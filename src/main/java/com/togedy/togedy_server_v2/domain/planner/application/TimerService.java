@@ -13,6 +13,8 @@ import com.togedy.togedy_server_v2.domain.planner.dto.SubjectStudyTimeItemRespon
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
+import com.togedy.togedy_server_v2.domain.planner.event.TimerStartedEvent;
+import com.togedy.togedy_server_v2.domain.planner.event.TimerStoppedEvent;
 import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudySubjectException;
 import com.togedy.togedy_server_v2.domain.planner.exception.StudySubjectNotFoundException;
 import com.togedy.togedy_server_v2.domain.planner.exception.StudySubjectNotOwnedException;
@@ -32,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,6 +50,7 @@ public class TimerService {
     private final StudySubjectRepository studySubjectRepository;
     private final StudyTimeRepository studyTimeRepository;
     private final TransactionTemplate transactionTemplate;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     private static final int CUTOFF_SECONDS = 150;
 
@@ -85,6 +89,7 @@ public class TimerService {
             throw new TimerAlreadyRunningException();
         }
 
+        applicationEventPublisher.publishEvent(new TimerStartedEvent(userId, startTime));
         return PostTimerStartResponse.of(timerId, startTime);
     }
 
@@ -109,6 +114,7 @@ public class TimerService {
         studyTime.stop(endTime);
         updateDailyStudySummaryOnStop(userId, studyTime.getStartTime(), endTime);
         updateUser(user, endTime);
+        applicationEventPublisher.publishEvent(new TimerStoppedEvent(userId, studyTime.getStudySubjectId(), endTime));
         return PostTimerStopResponse.of(studyTime.getId(), studyTime.getStartTime(), endTime);
     }
 
@@ -221,6 +227,8 @@ public class TimerService {
         );
 
         updateUser(user, effectiveEndTime);
+        applicationEventPublisher.publishEvent(
+                new TimerStoppedEvent(user.getId(), studyTime.getStudySubjectId(), effectiveEndTime));
     }
 
     private void validateStartRequest(PostTimerStartRequest request) {

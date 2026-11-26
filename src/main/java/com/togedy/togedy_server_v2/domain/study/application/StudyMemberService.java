@@ -1,5 +1,7 @@
 package com.togedy.togedy_server_v2.domain.study.application;
 
+import com.togedy.togedy_server_v2.domain.badge.application.BadgeService;
+import com.togedy.togedy_server_v2.domain.badge.dto.GetMyBadgesResponse;
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudyTaskRepository;
@@ -45,6 +47,7 @@ public class StudyMemberService {
     private final StudySubjectRepository studySubjectRepository;
     private final StudyTaskRepository studyTaskRepository;
     private final StudyTimeRepository studyTimeRepository;
+    private final BadgeService badgeService;
 
     private static final int MONTH_RANGE = 6;
 
@@ -170,6 +173,29 @@ public class StudyMemberService {
                 totalTaskCount,
                 dailyPlannerDtos
         );
+    }
+
+    /**
+     * 스터디 멤버의 연도별 보유 뱃지를 조회한다.
+     * <p>
+     * 요청한 사용자와 조회 대상 멤버가 모두 해당 스터디에 속해 있어야 하며, 응답은 본인 보유 뱃지 조회와 같다.
+     * </p>
+     *
+     * @param studyId  조회 대상 스터디 ID
+     * @param memberId 뱃지를 조회할 멤버 사용자 ID
+     * @param userId   조회를 요청한 사용자 ID
+     * @return 스터디 멤버의 연도별 보유 뱃지
+     * @throws StudyAccessDeniedException 요청한 사용자가 해당 스터디에 속해 있지 않은 경우
+     * @throws UserStudyNotFoundException 조회 대상 멤버가 해당 스터디에 속해 있지 않은 경우
+     */
+    public GetMyBadgesResponse findStudyMemberBadges(Long studyId, Long memberId, Long userId) {
+        validateUserInStudy(studyId, userId);
+
+        if (!userStudyRepository.existsByStudyIdAndUserId(studyId, memberId)) {
+            throw new UserStudyNotFoundException();
+        }
+
+        return badgeService.findMyBadges(memberId);
     }
 
     /**

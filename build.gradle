@@ -23,6 +23,8 @@ repositories {
     mavenCentral()
 }
 
+ext['testcontainers.version'] = '1.21.4'
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-security'
@@ -70,6 +72,9 @@ dependencies {
     // monitoring
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     runtimeOnly 'io.micrometer:micrometer-registry-prometheus'
+
+    // lunar calendar
+    implementation 'com.ibm.icu:icu4j:77.1'
 
     //test
     testImplementation 'org.testcontainers:junit-jupiter'

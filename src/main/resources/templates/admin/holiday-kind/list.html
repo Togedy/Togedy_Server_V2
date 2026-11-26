@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{admin/fragments :: head('연휴 종류 관리')}"></head>
+<body>
+<header th:replace="~{admin/fragments :: nav('holiday-kind')}"></header>
+<main>
+    <div class="page-head">
+        <div>
+            <h1>연휴 종류 관리</h1>
+            <p class="desc">연휴 등록 시 선택하는 종류입니다. 뱃지 지급을 켠 종류의 연휴만 연휴 파이터 뱃지를 판정하며, 연휴가 등록된 종류는 삭제할 수 없습니다.</p>
+        </div>
+        <a class="btn btn-primary" th:href="@{/admin/holiday-kinds/new}">새 종류 등록</a>
+    </div>
+    <div class="alert alert-error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+    <div class="card">
+        <table>
+            <thead>
+            <tr><th>ID</th><th>뱃지</th><th style="width: 100%;">종류</th><th>뱃지 이미지</th><th></th></tr>
+            </thead>
+            <tbody>
+            <tr th:if="${#lists.isEmpty(holidayKinds)}"><td class="empty" colspan="5">등록된 연휴 종류가 없습니다.</td></tr>
+            <tr th:each="kind : ${holidayKinds}">
+                <td class="muted" th:text="${kind.holidayKindId}"></td>
+                <td>
+                    <span class="chip chip-green" th:if="${kind.badgeEnabled}">지급</span>
+                    <span class="chip" th:unless="${kind.badgeEnabled}">미지급</span>
+                </td>
+                <td th:text="${kind.name}"></td>
+                <td>
+                    <img th:if="${kind.badgeImageUrl}" th:src="${kind.badgeImageUrl}" alt="뱃지 이미지"
+                         style="width: 40px; height: 40px; object-fit: contain;">
+                    <span class="muted" th:unless="${kind.badgeImageUrl}">없음</span>
+                </td>
+                <td>
+                    <div class="actions">
+                        <a class="btn btn-outline btn-sm"
+                           th:href="@{/admin/holiday-kinds/{id}/edit(id=${kind.holidayKindId})}">수정</a>
+                        <form class="inline"
+                              th:action="@{/admin/holiday-kinds/{id}/delete(id=${kind.holidayKindId})}"
+                              method="post" onsubmit="return confirm('삭제하시겠습니까?');">
+                            <button class="btn btn-danger btn-sm" type="submit">삭제</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

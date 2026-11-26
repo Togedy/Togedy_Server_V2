@@ -1,0 +1,92 @@
+package com.togedy.togedy_server_v2.domain.badge.entity;
+
+import com.togedy.togedy_server_v2.domain.badge.enums.BadgeType;
+import com.togedy.togedy_server_v2.global.entity.BaseEntity;
+import com.togedy.togedy_server_v2.global.util.TimeUtil;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
+import java.time.LocalDate;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Table(name = "badge", uniqueConstraints = @UniqueConstraint(
+        name = "uk_badge_user_id_type_period_key",
+        columnNames = {"user_id", "type", "period_key"})
+)
+public class Badge extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "badge_id", nullable = false, updatable = false)
+    private Long id;
+
+    @Column(name = "user_id", nullable = false, updatable = false)
+    private Long userId;
+
+    @Column(name = "detail", updatable = false)
+    private String detail;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type", nullable = false, updatable = false, columnDefinition = "varchar(30)")
+    private BadgeType type;
+
+    @Column(name = "period_key", nullable = false, updatable = false)
+    private String periodKey;
+
+    @Column(name = "checked", nullable = false)
+    private boolean checked;
+
+    @Builder
+    public Badge(Long userId, String detail, BadgeType type, LocalDate date) {
+        this(userId, detail, type, type.getPeriodType().toKey(date));
+    }
+
+    private Badge(Long userId, String detail, BadgeType type, String periodKey) {
+        this.userId = userId;
+        this.detail = detail;
+        this.type = type;
+        this.periodKey = periodKey;
+        this.checked = false;
+    }
+
+    /**
+     * 연휴 파이터 뱃지를 생성한다.
+     * <p>
+     * 같은 날 여러 연휴가 있어도 각각 지급하도록 periodKey는 연휴 ID이며, 연휴 종류의 이름을 지급 시점의 값으로 저장한다.
+     * </p>
+     *
+     * @param userId  지급 대상 유저 ID
+     * @param holiday 판정 대상 연휴
+     * @return 저장 전 뱃지
+     */
+    public static Badge createHolidayBadge(Long userId, Holiday holiday) {
+        return new Badge(userId, holiday.getHolidayKind().getName(), BadgeType.HOLIDAY, String.valueOf(holiday.getId()));
+    }
+
+    public void check() {
+        this.checked = true;
+    }
+
+    public String getDisplayName() {
+        if (detail == null) {
+            return type.getName();
+        }
+        return detail + " " + type.getName();
+    }
+
+    public LocalDate getAcquiredDate() {
+        return TimeUtil.startOfStudyDay(getCreatedAt()).toLocalDate();
+    }
+}

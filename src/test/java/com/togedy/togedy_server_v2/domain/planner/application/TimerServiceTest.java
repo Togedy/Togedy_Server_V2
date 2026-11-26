@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.verify;
 
 import com.togedy.togedy_server_v2.domain.planner.dao.DailyStudySummaryRepository;
 import com.togedy.togedy_server_v2.domain.planner.dao.StudySubjectRepository;
@@ -19,6 +20,8 @@ import com.togedy.togedy_server_v2.domain.planner.dto.SubjectStudyTimeItemRespon
 import com.togedy.togedy_server_v2.domain.planner.entity.DailyStudySummary;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudySubject;
 import com.togedy.togedy_server_v2.domain.planner.entity.StudyTime;
+import com.togedy.togedy_server_v2.domain.planner.event.TimerStartedEvent;
+import com.togedy.togedy_server_v2.domain.planner.event.TimerStoppedEvent;
 import com.togedy.togedy_server_v2.domain.planner.exception.InvalidStudySubjectException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyRunningException;
 import com.togedy.togedy_server_v2.domain.planner.exception.TimerAlreadyStoppedException;
@@ -34,6 +37,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,6 +54,9 @@ class TimerServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
 
     @InjectMocks
     private TimerService timerService;
@@ -89,6 +96,8 @@ class TimerServiceTest {
 
         assertThat(response.getTimerId()).isEqualTo(100L);
         assertThat(response.getStartTime()).isNotNull();
+        verify(applicationEventPublisher).publishEvent(
+                new TimerStartedEvent(user.getId(), response.getStartTime()));
     }
 
     @Test
@@ -160,6 +169,8 @@ class TimerServiceTest {
         assertThat(response.getTimerId()).isEqualTo(timerId);
         assertThat(response.getStartTime()).isEqualTo(startTime);
         assertThat(response.getEndTime()).isNotNull();
+        verify(applicationEventPublisher).publishEvent(
+                new TimerStoppedEvent(user.getId(), 10L, response.getEndTime()));
     }
 
     @Test
